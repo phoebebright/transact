@@ -1,16 +1,167 @@
-"""
-This file demonstrates writing tests using the unittest module. These will pass
-when you run "manage.py test".
+#python
+from datetime import date, datetime, timedelta
 
-Replace this with more appropriate tests for your application.
-"""
-
+#django
+from django import template
+from django.contrib.auth.models import User, Permission, Group
+from django.contrib.contenttypes.models import ContentType
+from django.core import mail
+from django.core.urlresolvers import reverse
+from django.db.models import get_model
+from django.test import Client
 from django.test import TestCase
+from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
+
+#app
+
+from web.models import *
 
 
-class SimpleTest(TestCase):
-    def test_basic_addition(self):
-        """
-        Tests that 1 + 1 always equals 2.
-        """
-        self.assertEqual(1 + 1, 2)
+
+TODAY = date.today()
+YESTERDAY = date.today() - timedelta(days = 1)
+TOMORROW = date.today() + timedelta(days = 1)
+LASTWEEK = date.today() - timedelta(days = 7)
+NEXTWEEK = date.today() + timedelta(days = 7)
+NOW = datetime.now() + timedelta(minutes=1)
+TODAY_STARTS = NOW.replace(hour=0,minute=0,second=0)
+TODAY_ENDS = NOW.replace(hour=23,minute=59,second=59)
+
+'''
+        for c in Customer.objects.all():
+            print c.id,c.anonymous,c.clients.all(),c.name
+'''
+    
+class WebBaseTest(TestCase):
+    """
+    setup data
+    """
+
+    def setUp(self):
+        """ running setup """
+      
+        self.client1=Client.objects.create(name='Client 1')
+        print self.client1.__dict__
+        self.client2=Client.objects.create(name='Client 2')
+
+        self.custA=Customer.objects.create(name='Customer A of Client 1')
+        Relationship.objects.create(client=self.client1, customer=self.custA)
+        
+        
+        # create users
+        self.system_user = User.objects.create_user('system','system@trialflight.com','pass')
+        
+        '''
+        # client 1 has two users
+        u= User.objects.create_user('uclient1a','ucient1a@trialflight.com','pass')
+        profile = u.get_profile()
+        profile.client = self.client1
+        profile.save()
+        
+        u= User.objects.create_user('uclient1b','ucient1b@trialflight.com','pass')
+        profile = self.u.get_profile()
+        profile.client = self.client1
+        profile.save()
+        
+        
+        # client 2 has two users
+        u= User.objects.create_user('uclient2a','ucient2a@trialflight.com','pass')
+        profile = self.u.get_profile()
+        profile.client = self.client2
+        profile.save()
+
+        '''
+        
+        #  add product types
+        ProductType.objects.create(code='WIND', name='Wind')
+        ProductType.objects.create(code='HYDR', name='Hydro')
+        ProductType.objects.create(code='BIOM', name='Biomass')
+
+        for p in ProductType.objects.all():
+            print p.code
+        
+
+class BasicTests(TestCase):
+    """
+    simple tests 
+    """
+
+    def test_create_client(self):
+        "create client test"
+        
+        client=Client.objects.create(name='Client 1')
+        # has the anonymous customer for this client been added
+        self.assertEqual(Customer.objects.count(), 1)
+
+         
+        cust = Customer.objects.get(id=1)
+        self.assertTrue(cust.anonymous)
+        self.assertEqual(cust.clients.all().count(), 1)
+        cust1 = Customer.objects.get(id=1)
+        self.assertEqual(client.customers.all()[0], cust1)
+        
+
+        rel = Relationship.objects.get(id=1)
+        self.assertEqual(rel.client, client)        
+        self.assertEqual(rel.customer, cust) 
+        
+
+
+    def test_create_customer(self):
+        "create stand-alone customer test"
+
+        # can create a customer that is not linked to a client
+        cust = Customer.objects.create(name="customer 1")      
+        self.assertEqual(Relationship.objects.count(), 0)
+
+        
+        # add a customer to a client entity
+        client=Client.objects.create(name='Client A')
+        custA = Customer.objects.create(name="customer A")      
+        Relationship.objects.create(client=client, customer=custA)
+
+        # this client now have two customers, three customers in total
+            
+        self.assertEqual(Customer.objects.count(), 3)
+        client1 = Client.objects.get(id=1)
+        self.assertEqual(client1.customers.all().count(), 2)
+        
+class UpstreamTests(WebBaseTest):
+    """
+    check upstream tasks - purchase credits, create products, add to pool
+    """
+        
+    def test_trade2pool(self):
+       
+        # trade creates a new product
+        trade = Trade.objects.create(name = 'Carbon Credit 1', 
+            purchfrom = 'EXCH',
+            total = '10000.00',
+            currency = 'EUR',
+            tonnes = '2500',
+            ref='test 1',
+            )
+            
+        # check product created
+        
+        product = Product.objects.get(trade=trade)
+        product.quality = 'G'
+        product.type=ProductType.objects.get(code='HYDR')
+        product.save()
+       
+        p=Product.objects.get(id=1)
+
+        self.assertEqual(p.quantity, Decimal('2500'))
+        self.assertEqual(p.price, Decimal('4'))
+        
+        # now put in pool and check correctly created
+        p.add2pool()
+        
+        pool = Pool.objects.get(id=1)
+        self.assertEqual(pool.product,p)
+        self.assertEqual(pool.quantity,p.quantity)
+        self.assertEqual(pool.quality,p.quality)
+        self.assertEqual(pool.type,p.type)
+        self.assertEqual(pool.price,p.price)
+        
