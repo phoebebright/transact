@@ -1,0 +1,7 @@
+*.pyo
+*.pyc
+.idea
+/site_media/uploads
+settings.py
+django.wsgi
+
