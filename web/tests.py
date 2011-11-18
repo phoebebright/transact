@@ -28,12 +28,22 @@ NOW = datetime.now() + timedelta(minutes=1)
 TODAY_STARTS = NOW.replace(hour=0,minute=0,second=0)
 TODAY_ENDS = NOW.replace(hour=23,minute=59,second=59)
 
-'''
-        for c in Customer.objects.all():
-            print c.id,c.anonymous,c.clients.all(),c.name
-'''
-    
-class WebBaseTest(TestCase):
+def list_pool():
+
+        for p in Pool.objects.all():
+            print p.__dict__
+
+def list_transactions():
+
+        for t in Transaction.objects.all():
+            print t.__dict__
+
+def list_products():
+
+        for t in Product.objects.all():
+            print t.__dict__
+
+class BaseTest(TestCase):
     """
     setup data
     """
@@ -42,7 +52,6 @@ class WebBaseTest(TestCase):
         """ running setup """
       
         self.client1=Client.objects.create(name='Client 1')
-        print self.client1.__dict__
         self.client2=Client.objects.create(name='Client 2')
 
         self.custA=Customer.objects.create(name='Customer A of Client 1')
@@ -78,10 +87,45 @@ class WebBaseTest(TestCase):
         ProductType.objects.create(code='HYDR', name='Hydro')
         ProductType.objects.create(code='BIOM', name='Biomass')
 
-        for p in ProductType.objects.all():
-            print p.code
+class BaseTestMoreData(BaseTest):
+    """
+    setup data
+    """
+
+    def setUp(self):
+    
+        super(BaseTestMoreData, self).setUp()
         
 
+        # add products to the pool
+        trade = Trade.objects.create(name = 'Carbon Credit 1', 
+            purchfrom = 'EXCH',
+            total = '10000.00',
+            currency = 'EUR',
+            tonnes = '2500',
+            ref='test 1',
+            )        
+        product = Product.objects.get(trade=trade)
+        product.quality = 'G'
+        product.type=ProductType.objects.get(code='HYDR')
+        product.save()
+        product.move2pool()      
+        
+        # add products to the pool
+        trade = Trade.objects.create(name = 'Carbon Credit 2', 
+            purchfrom = 'EXCH',
+            total = '1532.22',
+            currency = 'EUR',
+            tonnes = '3221',
+            ref='test 2',
+            )        
+        product = Product.objects.get(trade=trade)
+        product.quality = 'P'
+        product.type=ProductType.objects.get(code='HYDR')
+        product.save()
+        product.move2pool()          
+        
+        
 class BasicTests(TestCase):
     """
     simple tests 
@@ -127,7 +171,7 @@ class BasicTests(TestCase):
         client1 = Client.objects.get(id=1)
         self.assertEqual(client1.customers.all().count(), 2)
         
-class UpstreamTests(WebBaseTest):
+class UpstreamTests(BaseTest):
     """
     check upstream tasks - purchase credits, create products, add to pool
     """
@@ -152,16 +196,40 @@ class UpstreamTests(WebBaseTest):
        
         p=Product.objects.get(id=1)
 
-        self.assertEqual(p.quantity, Decimal('2500'))
-        self.assertEqual(p.price, Decimal('4'))
+        self.assertEqual(p.quantity_purchased, Decimal('2500'))
+        self.assertEqual(p.price, Decimal('4.40'))
         
         # now put in pool and check correctly created
-        p.add2pool()
+        p.move2pool()
         
         pool = Pool.objects.get(id=1)
         self.assertEqual(pool.product,p)
-        self.assertEqual(pool.quantity,p.quantity)
+        self.assertEqual(pool.quantity,p.quantity2pool)
         self.assertEqual(pool.quality,p.quality)
         self.assertEqual(pool.type,p.type)
         self.assertEqual(pool.price,p.price)
+        
+class DownstreamTests(BaseTestMoreData):
+    """
+    check downstream tasks - price check, transaction, payment
+    """
+    
+    def test_basictransaction(self):
+
+        list_pool()
+        # price check
+        item = Pool.price_check(10)
+        
+        t = Transaction.objects.create(
+            pool = item,
+            product = item.product,
+            price = item.price + Decimal(settings.DEFAULT_FEE),
+            currency = item.currency,
+            quantity = item.quantity,
+            )
+            
+        list_products()
+        
+
+        
         

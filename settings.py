@@ -147,4 +147,7 @@ EXPIRE_TRANSACTIONS_AFTER_SECONDS = 60 * 5
 DEFAULT_CURRENCY = 'EUR'  
 
 # default profit margin - applied when creating a product from a trade
-PROFIT_MARGIN = 0.10
+PROFIT_MARGIN = '0.10'
+
+# amount in DEFAULT_CURRENCY charged on each transaction
+DEFAULT_FEE = '0.25'
