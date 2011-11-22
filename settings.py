@@ -97,6 +97,8 @@ TEMPLATE_DIRS = (
 )
 
 INSTALLED_APPS = (
+    'keyedcache',
+    'livesettings',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -140,14 +142,6 @@ SHORT_DATETIME_FORMAT = 'dM H:i'
 
 AUTH_PROFILE_MODULE = 'web.UserProfile'
 
-# by default, transactions will be set to expire after this number of seconds
-EXPIRE_TRANSACTIONS_AFTER_SECONDS = 60 * 5
+CACHE_PREFIX = 'T'
+CACHE_TIMEOUT = 300
 
-# if a currency is not specified at any point, use this one
-DEFAULT_CURRENCY = 'EUR'  
-
-# default profit margin - applied when creating a product from a trade
-PROFIT_MARGIN = '0.10'
-
-# amount in DEFAULT_CURRENCY charged on each transaction
-DEFAULT_FEE = '0.25'

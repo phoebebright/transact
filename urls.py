@@ -13,14 +13,14 @@ urlpatterns = patterns('',
         {'document_root': os.path.join(os.path.dirname(__file__), "site_media/css")}),
     (r'^js/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': os.path.join(os.path.dirname(__file__), "site_media/js")}),
-   (r'(.+\.html)$', 'django.views.generic.simple.direct_to_template'),
-   (r'^$',  'django.views.generic.simple.direct_to_template',{'template': 'index.html'}),
-
+   url(r'(.+\.html)$', 'django.views.generic.simple.direct_to_template'),
+   url(r'^$',  'django.views.generic.simple.direct_to_template',{'template': 'index.html'}),
 )
 
 
 urlpatterns += patterns('',
-    (r'^admin/doc/', include('django.contrib.admindocs.urls')),
-    (r'^admin/', include(admin.site.urls)),
+    url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+    url(r'^admin/', include(admin.site.urls)),
+    url(r'^settings/', include('livesettings.urls')),
 )
 

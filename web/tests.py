@@ -223,7 +223,7 @@ class DownstreamTests(BaseTestMoreData):
         t = Transaction.objects.create(
             pool = item,
             product = item.product,
-            price = item.price + Decimal(settings.DEFAULT_FEE),
+            price = item.price + Decimal('0.25'),
             currency = item.currency,
             quantity = item.quantity,
             )
