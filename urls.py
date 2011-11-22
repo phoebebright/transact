@@ -22,5 +22,6 @@ urlpatterns = patterns('',
 urlpatterns += patterns('',
     (r'^admin/doc/', include('django.contrib.admindocs.urls')),
     (r'^admin/', include(admin.site.urls)),
+    url(r'^webtest/', include('webtest.urls')),
 )
 

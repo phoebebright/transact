@@ -31,7 +31,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'transact',   
         'USER': 'root',               
-        'PASSWORD': '578632',           
+        'PASSWORD': '578632',
         'HOST': '',                  
         'PORT': '',                 
     }
@@ -106,6 +106,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.admindocs',
     'web',
+    'webtest',
 )
 
 # A sample logging configuration. The only tangible logging
