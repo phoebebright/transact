@@ -30,8 +30,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'transact',   
-        'USER': 'root',               
-        'PASSWORD': '578632',           
+        'USER': 'transact',
+        'PASSWORD': 'tr4ns4ct',
         'HOST': '',                  
         'PORT': '',                 
     }
