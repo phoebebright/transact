@@ -1,6 +1,14 @@
 #!/usr/bin/env python
+# we need to include third party modules path here
+# note this is only for development,
+# proper path to libs have to be inserted by wsgi configuration for development
+import sys, os
+sys.path.insert(0, os.path.join(os.getcwd(), 'libs'))
+
+#rest of standard manage.py file
 from django.core.management import execute_manager
 import imp
+
 try:
     imp.find_module('settings') # Assumed to be in the same directory.
 except ImportError:
