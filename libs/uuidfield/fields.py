@@ -1,65 +1,69 @@
-from django.forms.util import ValidationError
-from django import forms
-from django.db import models
-from django.utils.encoding import smart_unicode
-from django.utils.translation import ugettext as _
+
+from django.db.models import Field
 
 import uuid
 
-class UUIDField(models.CharField):
-    
-    def __init__(self, auto=False, *args, **kwargs):
-        if kwargs.get('primary_key', False):
-            assert auto, _("Must pass auto=True when using UUIDField as primary key")
-        
+try:
+    # psycopg2 needs us to register the uuid type
+    import psycopg2
+    psycopg2.extras.regster_uuid()
+except (ImportError, AttributeError):
+    pass
+
+class UUIDField(Field):
+    """
+        A field which stores a UUID value in hex format. This may also have
+        the Boolean attribute 'auto' which will set the value on initial save to a
+        new UUID value (calculated using the UUID1 method). Note that while all
+        UUIDs are expected to be unique we enforce this with a DB constraint.
+    """
+    # TODO: support UUID types in Postgres
+    # TODO: support binary storage types
+    # __metaclass__ = models.SubfieldBase
+
+    def __init__(self, version=4, node=None, clock_seq=None, namespace=None, name=None, auto=False, *args, **kwargs):
+        assert version in (1, 3, 4, 5), "UUID version %s is not supported." % (version,)
         self.auto = auto
-        
-        kwargs['max_length'] = 36
+        self.version = version
+        # We store UUIDs in hex format, which is fixed at 32 characters.
+        kwargs['max_length'] = 32
         if auto:
+            # Do not let the user edit UUIDs if they are auto-assigned.
             kwargs['editable'] = False
             kwargs['blank'] = True
-            kwargs['null'] = True
-        
+            kwargs['unique'] = True
+        if version == 1:
+            self.node, self.clock_seq = node, clock_seq
+        elif version in (3, 5):
+            self.namespace, self.name = namespace, name
         super(UUIDField, self).__init__(*args, **kwargs)
-        
-    
-    def db_type(self, connection=None):
-        return 'uuid'
-    
-    def pre_save(self, model_instance, add):
-        value = getattr(model_instance, self.attname, None)
-        if not value and self.auto:
-            value = uuid.uuid4().hex
-            setattr(model_instance, self.attname, value)
-        return super(UUIDField, self).pre_save(model_instance, add)
-    
-    def to_python(self, value):
-        if not value:
-            return None
-        if isinstance(value, uuid.UUID):
-            return value.hex
-        return uuid.UUID(value).hex
-    
-    
-    def value_to_string(self, obj):
-        val = self._get_val_from_obj(obj)
-        if val is None:
-            data = ''
+
+    def _create_uuid(self):
+        if self.version == 1:
+            args = (self.node, self.clock_seq)
+        elif self.version in (3, 5):
+            args = (self.namespace, self.name)
         else:
-            data = unicode(val)
-        return data
-    
-try:
-    from south.modelsinspector import add_introspection_rules
-except ImportError:
-    pass
-else:
-    add_introspection_rules([
-        (
-            [UUIDField], # Class(es) these apply to
-            [],         # Positional arguments (not used)
-            {           # Keyword argument
-                "auto": ["auto", {"default": "False"}],
-            },
-        ),
-    ], ["^uuidfield\.fields\.UUIDField"]) # XXX Change this to where yours is stored. Better solution?
+            args = ()
+        return getattr(uuid, 'uuid%s' % (self.version,))(*args)
+
+    def db_type(self, connection=None):
+        return 'char(%s)' % (self.max_length,)
+
+    def pre_save(self, model_instance, add):
+        """ see CharField.pre_save
+            This is used to ensure that we auto-set values if required.
+        """
+        value = getattr(model_instance, self.attname, None)
+        if self.auto and add and not value:
+            # Assign a new value for this attribute if required.
+            value = self._create_uuid().hex
+            setattr(model_instance, self.attname, value)
+        return value
+
+    def south_field_triple(self):
+        "Returns a suitable description of this field for South."
+        from south.modelsinspector import introspector
+        field_class = "uuidfield.fields.UUIDField"
+        args, kwargs = introspector(self)
+        return (field_class, args, kwargs)
