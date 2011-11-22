@@ -15,3 +15,9 @@ class WebTestTest(TestCase):
         """
         response = self.client.get('/webtest/')
         self.assertEqual(response.status_code, 200)
+        content = response.content
+        self.assertEqual("<h1>Web test of TransAct api</h1>" in content, True)
+        #static files not easly testable
+        #response = self.client.get('/static/webtest/js/main.js')
+        #self.assertEqual(response.status_code, 200)
+        
