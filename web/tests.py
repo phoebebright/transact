@@ -248,12 +248,12 @@ class DownstreamTests(BaseTestMoreData):
     
 
         # add products to the pool
-        trade = Trade.objects.create(name = 'Carbon Credit 1 - copy', 
+        trade = Trade.objects.create(name = 'Yesterday', 
             purchfrom = 'EXCH',
             total = '10000.00',
             currency = 'EUR',
-            tonnes = '2500',
-            ref='test 1 - copy',
+            tonnes = '101',
+            ref='yesterday',
             )        
         product = Product.objects.get(trade=trade)
         product.quality = 'G'
@@ -266,25 +266,24 @@ class DownstreamTests(BaseTestMoreData):
 
 
         list_pool()
-        
-        '''
         # check earliest is being picked 
-        poolitem = Pool.objects.get(added=YESTERDAY)
-        item = Pool.price_check(10)
-        print poolitem.__dict__
-        print item.__dict__
-        self.assertEqual(item, poolitem)
+        earliestpoolitem = Pool.objects.get(product__name ='Yesterday')
+        item = Pool.price_check(10.1)
+        self.assertEqual(item, earliestpoolitem)
+        
         
         # but if quality is specified, now choose a that one
         platinumpoolitem = Pool.objects.get(quality='P', type__code='HYDR')
         item = Pool.price_check(10, quality='P')
         self.assertEqual(item, platinumpoolitem)
-        '''
         
         # look for items that have no match in the pool
         
         #quantity too high
-        self.assertRaises(NoMatchInPoolException,  Pool.price_check, 10000)
+        self.assertRaises(AboveMaxQuantity,  Pool.price_check, 10000)
+
+        #quantity too low
+        self.assertRaises(BelowMinQuantity,  Pool.price_check, 0.1)
 
         #no quality of type S
         self.assertRaises(NoMatchInPoolException,  Pool.price_check, 10, quality='S')
@@ -296,4 +295,16 @@ class DownstreamTests(BaseTestMoreData):
         self.assertRaises(NoMatchInPoolException,  Pool.price_check, 10, quality='G', type='XXX')
         
         
-        #add some more 
+        #test for matches
+        #quantity = available
+        item = Pool.price_check(101)
+        self.assertEqual(item, earliestpoolitem)
+        item = Pool.price_check(101, quality='G')
+        self.assertEqual(item, earliestpoolitem)
+        item = Pool.price_check(101, type='HYDR' )
+        self.assertEqual(item, earliestpoolitem)
+        item = Pool.price_check(101, type='HYDR' , quality='G')
+        self.assertEqual(item, earliestpoolitem)
+
+
+        

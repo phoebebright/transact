@@ -19,7 +19,7 @@ from django.utils.html import strip_tags
 #app
 import config
 from livesettings import config_value
-from web.exceptions import NoMatchInPoolException
+from web.exceptions import NoMatchInPoolException, BelowMinQuantity, AboveMaxQuantity
 
 CURRENCIES = (('EUR','EUR'), ('GBP','GBP'), ('USD','USD'))
 QUALITIES = (
@@ -241,6 +241,12 @@ class Pool(models.Model):
         returns the product id of the first product added to the pool that matches the requirements
         """
         
+        if qty < config_value('web','MIN_QUANTITY'):
+            raise BelowMinQuantity
+
+        if qty > config_value('web','MAX_QUANTITY'):
+            raise AboveMaxQuantity
+            
         queryset = cls.objects.filter(quantity__gte = qty)
         
         if quality:
@@ -249,8 +255,9 @@ class Pool(models.Model):
         if type:
             queryset = queryset.filter(type__code = type)
             
-        if queryset:
-            return queryset.order_by('-added')[0]
+        if queryset.count()>0:
+
+            return queryset.order_by('added')[0]
         else:
             raise NoMatchInPoolException()
             
