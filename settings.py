@@ -158,8 +158,16 @@ SHORT_DATETIME_FORMAT = 'dM H:i'
 
 AUTH_PROFILE_MODULE = 'web.UserProfile'
 
-CACHE_PREFIX = 'T'
+CACHE_PREFIX = 'TransAct'
 CACHE_TIMEOUT = 300
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': '127.0.0.1:11211',
+        'KEY_PREFIX': 'TransAct',
+    }
+}
+
 
 try:
     from settings_local import *

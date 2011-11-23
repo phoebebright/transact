@@ -116,7 +116,10 @@ Response at the end, ie. SomeResponse")
         return int(time.time() * 1000)
 
     def _call(self):
-        return self.__class__.__name__.rstrip("Response").upper()
+        name = self.__class__.__name__
+        toremove = len("Response")
+        call = name.upper()[:-toremove]
+        return call
 
     def get_response(self):
         """
