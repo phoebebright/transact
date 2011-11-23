@@ -6,21 +6,29 @@
     <script type="text/javascript" src="/static/js/JSON.js"></script>
     <script type="text/javascript" src="/static/webtest/js/main.js"></script>
     <script type="text/javascript">
+        function alertBox(data){
+            var box_content = "";
+            for (var key in data["currencies"]) {
+                var val = data["currencies"][key]["total"];
+                box_content += "total in "+key+": "+val+"\n";
+            }
+            alert(box_content);
+            display_call(data);
+        }
 
-    jQuery(document).ready(function() {
-
-        jQuery('#call_api').click(function(){
-            send_call(jQuery('#call_content').val(), display_call);
-            return false;
+        jQuery(document).ready(function() {
+            jQuery('#call_api').click(function(){
+                sendFormCall(jQuery("#call_form"));
+                return false;
+            });
         });
-    });
     </script>
 
 {% endblock %}
 {% block main %}
-<h1>Web test of TransAct api</h1>
+<h1>Web test of TransAct api ::PRICECHECK</h1>
 <form id="call_form" target="." >
-    <label class="fullwidth">Paste your JSON into content area</label><textarea id="call_content"></textarea><br/>
+    {{ form.as_p }}
     <p class="align-right"><input id="call_api" type="button" class="button" value="Send"></p>
 </form>
 <h4>Call response below:</h4>
