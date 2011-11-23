@@ -5,12 +5,16 @@ http://www.freecsstemplates.org
 Released for free under a Creative Commons Attribution 2.5 License
 */
 
+form{
+    width: 550px;
+}
+
 textarea{
     resize:none;
     background-color: #f4f4f4;
     border: 1px solid #d8d6ca;
     color: #242424;
-    width: 578px;
+    width: 100%;
     height: 200px;
     -moz-border-radius: 4px;
     -webkit-border-radius: 4px;
@@ -20,6 +24,12 @@ textarea{
 
 .align-right{
     text-align:right;
+}
+
+#call_response ul{
+    list-style: none;
+    margin-left: 5px;
+    padding-left: 10px;
 }
 
 .button{
