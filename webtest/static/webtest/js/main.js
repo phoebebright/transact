@@ -4,7 +4,10 @@
 
 
 function display_call(data){
-    jQuery('#call_response').append(JSON.stringify(data));
+    data = JSON.stringify(data);
+    data = data.replace(/\{/g, "<ul><li>{</li><ul><li>").replace(/\,/g,",</li><li>").replace(/\}/g,"</li></ul><li>}</li></ul>");
+    data = jQuery('<div/>', {'id': "call_response", 'html':data});
+    jQuery('#call_response').replaceWith(data);
 }
 function send_call() {
     var data = jQuery('#call_content').val();
@@ -22,7 +25,6 @@ function send_call() {
 
 jQuery(document).ready(function() {
     jQuery('#call_api').click(function(){
-
         send_call();
         return false;
     });
