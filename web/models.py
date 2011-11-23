@@ -232,10 +232,12 @@ class Pool(models.Model):
     
     
     def __unicode__(self):
-        return self.product 
+        return self.product.name
 
     class Meta:
         ordering = ['-id', ]
+        verbose_name = "Pool"
+        verbose_name_plural = "Pool"
 
     def remove_quanity(self, units):
         """

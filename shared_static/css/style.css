@@ -7,6 +7,7 @@ Released for free under a Creative Commons Attribution 2.5 License
 
 form{
     width: 550px;
+    margin: 20px; 0px;
 }
 
 textarea{
@@ -45,6 +46,21 @@ textarea{
     cursor: pointer;
 }
 
+label{
+    display: block;
+    float: left;
+    margin-right: 10px;
+    text-align: right;
+    width: 200px;
+}
+
+.labeled{
+    margin-left: 210px;
+}
+
+.fullwidth{
+    width: auto;
+}
 
 body {
 	margin: 0;
