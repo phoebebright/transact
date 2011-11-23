@@ -4,4 +4,4 @@
 /site_media/uploads
 settings.py
 django.wsgi
-
+.*
