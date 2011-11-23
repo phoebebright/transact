@@ -5,6 +5,7 @@ when you run "manage.py test".
 Replace this with more appropriate tests for your application.
 """
 import json
+from django.contrib.auth.models import User
 
 from django.test import TestCase
 
@@ -84,3 +85,17 @@ class ApiTest(TestCase):
         self.assertEquals(jsoncontent['status'],'FAILED')
         self.assertTrue(int(jsoncontent['timestamp']) > 0)
         self.assertEquals(jsoncontent['code'], 402)
+        user=User.objects.create(username="tester",password="1234567890")
+        user.active=True
+        user.save()
+        call_data = {
+            "call": 'LOGIN',
+            "username": "tester",
+            "password": "1234567890"
+        }
+        #This should fail
+        jsoncontent = self._api_call(call_data)
+        self.assertEquals(jsoncontent['call'],'LOGIN')
+        self.assertEquals(jsoncontent['status'],'OK')
+        self.assertTrue(int(jsoncontent['timestamp']) > 0)
+        self.assertTrue(isinstance(jsoncontent['token'], basestring))
