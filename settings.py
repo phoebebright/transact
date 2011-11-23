@@ -148,3 +148,8 @@ AUTH_PROFILE_MODULE = 'web.UserProfile'
 CACHE_PREFIX = 'T'
 CACHE_TIMEOUT = 300
 
+try:
+    from settings_local import *
+    Warning.message("local settings imported successfully")
+except ImportError:
+    Warning.message("no local settings")
