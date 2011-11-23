@@ -78,6 +78,13 @@ class PoolAdmin(admin.ModelAdmin):
     list_display = ('product','quality', 'type','quantity','price')   
 
        
+class TransactionAdmin(admin.ModelAdmin):
+
+    class Meta:
+        model = Transaction 
+        
+        
+    list_display = ('uuid','status', 'pool', 'product','price','currency','fee', 'quantity')
 
 
 admin.site.register(Trade, TradeAdmin)    
@@ -85,3 +92,4 @@ admin.site.register(Client, ClientAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(ProductType, ProductTypeAdmin)
 admin.site.register(Pool, PoolAdmin)
+admin.site.register(Transaction, TransactionAdmin)
