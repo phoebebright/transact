@@ -214,20 +214,7 @@ class DownstreamTests(BaseTestMoreData):
     """
     check downstream tasks - price check, transaction, payment
     """
-    
-    def test_basictransaction(self):
-
-        # price check
-        item = Pool.price_check(10)
-        
-        t = Transaction.objects.create(
-            pool = item,
-            product = item.product,
-            price = item.price + Decimal('0.25'),
-            currency = item.currency,
-            quantity = item.quantity,
-            )
-            
+                
         
     def test_pricecheck(self):
 
@@ -265,7 +252,6 @@ class DownstreamTests(BaseTestMoreData):
         poolitem.save()
 
 
-        list_pool()
         # check earliest is being picked 
         earliestpoolitem = Pool.objects.get(product__name ='Yesterday')
         item = Pool.price_check(10.1)
@@ -307,4 +293,15 @@ class DownstreamTests(BaseTestMoreData):
         self.assertEqual(item, earliestpoolitem)
 
 
+    def test_transaction(self):
+
+        # price check
+        item = Pool.price_check(10.55)
+        
+        trans = Transaction.new(self.client1, 10.55)
+        
+        self.assertEqual(item.product, trans.product)
+        self.assertTrue(trans.is_open)
+        self.assertFalse(trans.is_closed)
+        self.assertEqual(trans.quantity, Decimal('10.55'))
         
