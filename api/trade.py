@@ -17,7 +17,12 @@ class PriceCheckRequest(Request):
     quality = micromodels.CharField()
 
     def run(self):
-        item = models.Pool.price_check(self.quantity)
+        kw = dict()
+        if hasattr(self, "type"):
+            kw['type'] = self.type
+        if hasattr(self, "quality"):
+            kw['quality'] = self.quality
+        item = models.Pool.price_check(self.quantity, **kw)
         response = self.response()
         fee = Decimal('0.25')
         # TODO: make it a DictField instance - there is no DictField class yet
