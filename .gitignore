@@ -1,7 +1,7 @@
 *.pyo
 *.pyc
 .idea
-/site_media/uploads
-settings.py
-django.wsgi
+/site_media/*
+/settings_local.py
+/django.wsgi
 .*

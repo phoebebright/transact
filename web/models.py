@@ -17,6 +17,8 @@ from django.core.mail import send_mail, EmailMessage
 from django.utils.html import strip_tags
 
 #app
+import config
+from livesettings import config_value
 
 CURRENCIES = (('EUR','EUR'), ('GBP','GBP'), ('USD','USD'))
 QUALITIES = (
@@ -153,7 +155,7 @@ class Trade(models.Model):
             Product.objects.create(name=self.name,
                 trade=self,
                 currency = self.currency,
-                price = (Decimal(self.total)/Decimal(self.tonnes)*(Decimal('1')+Decimal(settings.PROFIT_MARGIN))),
+                price = (Decimal(self.total)/Decimal(self.tonnes)*(Decimal('1')+Decimal(config_value('web','PROFIT_MARGIN')))),
                 quantity_purchased=self.tonnes)
             
 class Product(models.Model):
@@ -163,7 +165,7 @@ class Product(models.Model):
     uuid = UUIDField(auto=True)
     name = models.CharField(_('Product Name'), max_length=50)
     trade = models.ForeignKey(Trade)
-    currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=settings.DEFAULT_CURRENCY)
+    currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
     quality = models.CharField(_('Default Quality'),  max_length=1, choices=QUALITIES, blank=True, null=True)
     type =  models.ForeignKey(ProductType, verbose_name = _('Default Product Type'), blank=True, null=True)
     price = models.DecimalField(_('Price'), max_digits=9, decimal_places=2,default =0)
@@ -216,7 +218,7 @@ class Pool(models.Model):
     quality = models.CharField(_('Default Quality'),  max_length=1, choices=QUALITIES, blank=True, null=True)
     type =  models.ForeignKey(ProductType, verbose_name = _('Default Product Type'), blank=True, null=True)
     price = models.DecimalField(_('Price'), max_digits=9, decimal_places=2,default =0)
-    currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=settings.DEFAULT_CURRENCY)
+    currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
     added = models.DateTimeField(_('Added to Pool Date/Time'), auto_now_add=True, editable=False)
     
     
@@ -255,7 +257,7 @@ class Transaction(models.Model):
     product = models.ForeignKey(Product)
     price =  models.DecimalField(_('Price'), max_digits=9, decimal_places=2, default=0)
     fee =  models.DecimalField(_('Fee'), max_digits=9, decimal_places=2, default=0)
-    currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=settings.DEFAULT_CURRENCY)
+    currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
     quantity =  models.DecimalField(_('Quantity'), max_digits=9, decimal_places=2)
     created = models.DateTimeField(_('Created Date/Time'), auto_now_add=True, editable=False)
     closed = models.DateTimeField(_('Closed Date/Time'), null=True)
@@ -269,7 +271,7 @@ class Transaction(models.Model):
 
     def save(self, *args, **kwargs):
         
-        self.expire_at = datetime.now() + timedelta(seconds=settings.EXPIRE_TRANSACTIONS_AFTER_SECONDS)
+        self.expire_at = datetime.now() + timedelta(seconds=config_value('web','EXPIRE_TRANSACTIONS_AFTER_SECONDS'))
                     
         super(Transaction, self).save(*args, **kwargs)
 
@@ -325,7 +327,7 @@ class Payment(models.Model):
     payment_type = models.CharField(_('Type'),  max_length=1, default='A')
     payment_date = models.DateTimeField(_('Payment Date/Time'), auto_now_add=True)
     amount =  models.DecimalField(_('Payment Amount'), max_digits=9, decimal_places=2, default=0)
-    currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=settings.DEFAULT_CURRENCY) 
+    currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
     
     def __unicode__(self):
         return self.id 
@@ -339,98 +341,6 @@ class Payment(models.Model):
         return (self.status=='S')
         
         
-class MailLog(models.Model):
-    """
-    Record emails sent 
-    To send an email, add a new item to MailLog and then call send on the object
-    """
-
-    subject = models.CharField(_('Subject'), max_length=120)
-    body = models.TextField(_('Body'), null=True)
-    from_email = models.CharField(_('From Email'), max_length=100)
-    to_email = models.TextField(_('To Email'), )
-    sent_date = models.DateTimeField(_('Sent Date/Time'), null=True, editable=False)
-    priority = models.BooleanField(_('Priority'), default=False)
-    created = models.DateTimeField(_('Created Date/Time'), auto_now_add=True, editable=False)
-    created_by = models.ForeignKey(User, blank=True, null=True)
-    mailed = models.ManyToManyField(User, verbose_name=_('Mailed to Users'),related_name="mailed")
-
-
-    def save(self, *args, **kwargs): 
-        self.subject = self.subject[:119]
-        if not self.created_by:
-            self.created_by=system_user()
-        super(MailLog, self).save(*args, **kwargs)
-
-        
-    def __unicode__(self):
-        return self.subject
-
-    class Meta:
-        ordering = ['-id',]
-
-    def send(self, priority=False, individual=True, attach=None):
-        """
-        send or resend an item in the MailLog
-        have to use EmailMessage and send as setting the priority not availabe in send_mail
-        If individual is true the a separate email is sent for each person in the to_email list
-        """     
-        
-        # save options used
-        self.priority=priority
-        self.individual = individual
-        self.save()
-
-        sendto = self.to_email.split(',')
-
-        # sendto can be blank because no email added to log or because a group with
-        # no emails attached was used.  
-        # return False but don't raise error here
-
-        if len(sendto) == 1 and len(sendto[0])==0:
-            return False
-
-        
-        if  settings.EMAIL_DEBUG:
-            self.to_email = settings.TEST_EMAIL
-                    
-        
-        if individual:
-            try:
-               for  toemail in sendto:
-               
-                    if priority:
-                        msg = EmailMessage(self.subject, self.body, self.from_email, [toemail,], 
-        headers={'X-Priority': 1})
-                    else:
-                         msg = EmailMessage(self.subject, self.body, self.from_email, [toemail,])
-
-            except:
-                 return False
-
-        else:
-            try:
-                if priority:
-                    msg = EmailMessage(self.subject, self.body, self.from_email, sendto, 
-    headers={'X-Priority': 1})
-                else:
-                     msg = EmailMessage(self.subject, self.body, self.from_email, sendto)
-
-                
-            except:
-                return False
-
-
-
-        if attach:
-            msg.attach(attach)
-            
-        msg.send()
-                            
-        self.sent_date = datetime.now()
-        self.save()
-        
-        return True               
 
 
 class UserProfile(models.Model):
@@ -440,44 +350,4 @@ class UserProfile(models.Model):
     
     def __str__(self):
         return "%s's profile" % self.user
-
-class Say(models.Model):
-    phrase = models.CharField(max_length=75, primary_key=True)
-    en_gb_text = models.TextField(_('Content'), blank=True)
-    status = models.CharField(max_length=15, blank=True)
-    userlevel = models.IntegerField()
-    usedin = models.TextField(_('Screen(s) where Used'),blank=True, null=True)
-
-    def __unicode__(self):
-        return self.phrase
-
-    
-    class Meta:
-        verbose_name = "Screen Message"
-        
-    @classmethod
-    def say(cls, phrase, page=None):
-        """
-        return block of text linked to phrase
-        """
-        
-        try:
-            content = cls.objects.get(phrase=phrase)
-            text = content.output()
-            
-        except cls.DoesNotExist:
-             text = re.sub('((?=[A-Z][a-z])|(?<=[a-z])(?=[A-Z]))', ' ', phrase).strip()
-             content = cls.objects.create(phrase=phrase, en_gb_text = text, status='auto', usedin=page, userlevel=0)
-        
-        #  track where phrases are used if in debug mode
-        if settings.DEBUG and page:
-            if not page in content.usedin:
-                content.usedin += "," + page
-                content.save()
-    
-        return text
-    
-        
-    def output(self, language=None):
-        return self.en_gb_text
 

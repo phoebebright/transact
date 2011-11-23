@@ -2,12 +2,12 @@
 import sys, os
 ROOT = lambda base : os.path.abspath(os.path.join(os.path.dirname(__file__), base).replace('\\','/'))
 
-sys.path.insert(0, '//home/django/transact/')
+sys.path.insert(0, '//home/django/dev/')
 sys.path.insert(0, '//home/django/')
 
 gettext = lambda s: s
 
-SITE_URL = "http://transact.trialflight.com"
+SITE_URL = "http://dev.trialflight.com"
 
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
@@ -18,7 +18,7 @@ TEMPLATE_DEBUG = True
 # if email in debug mode - don't sent externally
 EMAIL_DEBUG = False
 # where emails are sent in debug mode
-TEST_EMAIL = 'phoebebright310+transact@gmail.com'
+TEST_EMAIL = 'phoebebright310+dev@gmail.com'
 
 ADMINS = (
      ('Phoebe Bright', 'phoebebright310@gmail.com'),
@@ -29,9 +29,9 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'transact',   
-        'USER': 'root',               
-        'PASSWORD': '578632',           
+        'NAME': 'dev',   
+        'USER': 'dev',               
+        'PASSWORD': 'silicon',           
         'HOST': '',                  
         'PORT': '',                 
     }
@@ -46,10 +46,10 @@ SITE_ID = 1
 
 
 # Absolute path to the directory that holds media.
-MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'site_media')
-MEDIA_URL = '/site_media/'
+MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
+MEDIA_URL = '/media/'
 
-STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'site_media')
 STATIC_URL = '/static/'
 
 # URL prefix for admin static files -- CSS, JavaScript and images.
@@ -59,6 +59,7 @@ ADMIN_MEDIA_PREFIX = '/static/admin/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
+    ROOT('shared_static'),
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -90,13 +91,15 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
-ROOT_URLCONF = 'transact.urls'
+ROOT_URLCONF = 'dev.urls'
 
 TEMPLATE_DIRS = (
     os.path.join(os.path.dirname(__file__), "templates"),
 )
 
 INSTALLED_APPS = (
+    'keyedcache',
+    'livesettings',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -106,6 +109,8 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.admindocs',
     'web',
+    'webtest',
+    'api',
 )
 
 # A sample logging configuration. The only tangible logging
@@ -140,14 +145,11 @@ SHORT_DATETIME_FORMAT = 'dM H:i'
 
 AUTH_PROFILE_MODULE = 'web.UserProfile'
 
-# by default, transactions will be set to expire after this number of seconds
-EXPIRE_TRANSACTIONS_AFTER_SECONDS = 60 * 5
+CACHE_PREFIX = 'T'
+CACHE_TIMEOUT = 300
 
-# if a currency is not specified at any point, use this one
-DEFAULT_CURRENCY = 'EUR'  
-
-# default profit margin - applied when creating a product from a trade
-PROFIT_MARGIN = '0.10'
-
-# amount in DEFAULT_CURRENCY charged on each transaction
-DEFAULT_FEE = '0.25'
+try:
+    from settings_local import *
+    print "local settings imported successfully"
+except ImportError:
+    print "no local settings"
