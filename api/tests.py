@@ -6,6 +6,7 @@ Replace this with more appropriate tests for your application.
 """
 import json
 from django.contrib.auth.models import User
+from django.core.cache import cache
 
 from django.test import TestCase
 
@@ -96,8 +97,9 @@ class ApiTest(TestCase):
         }
         #This should fail
         jsoncontent = self._api_call(call_data)
-        print jsoncontent
         self.assertEquals(jsoncontent['call'],'LOGIN')
         self.assertEquals(jsoncontent['status'],'OK')
         self.assertTrue(int(jsoncontent['timestamp']) > 0)
         self.assertTrue(isinstance(jsoncontent['token'], basestring))
+        value = cache.get(jsoncontent['token'])
+        self.assertEquals(value,'tester')
