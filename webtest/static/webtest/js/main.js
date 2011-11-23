@@ -9,11 +9,11 @@ function display_call(data){
     data = jQuery('<div/>', {'id': "call_response", 'html':data});
     jQuery('#call_response').replaceWith(data);
 }
-function send_call(input_data, callback) {
+function send_call(post_data, callback) {
     jQuery.ajax({
         url:"/api/",
         type: "POST",
-        data: input_data,
+        data: post_data,
         contentType: "application/json; charset=UTF-8",
         success: function(data){
             callback(data);
@@ -23,7 +23,14 @@ function send_call(input_data, callback) {
 }
 
 
+function alertBox(data){
+    // overwrite in your local view
+    alert(data);
+    display_call(data);
+}
+
 function sendFormCall(form){
     data = form.serializeForm();
-    send_call(data, alert);
+    data = JSON.stringify(data);
+    send_call(data, alertBox);
 }

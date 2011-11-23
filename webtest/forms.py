@@ -7,6 +7,9 @@ from django import forms
 from web.models import QUALITIES, ProductType
 
 
+FORM_QUALITIES = [("", "---------")]
+FORM_QUALITIES.extend(QUALITIES)
+
 class BasicRequestForm(forms.Form):
     call = forms.CharField(widget=forms.HiddenInput())
     token = forms.CharField(widget=forms.HiddenInput())
@@ -15,5 +18,5 @@ class BasicRequestForm(forms.Form):
 
 class PriceCheck(BasicRequestForm):
     quantity = forms.DecimalField(max_value=1000, min_value=0.2)
-    type = forms.ModelChoiceField(queryset=ProductType.objects.all())
-    quality = forms.ChoiceField(choices=QUALITIES)
+    type = forms.ModelChoiceField(queryset=ProductType.objects.all(), required=False)
+    quality = forms.ChoiceField(choices=FORM_QUALITIES, required=False)
