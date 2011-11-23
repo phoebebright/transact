@@ -305,3 +305,13 @@ class DownstreamTests(BaseTestMoreData):
         self.assertFalse(trans.is_closed)
         self.assertEqual(trans.quantity, Decimal('10.55'))
         
+        # now pay this Transaction
+        p = trans.pay('PAYREF')
+        
+        self.assertTrue(p.ref, 'PAYREF')
+        
+        self.assertEqual(trans.status, 'P')
+        #DO NEXT
+        #cancel, expire, refund, pay
+        
+        

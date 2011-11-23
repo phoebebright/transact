@@ -331,6 +331,7 @@ class Transaction(models.Model):
         # first get the item to purchase
         item = Pool.price_check(qty, quality=quality, type=type)
         
+        
         t = Transaction.objects.create(
             pool = item,
             product = item.product,
@@ -343,14 +344,20 @@ class Transaction(models.Model):
         return t
         
         
-    def pay(self):
+    def pay(self, ref=None):
         """
         create a payment entity and mark status of this transaction to paid
         """
         
-        p = Payment.objects.create(trans=self, status='S', amount=self.total, currency=self.currency)
+        p = Payment.objects.create(
+            trans=self, 
+            ref=ref,
+            status='S', 
+            amount=self.total, 
+            currency=self.currency)
+            
         self.status = 'P'
-        self.pool = NULL
+        self.pool = None
         self.save()
         return p
         
@@ -363,7 +370,7 @@ class Transaction(models.Model):
             raise Unable2ExpireTransaction()
         else:
             self.status = 'X'
-            self.pool = NULL
+            self.pool = None
             self.save()
 
     def cancel(self):
@@ -375,7 +382,7 @@ class Transaction(models.Model):
             raise Unable2CancelTransaction()
         else:
             self.status = 'C'
-            self.pool = NULL
+            self.pool = None
             self.save()
             
     def refund(self):
@@ -399,6 +406,7 @@ class Payment(models.Model):
     trans = models.ForeignKey(Transaction)
     status = models.CharField(_('Status'),  max_length=1, choices=PAYMENT_STATUS, default='F')
     payment_type = models.CharField(_('Type'),  max_length=1, default='A')
+    ref = models.CharField(_('Payment Ref'), max_length=20, blank=True, null=True)
     payment_date = models.DateTimeField(_('Payment Date/Time'), auto_now_add=True)
     amount =  models.DecimalField(_('Payment Amount'), max_digits=9, decimal_places=2, default=0)
     currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
