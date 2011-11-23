@@ -1,13 +1,27 @@
 /* js file for webtest app */
-function display_call(data, textStatus, jqXHR){
-    alert(data);
-    jQuery('#call_response').text(data);
+// Keep for future use ? Serializes a form to array with {"field_name": "field_value"}
+// jQuery.fn.serializeForm = function(){a={};b=this.serializeArray();jQuery.each(b,function(d,c){a[c['name']]=c['value']});return a;}
+
+
+function display_call(data){
+    jQuery('#call_response').append(data);
 }
 function send_call() {
-   var data = jQuery('#call_area').val();
-   jQuery.post('/api/', data, function(a,b,c){display_call(a,b,c)}, 'json');
+    var data = jQuery('#call_content').val();
+    return false;
+    jQuery.ajax({
+        url:"/api/",
+        type: "POST",
+        data: data,
+        contentType: "application/json; charset=UTF-8",
+        success: display_call,
+        accept: 'json'
+    });
 }
 
 jQuery(document).ready(function() {
-   jQuery('#call_send').click(send_call);
+    jQuery('#call_api').click(function(){
+        send_call();
+        return false;
+    });
  });
