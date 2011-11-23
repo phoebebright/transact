@@ -16,7 +16,7 @@ from django.conf import settings
 #app
 
 from web.models import *
-
+from web.exceptions import *
 
 
 TODAY = date.today()
@@ -29,9 +29,10 @@ TODAY_STARTS = NOW.replace(hour=0,minute=0,second=0)
 TODAY_ENDS = NOW.replace(hour=23,minute=59,second=59)
 
 def list_pool():
-
+        print "POOL"
         for p in Pool.objects.all():
-            print p.__dict__
+            print "%30s | %s | %s | %i | %s | %.2f | %s" % (p.product, p.quality, p.type, p.quantity, p.currency, p.price, p.added)
+
 
 def list_transactions():
 
@@ -216,7 +217,6 @@ class DownstreamTests(BaseTestMoreData):
     
     def test_basictransaction(self):
 
-        list_pool()
         # price check
         item = Pool.price_check(10)
         
@@ -228,8 +228,72 @@ class DownstreamTests(BaseTestMoreData):
             quantity = item.quantity,
             )
             
-        list_products()
         
+    def test_pricecheck(self):
 
+        # add products to the pool
+        trade = Trade.objects.create(name = 'Wind P', 
+            purchfrom = 'EXCH',
+            total = '100.00',
+            currency = 'EUR',
+            tonnes = '25',
+            ref='windp',
+            )        
+        product = Product.objects.get(trade=trade)
+        product.quality = 'P'
+        product.type=ProductType.objects.get(code='WIND')
+        product.save()
+        product.move2pool()  
+        poolitem = Pool.objects.get(product=product)
+    
+
+        # add products to the pool
+        trade = Trade.objects.create(name = 'Carbon Credit 1 - copy', 
+            purchfrom = 'EXCH',
+            total = '10000.00',
+            currency = 'EUR',
+            tonnes = '2500',
+            ref='test 1 - copy',
+            )        
+        product = Product.objects.get(trade=trade)
+        product.quality = 'G'
+        product.type=ProductType.objects.get(code='HYDR')
+        product.save()
+        product.move2pool()  
+        poolitem = Pool.objects.get(product=product)
+        poolitem.added=YESTERDAY
+        poolitem.save()
+
+
+        list_pool()
+        
+        '''
+        # check earliest is being picked 
+        poolitem = Pool.objects.get(added=YESTERDAY)
+        item = Pool.price_check(10)
+        print poolitem.__dict__
+        print item.__dict__
+        self.assertEqual(item, poolitem)
+        
+        # but if quality is specified, now choose a that one
+        platinumpoolitem = Pool.objects.get(quality='P', type__code='HYDR')
+        item = Pool.price_check(10, quality='P')
+        self.assertEqual(item, platinumpoolitem)
+        '''
+        
+        # look for items that have no match in the pool
+        
+        #quantity too high
+        self.assertRaises(NoMatchInPoolException,  Pool.price_check, 10000)
+
+        #no quality of type S
+        self.assertRaises(NoMatchInPoolException,  Pool.price_check, 10, quality='S')
+
+        #no type 'XXX'
+        self.assertRaises(NoMatchInPoolException,  Pool.price_check, 10, type='XXX')
+        
+        #no quality G, type 'XXX'
+        self.assertRaises(NoMatchInPoolException,  Pool.price_check, 10, quality='G', type='XXX')
         
         
+        #add some more 
