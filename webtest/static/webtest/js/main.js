@@ -4,23 +4,25 @@
 
 
 function display_call(data){
-    jQuery('#call_response').append(data);
+    jQuery('#call_response').append(JSON.stringify(data));
 }
 function send_call() {
     var data = jQuery('#call_content').val();
-    return false;
     jQuery.ajax({
         url:"/api/",
         type: "POST",
         data: data,
         contentType: "application/json; charset=UTF-8",
-        success: display_call,
+        success: function(data){
+            display_call(data);
+        },
         accept: 'json'
     });
 }
 
 jQuery(document).ready(function() {
     jQuery('#call_api').click(function(){
+
         send_call();
         return false;
     });
