@@ -4,4 +4,4 @@
 /site_media/*
 /settings_local.py
 /django.wsgi
-
+.*

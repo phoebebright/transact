@@ -1,0 +1,3 @@
+calls = {
+    "PING": ('utils', 'PingRequest')
+}
