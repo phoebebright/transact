@@ -46,10 +46,10 @@ SITE_ID = 1
 
 
 # Absolute path to the directory that holds media.
-MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'site_media')
-MEDIA_URL = '/site_media/'
+MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
+MEDIA_URL = '/media/'
 
-STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'site_media')
 STATIC_URL = '/static/'
 
 # URL prefix for admin static files -- CSS, JavaScript and images.
