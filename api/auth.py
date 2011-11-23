@@ -39,7 +39,7 @@ class LoginRequest(Request):
         if user and user.is_active:
             token = uuid.uuid4().hex
 
-            expires = int((time.time() + config_value('api','TOKEN_EXPIRY')) * 1000)
+            expires = int(config_value('api','TOKEN_EXPIRY'))
             cache.set(token, user.username, expires)
             return self.response(token=token,
                             expires=expires
