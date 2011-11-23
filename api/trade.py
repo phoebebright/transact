@@ -1,7 +1,7 @@
 from decimal import Decimal
-from base import *
-from web.models import *
 from decorators import authenticated
+from api.base import *
+from web import models
 
 class PriceCheckResponse(Response):
     quantity = micromodels.FloatField()
@@ -19,7 +19,7 @@ class PriceCheckRequest(Request):
 
     @authenticated
     def run(self):
-        item = Pool.price_check(self.quantity)
+        item = models.Pool.price_check(self.quantity)
         response = self.response()
         fee = Decimal('0.25')
         # TODO: make it a DictField instance - there is no DictField class yet
