@@ -43,4 +43,18 @@ config_register(DecimalValue(
         default = '0.25',
 ))
 
-DEFAULT_FEE = '0.25'
+config_register(DecimalValue(
+    TRANSACT_GROUP,
+        'MIN_QUANTITY',
+        description = _('Minimum Quantity that can be purchased'),
+        help_text = _("Set quantity"),
+        default = '0.2',
+))
+
+config_register(DecimalValue(
+    TRANSACT_GROUP,
+        'MAX_QUANTITY',
+        description = _('Maximum Quantity that can be purchased'),
+        help_text = _("Set quantity"),
+        default = '1000',
+))
