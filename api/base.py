@@ -18,13 +18,26 @@ class StaticClass:
         % cls.__name__)
 
 
+class ResponseJsonEncoder(json.JSONEncoder):
+    def default(self, o):
+        if hasattr(o, "__class__") \
+        and issubclass(o.__class__, Response):
+            return o.get_response()
+        return json.JSONEncoder.default(self, o)
+
+
 class JsonWrapper(StaticClass):
     @staticmethod
     def wrap(data):
-        return json.dumps(data, encoding='utf8')
+        # FIXME: for some reason the ResponseJsonEncoder.default
+        #       is not executed when passing Response object in here
+        #       Pass dictionary (via Response.get_response())
+        return json.dumps(data, encoding='utf8', cls=ResponseJsonEncoder)
 
     @staticmethod
     def unwrap(json_data, factory):
+        # TODO: test this instead:
+        # return json.loads(json_data, encoding='utf8', object_hook=factory)
         data = json.loads(json_data, encoding='utf8')
         return factory(data)
 
@@ -66,7 +79,7 @@ Request at the end, ie. SomeRequest")
         return cls.from_dict(data)
 
 
-class Response(micromodels.Model):
+class Response(micromodels.Model, dict):
     def __new__(cls, *args, **kw):
         if not cls.__name__.endswith("Response"):
             raise NameError("Response type class must be named with \
@@ -106,24 +119,3 @@ class ErrorResponse(Response):
         self.add_field("call", call, micromodels.CharField())
         self.status = status
         self.code = code
-
-
-class AuthResponse(Response):
-    token = micromodels.CharField()
-    expires = micromodels.IntegerField()
-
-
-class AuthRequest(Request):
-    authID = micromodels.CharField()
-    secret = micromodels.CharField()
-
-    response = AuthResponse
-
-    def run(self):
-        if self.authID == "secret" and self.secret == "sauce":
-            return self.response(token=uuid.uuid4().hex,
-                            expires=int((time.time() + 300) * 1000)
-                            )
-        else:
-            return ErrorResponse(code=401, call="AUTH",
-                                description="Authentication failed.")
