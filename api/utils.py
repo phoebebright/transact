@@ -1,4 +1,4 @@
-from base import *
+from api.base import *
 
 
 class PingResponse(Response):
