@@ -1,6 +1,6 @@
 /* js file for webtest app */
-// Keep for future use ? Serializes a form to array with {"field_name": "field_value"}
-// jQuery.fn.serializeForm = function(){a={};b=this.serializeArray();jQuery.each(b,function(d,c){a[c['name']]=c['value']});return a;}
+/* Serializes a form to array with {"field_name": "field_value"} */
+jQuery.fn.serializeForm = function(){a={};b=this.serializeArray();jQuery.each(b,function(d,c){a[c['name']]=c['value']});return a;}
 
 
 function display_call(data){
@@ -9,23 +9,21 @@ function display_call(data){
     data = jQuery('<div/>', {'id': "call_response", 'html':data});
     jQuery('#call_response').replaceWith(data);
 }
-function send_call() {
-    var data = jQuery('#call_content').val();
+function send_call(input_data, callback) {
     jQuery.ajax({
         url:"/api/",
         type: "POST",
-        data: data,
+        data: input_data,
         contentType: "application/json; charset=UTF-8",
         success: function(data){
-            display_call(data);
+            callback(data);
         },
         accept: 'json'
     });
 }
 
-jQuery(document).ready(function() {
-    jQuery('#call_api').click(function(){
-        send_call();
-        return false;
-    });
- });
+
+function sendFormCall(form){
+    data = form.serializeForm();
+    send_call(data, alert);
+}
