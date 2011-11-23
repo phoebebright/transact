@@ -45,7 +45,8 @@ class JsonWrapper(StaticClass):
         if not call or not isinstance(call, basestring):
             raise AttributeError("'call' missing")
         (module, klass) = dispatcher.calls.get(call.upper())
-        module = __import__(module)
+        import api
+        module = api.__dict__[module]
         klass = module.__dict__[klass]
         return klass.factory(data)
 
@@ -73,9 +74,9 @@ Request at the end, ie. SomeRequest")
 
     @classmethod
     def dispatch(cls, data, encoding=ENCODING_JSON):
-        if encoding==ENCODING_JSON:
+        if encoding == ENCODING_JSON:
             return JsonWrapper.unwrap(data)
-
+        raise AttributeError("Unknown encoding %s" % encoding)
 
     @abc.abstractmethod
     def run(self):

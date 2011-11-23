@@ -13,7 +13,7 @@ class ApiTest(TestCase):
 
     def _api_call(self, call_data):
         json_call = json.dumps(call_data)
-        response = self.client.post('/api/',json_call,content_type='application/json')
+        response = self.client.post('/api/',call_data,content_type='application/json')
         self.assertEquals(response.status_code, 200)
         content = response.content
         try:
