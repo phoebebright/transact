@@ -58,6 +58,9 @@ label{
     margin-left: 210px;
 }
 
+.full-length{
+    width: auto;
+}
 
 body {
 	margin: 0;
