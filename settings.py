@@ -2,8 +2,8 @@
 import sys, os
 ROOT = lambda base : os.path.abspath(os.path.join(os.path.dirname(__file__), base).replace('\\','/'))
 
-sys.path.insert(0, '//home/django/transact/')
-sys.path.insert(0, '//home/django/')
+sys.path.insert(0, '/home/django/transact/')
+sys.path.insert(0, '/home/django/')
 
 gettext = lambda s: s
 
