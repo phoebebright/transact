@@ -18,9 +18,13 @@
 
 {% endblock %}
 {% block main %}
-<h1>Web test of TransAct api</h1>
+<h1>{% block heading %}Web test of TransAct api{% endblock heading %}</h1>
+
+{% block doc %}{%endblock doc %}
+<hr />
+
 <form id="call_form" target="." >
-    <label class="fullwidth">Paste your JSON into content area</label><textarea id="call_content"></textarea><br/>
+    <label class="fullwidth">Paste your JSON into content area</label><textarea id="call_content">{% block examplejson %}{% endblock examplejson %}</textarea><br/>
     <p class="align-right"><input id="call_api" type="button" class="button" value="Send"></p>
 </form>
 <h4>Call response below:</h4>

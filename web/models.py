@@ -57,7 +57,11 @@ class ProductType(models.Model):
         verbose_name = "Product Type"
         verbose_name_plural = "Product Types"
 
- 
+    @classmethod
+    def LISTTYPES(self):
+    
+        return self.objects.all()
+        
             
 class Customer(models.Model):
     """

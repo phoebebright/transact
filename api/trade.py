@@ -1,6 +1,5 @@
 from decimal import Decimal
 from api.base import *
-from web import models
 
 
 class PriceCheckResponse(Response):
@@ -17,12 +16,20 @@ class PriceCheckRequest(Request):
     quality = micromodels.CharField()
 
     def run(self):
+<<<<<<< HEAD
         kw = dict()
         if hasattr(self, "type"):
             kw['type'] = self.type
         if hasattr(self, "quality"):
             kw['quality'] = self.quality
         item = models.Pool.price_check(self.quantity, **kw)
+=======
+        # have to put this here (and have api above web settings.INSTALLED_APPS
+        # or you get error 
+        from web.models import Pool
+        
+        item = models.Pool.price_check(self.quantity)
+>>>>>>> phoebe
         response = self.response()
         fee = Decimal('0.25')
         # TODO: make it a DictField instance - there is no DictField class yet

@@ -1,0 +1,33 @@
+{% extends "test.html" %}
+
+{% block heading %}LISTTYPES{% endblock heading %}</h1>
+
+{% block doc %}<p>Get a list of all valid Product Types {% endblock doc %}
+{% block examplejson %}{"call":"LISTTYPES"}{% endblock examplejson %}
+
+
+{
+	"call": "LISTTYPES", // required
+	"token": "1db6b44cafa0494a950d9ef531c02e69" // required
+}
+// LISTTYPES RESPONSE
+{
+	"call": "LISTTYPES",
+	"timestamp": 1321267155000,
+	"status": "OK",
+	"types": [
+		{
+			"code": "BIOM",
+			"name": "Biomass"
+		},
+		{
+			"code": "HYDR",
+			"name": "Hydro"
+		},
+		{
+			"code": "WIND",
+			"name": "Wind"
+		}
+		
+	]
+}

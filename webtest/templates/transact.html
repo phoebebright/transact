@@ -1,28 +1,12 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-
     <script type="text/javascript" src="/static/js/jquery-1.7.1.js"></script>
-    <script type="text/javascript" src="/static/js/jquery-ui-1.8.16.custom.min.js"></script>
     <script type="text/javascript" src="/static/js/crsf.js"></script>
     <script type="text/javascript" src="/static/js/JSON.js"></script>
     <script type="text/javascript" src="/static/webtest/js/main.js"></script>
     <script type="text/javascript">
         function alertBox(data){
-            var box_content = "";
-            for (var key in data["currencies"]) {
-                var val = data["currencies"][key]["total"];
-                box_content += "total in "+key+": "+val+"<br/>";
-            }
-            var info_box = jQuery('<div/>', {'class': "dialog", 'html': box_content});
-            jQuery(info_box).dialog({modal:true,
-                                     resizable: false,
-                                     buttons: {
-				                        "Ok": function() {
-					                            $( this ).dialog( "close" );
-				                                }
-                                     }
-                                  });
             display_call(data);
         }
 
@@ -36,7 +20,7 @@
 
 {% endblock %}
 {% block main %}
-<h1>Web test of TransAct api ::PRICECHECK</h1>
+<h1>Web test of TransAct api ::TRANSACT</h1>
 <form id="call_form" target="." >
     {{ form.as_p }}
     <p class="align-right"><input id="call_api" type="button" class="button" value="Send"></p>
