@@ -19,6 +19,7 @@ from django.utils.html import strip_tags
 #app
 import config
 from livesettings import config_value
+from web.exceptions import NoMatchInPoolException, BelowMinQuantity, AboveMaxQuantity
 
 CURRENCIES = (('EUR','EUR'), ('GBP','GBP'), ('USD','USD'))
 QUALITIES = (
@@ -219,7 +220,7 @@ class Pool(models.Model):
     type =  models.ForeignKey(ProductType, verbose_name = _('Default Product Type'), blank=True, null=True)
     price = models.DecimalField(_('Price'), max_digits=9, decimal_places=2,default =0)
     currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
-    added = models.DateTimeField(_('Added to Pool Date/Time'), auto_now_add=True, editable=False)
+    added = models.DateTimeField(_('Added to Pool Date/Time'), auto_now_add=True)
     
     
     def __unicode__(self):
@@ -240,7 +241,26 @@ class Pool(models.Model):
         returns the product id of the first product added to the pool that matches the requirements
         """
         
-        return cls.objects.filter(quantity__gte = qty).order_by('-id')[0]
+        if qty < config_value('web','MIN_QUANTITY'):
+            raise BelowMinQuantity
+
+        if qty > config_value('web','MAX_QUANTITY'):
+            raise AboveMaxQuantity
+            
+        queryset = cls.objects.filter(quantity__gte = qty)
+        
+        if quality:
+            queryset = queryset.filter(quality = quality)
+            
+        if type:
+            queryset = queryset.filter(type__code = type)
+            
+        if queryset.count()>0:
+
+            return queryset.order_by('added')[0]
+        else:
+            raise NoMatchInPoolException()
+            
         
 class Transaction(models.Model):
     """
