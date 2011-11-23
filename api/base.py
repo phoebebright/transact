@@ -4,6 +4,10 @@ import time
 import uuid
 import micromodels
 
+import dispatcher
+
+ENCODING_JSON = 1
+
 
 class StaticClassError(Exception):
     pass
@@ -35,11 +39,15 @@ class JsonWrapper(StaticClass):
         return json.dumps(data, encoding='utf8', cls=ResponseJsonEncoder)
 
     @staticmethod
-    def unwrap(json_data, factory):
-        # TODO: test this instead:
-        # return json.loads(json_data, encoding='utf8', object_hook=factory)
+    def unwrap(json_data):
         data = json.loads(json_data, encoding='utf8')
-        return factory(data)
+        call = data.get('call')
+        if not call or not isinstance(call, basestring):
+            raise AttributeError("'call' missing")
+        (module, klass) = dispatcher.calls.get(call.upper())
+        module = __import__(module)
+        klass = module.__dict__[klass]
+        return klass.factory(data)
 
 
 class CallableField(micromodels.BaseField):
@@ -59,7 +67,15 @@ Request at the end, ie. SomeRequest")
             or cls.response.__base__ is not Response:
             raise AttributeError("%s.request must be of type Response not %s"
                 % (cls.__name__, type(cls.response).__name__))
+        if kw:
+            return super(Request, cls).from_dict(kw)
         return super(Request, cls).__new__(cls)
+
+    @classmethod
+    def dispatch(cls, data, encoding=ENCODING_JSON):
+        if encoding==ENCODING_JSON:
+            return JsonWrapper.unwrap(data)
+
 
     @abc.abstractmethod
     def run(self):
