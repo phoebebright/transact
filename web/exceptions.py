@@ -24,3 +24,24 @@ class AboveMaxQuantity(ModelException):
     '''
     txtMessage = _('Above maximum quantity allowed')
     errorCode = 103   
+    
+class Unable2CancelTransaction(ModelException):
+    '''
+    raised if transaction is still open and therefore cannot cancel it
+    '''
+    txtMessage = _('Open Transaction cannot be cancelled')
+    errorCode = 104       
+    
+class Unable2RefundTransaction(ModelException):
+    '''
+    raised if transaction is still open and therefore cannot refund it
+    '''
+    txtMessage = _('Open Transaction cannot be Refunded')
+    errorCode = 105     
+    
+class Unable2ExpireTransaction(ModelException):
+    '''
+    raised if transaction is still open and therefore cannot expire it
+    '''
+    txtMessage = _('Closed Transaction cannot be Expired')
+    errorCode = 105         

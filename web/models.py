@@ -115,7 +115,15 @@ class Client(models.Model):
                 client = self,
                 customer = cust)
                 
-                
+     
+    def transaction_fee(self):
+        """
+        in future fee can be varied by Client.
+        for the moment return the default
+        """
+        
+        return Decimal(config_value('web','DEFAULT_FEE'))
+        
 class Relationship(models.Model):
     """
     Links customers to client
@@ -236,10 +244,12 @@ class Pool(models.Model):
         return True        
         
     @classmethod
-    def price_check(cls, qty, quality=None, type=None):
+    def price_check(cls, quantity, quality=None, type=None):
         """
         returns the product id of the first product added to the pool that matches the requirements
         """
+        
+        qty = Decimal(str(quantity))
         
         if qty < config_value('web','MIN_QUANTITY'):
             raise BelowMinQuantity
@@ -266,8 +276,7 @@ class Transaction(models.Model):
     """
     Purchase of a Product from the Pool by a Client (on behalf of a Customer)
     Note that the pool id will be set to null once the transaction status moves beyond Pending
-    The Client purchases a Voucher for a certain number of units.  The Voucher ID they are given is the
-     transaction id.
+    The Client purchases a Voucher for a certain number of units.  The Voucher ID they are given is the transaction id.
     A transaction is Open if the status is Pending, otherwise the transaction is Closed
     """
     
@@ -307,13 +316,49 @@ class Transaction(models.Model):
     @property
     def total(self):
         return self.price + self.fee
+   
+    @classmethod
+    def new(self, client, quantity, quality=None, type=None):
+        """
+        create a new transaction of status Pending
+        """
         
-    def pay(self):
+        qty = Decimal(str(quantity))
+        
+        # in future need to do a lock between doing a price check and
+        # creating a transaction
+        
+        # first get the item to purchase
+        item = Pool.price_check(qty, quality=quality, type=type)
+        
+        
+        t = Transaction.objects.create(
+            pool = item,
+            product = item.product,
+            price = (item.price*qty),
+            fee = client.transaction_fee(),
+            currency = item.currency,
+            quantity = qty,
+            )        
+        
+        return t
+        
+        
+    def pay(self, ref=None):
         """
         create a payment entity and mark status of this transaction to paid
         """
         
-        p = Payment.objects.create(trans=self, status='S', amount=self.total, currency=self.currency)
+        p = Payment.objects.create(
+            trans=self, 
+            ref=ref,
+            status='S', 
+            amount=self.total, 
+            currency=self.currency)
+            
+        self.status = 'P'
+        self.pool = None
+        self.save()
         return p
         
     def expire(self):
@@ -321,20 +366,36 @@ class Transaction(models.Model):
         update status to expired and put quanity back in the pool
         """
         
-        return True
+        if self.is_closed:
+            raise Unable2ExpireTransaction()
+        else:
+            self.status = 'X'
+            self.pool = None
+            self.save()
 
     def cancel(self):
         """
         update status to cancelled and put quanity back in the pool
         """
         
-        return True
-        
+        if self.is_open:
+            raise Unable2CancelTransaction()
+        else:
+            self.status = 'C'
+            self.pool = None
+            self.save()
+            
     def refund(self):
         """
-        put this quanity of items back in the pool
+        put this quanity of items back in the pool and refund
         """
-        return True
+        
+        if self.is_open:
+            raise Unable2RefundTransaction()
+        else:
+            self.cancel()
+            #NOW UNDO PAYMENT
+            
         
 class Payment(models.Model):
     """
@@ -345,6 +406,7 @@ class Payment(models.Model):
     trans = models.ForeignKey(Transaction)
     status = models.CharField(_('Status'),  max_length=1, choices=PAYMENT_STATUS, default='F')
     payment_type = models.CharField(_('Type'),  max_length=1, default='A')
+    ref = models.CharField(_('Payment Ref'), max_length=20, blank=True, null=True)
     payment_date = models.DateTimeField(_('Payment Date/Time'), auto_now_add=True)
     amount =  models.DecimalField(_('Payment Amount'), max_digits=9, decimal_places=2, default=0)
     currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
