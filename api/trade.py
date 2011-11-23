@@ -1,6 +1,5 @@
 from decimal import Decimal
 from api.base import *
-from web import models
 
 
 class PriceCheckResponse(Response):
@@ -17,6 +16,10 @@ class PriceCheckRequest(Request):
     quality = micromodels.CharField()
 
     def run(self):
+        # have to put this here (and have api above web settings.INSTALLED_APPS
+        # or you get error 
+        from web.models import Pool
+        
         item = models.Pool.price_check(self.quantity)
         response = self.response()
         fee = Decimal('0.25')

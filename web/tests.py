@@ -317,4 +317,19 @@ class DownstreamTests(BaseTestMoreData):
         #DO NEXT
         #cancel, expire, refund, pay
         
+class ListTests(BaseTestMoreData):
+    """
+    check some basic API calls to the model
+    """
+                
+        
+    def test_listtype(self):
+    
+        types = ProductType.LISTTYPES()
+        self.assertEqual(types.count(),3)
+        
+        ProductType.objects.create(code='TST', name='Tests')
+        types = ProductType.LISTTYPES()
+        self.assertEqual(types.count(),4)
+        
         
