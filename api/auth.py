@@ -1,5 +1,5 @@
 from django.contrib.auth import authenticate
-from base import *
+from api.base import *
 from livesettings import config_value
 from django.core.cache import cache
 
