@@ -150,6 +150,6 @@ CACHE_TIMEOUT = 300
 
 try:
     from settings_local import *
-    Warning.message("local settings imported successfully")
+    print "local settings imported successfully"
 except ImportError:
-    Warning.message("no local settings")
+    print "no local settings"
