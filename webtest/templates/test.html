@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+    <script type="text/javascript" src="/static/js/jquery-1.7.1.js"></script>
+    <script type="text/javascript" src="/static/js/crsf.js"></script>
+    <script type="text/javascript" src="/static/webtest/js/main.js"></script>
+{% endblock %}
+{% block main %}
+<h1>Web test of TransAct api</h1>
+<form target="" >
+    <label>Call to send</label><textarea rows="10" cols="50" id="call_area"></textarea><br/>
+    <input type="button" id="call_send" value="Send">
+</form>
+<h4>Call response below:</h4>
+<div id="call_response"></div>
+
+{% endblock main %}

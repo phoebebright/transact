@@ -17,6 +17,8 @@ from django.core.mail import send_mail, EmailMessage
 from django.utils.html import strip_tags
 
 #app
+import config
+from livesettings import config_value
 
 CURRENCIES = (('EUR','EUR'), ('GBP','GBP'), ('USD','USD'))
 QUALITIES = (
@@ -153,7 +155,7 @@ class Trade(models.Model):
             Product.objects.create(name=self.name,
                 trade=self,
                 currency = self.currency,
-                price = (Decimal(self.total)/Decimal(self.tonnes)*(Decimal('1')+Decimal(settings.PROFIT_MARGIN))),
+                price = (Decimal(self.total)/Decimal(self.tonnes)*(Decimal('1')+Decimal(config_value('web','PROFIT_MARGIN')))),
                 quantity_purchased=self.tonnes)
             
 class Product(models.Model):
@@ -163,7 +165,7 @@ class Product(models.Model):
     uuid = UUIDField(auto=True)
     name = models.CharField(_('Product Name'), max_length=50)
     trade = models.ForeignKey(Trade)
-    currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=settings.DEFAULT_CURRENCY)
+    currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
     quality = models.CharField(_('Default Quality'),  max_length=1, choices=QUALITIES, blank=True, null=True)
     type =  models.ForeignKey(ProductType, verbose_name = _('Default Product Type'), blank=True, null=True)
     price = models.DecimalField(_('Price'), max_digits=9, decimal_places=2,default =0)
@@ -216,7 +218,7 @@ class Pool(models.Model):
     quality = models.CharField(_('Default Quality'),  max_length=1, choices=QUALITIES, blank=True, null=True)
     type =  models.ForeignKey(ProductType, verbose_name = _('Default Product Type'), blank=True, null=True)
     price = models.DecimalField(_('Price'), max_digits=9, decimal_places=2,default =0)
-    currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=settings.DEFAULT_CURRENCY)
+    currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
     added = models.DateTimeField(_('Added to Pool Date/Time'), auto_now_add=True, editable=False)
     
     
@@ -255,7 +257,7 @@ class Transaction(models.Model):
     product = models.ForeignKey(Product)
     price =  models.DecimalField(_('Price'), max_digits=9, decimal_places=2, default=0)
     fee =  models.DecimalField(_('Fee'), max_digits=9, decimal_places=2, default=0)
-    currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=settings.DEFAULT_CURRENCY)
+    currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
     quantity =  models.DecimalField(_('Quantity'), max_digits=9, decimal_places=2)
     created = models.DateTimeField(_('Created Date/Time'), auto_now_add=True, editable=False)
     closed = models.DateTimeField(_('Closed Date/Time'), null=True)
@@ -269,7 +271,7 @@ class Transaction(models.Model):
 
     def save(self, *args, **kwargs):
         
-        self.expire_at = datetime.now() + timedelta(seconds=settings.EXPIRE_TRANSACTIONS_AFTER_SECONDS)
+        self.expire_at = datetime.now() + timedelta(seconds=config_value('web','EXPIRE_TRANSACTIONS_AFTER_SECONDS'))
                     
         super(Transaction, self).save(*args, **kwargs)
 
@@ -325,7 +327,7 @@ class Payment(models.Model):
     payment_type = models.CharField(_('Type'),  max_length=1, default='A')
     payment_date = models.DateTimeField(_('Payment Date/Time'), auto_now_add=True)
     amount =  models.DecimalField(_('Payment Amount'), max_digits=9, decimal_places=2, default=0)
-    currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=settings.DEFAULT_CURRENCY) 
+    currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
     
     def __unicode__(self):
         return self.id 
