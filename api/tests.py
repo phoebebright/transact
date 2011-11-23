@@ -85,7 +85,8 @@ class ApiTest(TestCase):
         self.assertEquals(jsoncontent['status'],'FAILED')
         self.assertTrue(int(jsoncontent['timestamp']) > 0)
         self.assertEquals(jsoncontent['code'], 402)
-        user=User.objects.create(username="tester",password="1234567890")
+        user=User.objects.create(username="tester")
+        user.set_password("1234567890")
         user.active=True
         user.save()
         call_data = {
@@ -95,6 +96,7 @@ class ApiTest(TestCase):
         }
         #This should fail
         jsoncontent = self._api_call(call_data)
+        print jsoncontent
         self.assertEquals(jsoncontent['call'],'LOGIN')
         self.assertEquals(jsoncontent['status'],'OK')
         self.assertTrue(int(jsoncontent['timestamp']) > 0)

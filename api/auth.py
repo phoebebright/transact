@@ -33,10 +33,12 @@ class LoginRequest(Request):
     response = LoginResponse
 
     def run(self):
-#        if authenticate():
-#            return self.response(token=uuid.uuid4().hex,
-#                            expires=int((time.time() + 300) * 1000)
-#                            )
-#        else:
+        user = authenticate(username=self.username, password=self.password)
+        from django.contrib.auth.models import User
+        if user and user.is_active:
+            return self.response(token=uuid.uuid4().hex,
+                            expires=int((time.time() + 300) * 1000)
+                            )
+        else:
             return ErrorResponse(code=402, call="LOGIN",
                                 description="Login failed.")
