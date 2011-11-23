@@ -18,9 +18,9 @@ class PriceCheckRequest(Request):
 
     def run(self):
         kw = dict()
-        if self.type:
+        if hasattr(self, "type"):
             kw['type'] = self.type
-        if self.quality:
+        if hasattr(self, "quality"):
             kw['quality'] = self.quality
         item = models.Pool.price_check(self.quantity, **kw)
         response = self.response()
