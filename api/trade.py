@@ -1,6 +1,6 @@
 from decimal import Decimal
 from base import *
-from web.models import *
+from web.models import Pool
 
 
 class PriceCheckResponse(Response):
