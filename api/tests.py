@@ -11,7 +11,7 @@ from django.core.cache import cache
 from django.test import TestCase
 from web.models import *
 
-class ApiTest(TestCase):
+class ApiTestCase(TestCase):
 
     def _api_call(self, call_data):
         json_data = json.dumps(call_data)
@@ -24,6 +24,7 @@ class ApiTest(TestCase):
         except ValueError:
             self.fail("no json in response\nWe got\n%s" % content)
 
+class UtilsTest(ApiTestCase):
     def test_ping(self):
         """Testing PING call
             // PING REQUEST
@@ -45,6 +46,7 @@ class ApiTest(TestCase):
         self.assertEquals(jsoncontent['status'],'OK')
         self.assertTrue(int(jsoncontent['timestamp']) > 0)
 
+class AuthTest(ApiTestCase):
     def test_login(self):
         """Testing LOGIN 
             // LOGIN REQUEST
@@ -104,7 +106,7 @@ class ApiTest(TestCase):
         value = cache.get(jsoncontent['token'])
         self.assertEquals(value,'tester')
 
-class PriceCheckTest(TestCase):
+class TradeTest(ApiTestCase):
     """
     {
         "call": "PRICECHECK", // required
@@ -212,13 +214,20 @@ class PriceCheckTest(TestCase):
             "token": token,
             "quantity": 10.0
         }
-        response = self.client.post('/api/', json.dumps(call), content_type='application/json')
-        self.assertEquals(response.status_code, 200)
-        content = response.content
-        try:
-            data = json.loads(content)
-        except ValueError:
-            self.fail("no json in response\nWe got\n%s" % content)
+        data = self._api_call(call)
+        self.assertEqual(data.get('status'), "FAILED")
+        self.assertEqual(data.get('call'), 'PRICECHECK')
+        self.assertEqual(data.get('code'), 403)
+
+        auth_call = {
+            "call": "LOGIN",
+            "username": "system",
+            "password": "pass"
+        }
+        data = self._api_call(auth_call)
+        token = data.get('token')
+        call['token'] = token
+        data = self._api_call(call)
         self.assertEqual(data.get('status'), "OK")
         self.assertEqual(data.get('call'), 'PRICECHECK')
         self.assertEqual(data.get('quantity'), 10.0)

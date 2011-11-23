@@ -1,7 +1,7 @@
 from decimal import Decimal
 from base import *
 from web.models import *
-
+from decorators import authenticated
 
 class PriceCheckResponse(Response):
     quantity = micromodels.FloatField()
@@ -15,7 +15,9 @@ class PriceCheckRequest(Request):
     quantity = micromodels.FloatField()
     type = micromodels.CharField()
     quality = micromodels.CharField()
+    token = micromodels.CharField()
 
+    @authenticated
     def run(self):
         item = Pool.price_check(self.quantity)
         response = self.response()

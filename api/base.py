@@ -139,3 +139,5 @@ class ErrorResponse(Response):
         self.add_field("call", call, micromodels.CharField())
         self.status = status
         self.code = code
+
+    
