@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate
 from base import *
-
+from livesettings import config_value
+from django.core.cache import cache
 
 class AuthResponse(Response):
     token = micromodels.CharField()
@@ -36,8 +37,12 @@ class LoginRequest(Request):
         user = authenticate(username=self.username, password=self.password)
         from django.contrib.auth.models import User
         if user and user.is_active:
-            return self.response(token=uuid.uuid4().hex,
-                            expires=int((time.time() + 300) * 1000)
+            token = uuid.uuid4().hex
+
+            expires = int((time.time() + config_value('api','TOKEN_EXPIRY')) * 1000)
+            cache.set(token, user.username, expires)
+            return self.response(token=token,
+                            expires=expires
                             )
         else:
             return ErrorResponse(code=402, call="LOGIN",
