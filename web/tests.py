@@ -311,6 +311,9 @@ class DownstreamTests(BaseTestMoreData):
         self.assertTrue(p.ref, 'PAYREF')
         
         self.assertEqual(trans.status, 'P')
+        self.assertFalse(trans.is_open)
+        self.assertTrue(trans.is_closed)
+
         #DO NEXT
         #cancel, expire, refund, pay
         
