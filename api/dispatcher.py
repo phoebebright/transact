@@ -1,3 +1,4 @@
 calls = {
-    "PING": ('utils', 'PingRequest')
+    "PING": ('utils', 'PingRequest'),
+    "PRICECHECK": ('trade', 'PriceCheckRequest')
 }
