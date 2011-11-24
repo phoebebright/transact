@@ -126,6 +126,19 @@ class BaseTestMoreData(BaseTest):
         product.save()
         product.move2pool()          
         
+        # add products to the pool
+        trade = Trade.objects.create(name = 'Carbon Credit 3', 
+            purchfrom = 'MEX',
+            total = '800',
+            currency = 'EUR',
+            tonnes = '200',
+            ref='test 3',
+            )        
+        product = Product.objects.get(trade=trade)
+        product.quality = 'P'
+        product.type=ProductType.objects.get(code='WIND')
+        product.save()
+        product.move2pool()          
         
 class BasicTests(TestCase):
     """
@@ -341,9 +354,7 @@ class DownstreamTests(BaseTestMoreData):
         t1.expire_at = datetime.now() - timedelta(seconds=60)
         t1.save()        
         
-        list_transactions()
         n = Transaction.expire_all()
-        list_transactions()
         
         # one item expired
         self.assertEqual(Transaction.objects.open().count(),3)
@@ -374,24 +385,49 @@ class ListTests(BaseTestMoreData):
                 
         
     def test_listtype(self):
-    
+        """
+        check both LISTTYPE calls
+        """
+        
+        # get list of all possible product types
         types = ProductType.LISTTYPES()
         self.assertEqual(types.count(),3)
         
         ProductType.objects.create(code='TST', name='Tests')
         types = ProductType.LISTTYPES()
         self.assertEqual(types.count(),4)
+
+        # get list of all product types in the pool
+        types = Pool.LISTTYPES()
+        self.assertEqual(len(types),2)
+
+        # get list of all product types in the pool with optional first blank param
+        types = Pool.LISTTYPES('Any')
+        self.assertEqual(len(types),3)
+        self.assertEqual(types[0][0],'')
+        self.assertEqual(types[0][1],'Any')
+
         
     def test_qualities(self):
         
-        q = LISTQUALITIES()
-        
+        q = LISTQUALITIES()       
         self.assertEqual(len(q),4)
+        
+         # get list of all product qualities in the pool
+        qualities = Pool.LISTQUALITIES()
+        self.assertEqual(len(qualities),2)
+       
+
+        # get list of all product qualities in the pool with optional first blank param
+        qualities = Pool.LISTQUALITIES('Any')
+        self.assertEqual(len(qualities),3)
+        self.assertEqual(qualities[0][0],'')
+        self.assertEqual(qualities[0][1],'Any')
   
     def test_listproducts(self):
     
         products = Pool.LISTPRODUCTS()
-        self.assertEqual(products.count(),2)
+        self.assertEqual(products.count(),3)
         
         # if quantity is below minimum then won't be counted
         p = Pool.objects.get(id=1)
@@ -399,6 +435,6 @@ class ListTests(BaseTestMoreData):
         p.remove_quantity(2499.9)
 
         products = Pool.LISTPRODUCTS()
-        self.assertEqual(products.count(),1)
+        self.assertEqual(products.count(),2)
 
         

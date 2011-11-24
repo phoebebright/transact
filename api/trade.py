@@ -1,5 +1,7 @@
 from decimal import Decimal
 from api.base import *
+import config
+from livesettings import config_value
 
 
 class PriceCheckResponse(Response):
@@ -20,8 +22,11 @@ class PriceCheckRequest(Request):
         # or you get error 
         from web.models import Pool
         
-        item = models.Pool.price_check(self.quantity)
+        item = Pool.price_check(self.quantity)
         response = self.response()
+        
+        #TODO: once login is working, get the Client entity from the current Authentic
+        # and get the fee like this Client.transaction_fee()
         fee = Decimal('0.25')
         # TODO: make it a DictField instance - there is no DictField class yet
         response.currencies = {

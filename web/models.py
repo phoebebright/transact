@@ -2,6 +2,7 @@
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from uuidfield import UUIDField
+from collections import defaultdict
 
 #django
 from django.core.mail import send_mail, EmailMessage
@@ -303,7 +304,7 @@ class Pool(models.Model):
         """
         
         qty = Decimal(str(quantity))
-        
+
         if qty < config_value('web','MIN_QUANTITY'):
             raise BelowMinQuantity
 
@@ -312,19 +313,83 @@ class Pool(models.Model):
             
         queryset = cls.objects.filter(quantity__gte = qty)
         
-        if quality:
+        if quality and quality>" ":
             queryset = queryset.filter(quality = quality)
             
-        if type:
+        if type and type>" ":
             queryset = queryset.filter(type__code = type)
-            
+        
+        q = str(queryset.query)
+ 
         if queryset.count()>0:
             # first in first out - return earliest entry 
             return queryset.order_by('added')[0]
         else:
             raise NoMatchInPoolException()
             
+    @classmethod
+    def LISTTYPES(self, blank=None):
+        """
+        return list of product types for available items in the pool
+        eg. returns [(u'HYDR', u'Hydro'), (u'WIND', u'Wind')]
+        blank is an optional label to use to create a blank first option
+        eg. blank='Any', returns [(u'', u'Any'), (u'HYDR', u'Hydro'), (u'WIND', u'Wind')]
+        """
+        
+        items = self.objects.filter(quantity__gte = config_value('web','MIN_QUANTITY')).values_list('type','type__name').distinct().order_by('type')
 
+        # convert to list of tuples
+        
+        if blank:
+            types=[('',blank),]
+        else:
+            types = []
+        
+        for (code, name) in items:
+            types.append((code,name))
+  
+        return types
+
+    @classmethod
+    def LISTQUALITIES(self, blank=None):
+        """
+        return list of product types for available items in the pool
+        eg. returns [('G', 'Gold'), ('P', 'Platinum')]
+        blank is an optional label to use to create a blank first option
+        eg. blank='Any', returns [(u'', u'Any'), ('G', 'Gold'), ('P', 'Platinum')]
+        """
+        
+        items = self.objects.filter(quantity__gte = Decimal(config_value('web','MIN_QUANTITY'))).values_list('quality').distinct().order_by('quality')
+        # flatten list
+        print items.query
+        items = [item for sublist in items for item in sublist]
+        
+        # build list from all possible qualities so you get description
+
+        # convert to list of tuples
+        
+        if blank:
+            qualities=[('',blank),]
+        else:
+            qualities = []
+
+        for (code,name) in QUALITIES:
+            if code in items:
+                qualities.append((code,name))
+
+        return qualities
+            
+        
+    @classmethod
+    def clean(cls):
+        """
+        remove all items in the pool with quantities less than the minimum quantity that
+        can be sold.
+        do not remove if there is a transaction referencing this pool item as that will 
+        be a pending Transaction
+        create an adjusting transaction to remove the remaining quantity so the books balance
+        """
+        
 class TransItemMixin(object):
 
     def open(self):
