@@ -22,7 +22,7 @@ class PriceCheckRequest(Request):
         # or you get error 
         from web.models import Pool
         
-        item = models.Pool.price_check(self.quantity)
+        item = Pool.price_check(self.quantity)
 
         response = self.response()
         fee = Decimal('0.25')
