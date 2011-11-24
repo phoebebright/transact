@@ -21,8 +21,9 @@ class PriceCheckRequest(Request):
         # have to put this here (and have api above web settings.INSTALLED_APPS
         # or you get error 
         from web.models import Pool
-        
+
         item = Pool.price_check(self.quantity)
+
         response = self.response()
         
         #TODO: once login is working, get the Client entity from the current Authentic

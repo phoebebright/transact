@@ -337,6 +337,7 @@ class DownstreamTests(BaseTestMoreData):
         #DO NEXT
         #cancel, expire, refund, pay
         
+
     def test_expire_transactions(self):
     
         # create some open transactions
@@ -359,6 +360,7 @@ class DownstreamTests(BaseTestMoreData):
         # one item expired
         self.assertEqual(Transaction.objects.open().count(),3)
         
+
     def test_pool(self):
         """
         misc tests on pool
@@ -423,11 +425,13 @@ class ListTests(BaseTestMoreData):
         self.assertEqual(len(qualities),3)
         self.assertEqual(qualities[0][0],'')
         self.assertEqual(qualities[0][1],'Any')
+
   
     def test_listproducts(self):
     
         products = Pool.LISTPRODUCTS()
-        self.assertEqual(products.count(),3)
+        self.assertEqual(products.count(),2)
+
         
         # if quantity is below minimum then won't be counted
         p = Pool.objects.get(id=1)
@@ -436,5 +440,6 @@ class ListTests(BaseTestMoreData):
 
         products = Pool.LISTPRODUCTS()
         self.assertEqual(products.count(),2)
+
 
         
