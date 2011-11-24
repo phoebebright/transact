@@ -31,7 +31,7 @@ TODAY_ENDS = NOW.replace(hour=23,minute=59,second=59)
 def list_pool():
         print "POOL"
         for p in Pool.objects.all():
-            print "%30s | %s | %s | %i | %s | %.2f | %s" % (p.product, p.quality, p.type, p.quantity, p.currency, p.price, p.added)
+            print "%30s | %s | %s | %.2f | %s | %.2f | %s" % (p.product, p.quality, p.type, p.quantity, p.currency, p.price, p.added)
 
 
 def list_transactions():
@@ -295,15 +295,22 @@ class DownstreamTests(BaseTestMoreData):
 
     def test_transaction(self):
 
-        # price check
+        # get item that matches 10.55 units
         item = Pool.price_check(10.55)
+        before_qty = item.quantity
         
+        # create a transaction
         trans = Transaction.new(self.client1, 10.55)
         
         self.assertEqual(item.product, trans.product)
         self.assertTrue(trans.is_open)
         self.assertFalse(trans.is_closed)
         self.assertEqual(trans.quantity, Decimal('10.55'))
+        
+        # check this amount now removed from pool
+        item = Pool.objects.get(id=item.id)
+        self.assertEqual(item.quantity, before_qty - Decimal('10.55'))
+        
         
         # now pay this Transaction
         p = trans.pay('PAYREF')
@@ -317,4 +324,59 @@ class DownstreamTests(BaseTestMoreData):
         #DO NEXT
         #cancel, expire, refund, pay
         
+        
+
+    def test_pool(self):
+        """
+        misc tests on pool
+        """
+        
+        p = Pool.objects.get(id=1)
+        self.assertEqual(p.quantity, 2500)
+        
+        # remove 100 whole units from a pool item
+        p.remove_quantity(100)
+        p = Pool.objects.get(id=1)
+        self.assertEqual(p.quantity, 2400)
+        
+        # remove decimal amount
+        p.remove_quantity(0.3)
+        p = Pool.objects.get(id=1)
+        self.assertEqual(p.quantity, Decimal('2399.7'))
+        
+        
+class ListTests(BaseTestMoreData):
+    """
+    check some basic API calls to the model
+    """
+                
+        
+    def test_listtype(self):
+    
+        types = ProductType.LISTTYPES()
+        self.assertEqual(types.count(),3)
+        
+        ProductType.objects.create(code='TST', name='Tests')
+        types = ProductType.LISTTYPES()
+        self.assertEqual(types.count(),4)
+        
+    def test_qualities(self):
+        
+        q = LISTQUALITIES()
+        
+        self.assertEqual(len(q),4)
+  
+    def test_listproducts(self):
+    
+        products = Pool.LISTPRODUCTS()
+        self.assertEqual(products.count(),2)
+        
+        # if quantity is below minimum then won't be counted
+        p = Pool.objects.get(id=1)
+        self.assertEqual(p.quantity, 2500)
+        p.remove_quantity(2499.9)
+
+        products = Pool.LISTPRODUCTS()
+        self.assertEqual(products.count(),1)
+
         

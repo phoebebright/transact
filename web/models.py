@@ -19,7 +19,7 @@ from django.utils.html import strip_tags
 #app
 import config
 from livesettings import config_value
-from web.exceptions import NoMatchInPoolException, BelowMinQuantity, AboveMaxQuantity
+from web.exceptions import *
 
 CURRENCIES = (('EUR','EUR'), ('GBP','GBP'), ('USD','USD'))
 QUALITIES = (
@@ -40,7 +40,14 @@ PAYMENT_STATUS = (
     ('S', 'Success'),
     )
 
-
+def LISTQUALITIES():
+    """
+    List of valid Product Qualities
+    """
+    
+    return QUALITIES
+    
+    
 class ProductType(models.Model):
     """
     Each product has a type
@@ -57,7 +64,11 @@ class ProductType(models.Model):
         verbose_name = "Product Type"
         verbose_name_plural = "Product Types"
 
- 
+    @classmethod
+    def LISTTYPES(self):
+    
+        return self.objects.all()
+        
             
 class Customer(models.Model):
     """
@@ -239,11 +250,25 @@ class Pool(models.Model):
         verbose_name = "Pool"
         verbose_name_plural = "Pool"
 
-    def remove_quanity(self, units):
+    @classmethod
+    def LISTPRODUCTS(self):
+        """
+        List of currently available products
+        """
+        
+        return self.objects.filter(quantity__gte = config_value('web','MIN_QUANTITY'))
+    
+    def remove_quantity(self, units):
         """
         decrease quantity by units
         """
-        return True        
+        
+        if units > self.quantity:
+            raise Unable2RemoveUnits()
+        else:
+            self.quantity = self.quantity - Decimal(str(units))
+            self.save()
+            
         
     @classmethod
     def price_check(cls, quantity, quality=None, type=None):
@@ -268,7 +293,7 @@ class Pool(models.Model):
             queryset = queryset.filter(type__code = type)
             
         if queryset.count()>0:
-
+            # first in first out - return earliest entry 
             return queryset.order_by('added')[0]
         else:
             raise NoMatchInPoolException()
@@ -342,6 +367,9 @@ class Transaction(models.Model):
             currency = item.currency,
             quantity = qty,
             )        
+        
+        # remove items from the Pool
+        item.remove_quantity(qty)
         
         return t
         
