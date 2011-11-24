@@ -44,4 +44,12 @@ class Unable2ExpireTransaction(ModelException):
     raised if transaction is still open and therefore cannot expire it
     '''
     txtMessage = _('Closed Transaction cannot be Expired')
-    errorCode = 105         
+    errorCode = 106        
+    
+class Unable2RemoveUnits(ModelException):
+    '''
+    raised if trying to remove more units from a Pool item than there are
+    units available
+    '''
+    txtMessage = _('Trying to remove more units than are available')
+    errorCode = 106            

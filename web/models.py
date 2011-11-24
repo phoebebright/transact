@@ -2,6 +2,7 @@
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from uuidfield import UUIDField
+from collections import defaultdict
 
 #django
 from django.core.mail import send_mail, EmailMessage
@@ -19,7 +20,7 @@ from django.utils.html import strip_tags
 #app
 import config
 from livesettings import config_value
-from web.exceptions import NoMatchInPoolException, BelowMinQuantity, AboveMaxQuantity
+from web.exceptions import *
 
 CURRENCIES = (('EUR','EUR'), ('GBP','GBP'), ('USD','USD'))
 QUALITIES = (
@@ -40,7 +41,14 @@ PAYMENT_STATUS = (
     ('S', 'Success'),
     )
 
-
+def LISTQUALITIES():
+    """
+    List of valid Product Qualities
+    """
+    
+    return QUALITIES
+    
+    
 class ProductType(models.Model):
     """
     Each product has a type
@@ -57,7 +65,11 @@ class ProductType(models.Model):
         verbose_name = "Product Type"
         verbose_name_plural = "Product Types"
 
- 
+    @classmethod
+    def LISTTYPES(self):
+    
+        return self.objects.all()
+        
             
 class Customer(models.Model):
     """
@@ -134,6 +146,32 @@ class Relationship(models.Model):
     customer = models.ForeignKey(Customer)
     client = models.ForeignKey(Client)
     
+
+class Auth(models.Model):
+    """
+    Authority given by a User to access the system
+    Privileges can be controlled
+    """
+    
+    uuid = UUIDField(auto=True)
+    user = models.ForeignKey(User)
+    alias = models.CharField(_('Alias'),  max_length=32, null=True)
+    allowed = models.CharField(_('Allowed API Calls'),  max_length=100, blank=True, null=True)
+    expire_at = models.DateTimeField(_('Expire ated Date/Time'), null=True)
+    
+    def __unicode__(self):
+        return self.alias 
+
+    class Meta:
+        ordering = ['-uuid', ]
+    
+    def save(self, *args, **kwargs):
+        # set alias to uuid if alias not specified
+        if not self.alias:
+            self.alias = self.uuid
+            
+        super(Auth, self).save(*args, **kwargs)
+   
 
 class Trade(models.Model):
     """
@@ -239,11 +277,25 @@ class Pool(models.Model):
         verbose_name = "Pool"
         verbose_name_plural = "Pool"
 
-    def remove_quanity(self, units):
+    @classmethod
+    def LISTPRODUCTS(self):
+        """
+        List of currently available products
+        """
+        
+        return self.objects.filter(quantity__gte = config_value('web','MIN_QUANTITY'))
+    
+    def remove_quantity(self, units):
         """
         decrease quantity by units
         """
-        return True        
+        
+        if units > self.quantity:
+            raise Unable2RemoveUnits()
+        else:
+            self.quantity = self.quantity - Decimal(str(units))
+            self.save()
+            
         
     @classmethod
     def price_check(cls, quantity, quality=None, type=None):
@@ -252,7 +304,7 @@ class Pool(models.Model):
         """
         
         qty = Decimal(str(quantity))
-        
+
         if qty < config_value('web','MIN_QUANTITY'):
             raise BelowMinQuantity
 
@@ -261,18 +313,95 @@ class Pool(models.Model):
             
         queryset = cls.objects.filter(quantity__gte = qty)
         
-        if quality:
+        if quality and quality>" ":
             queryset = queryset.filter(quality = quality)
             
-        if type:
+        if type and type>" ":
             queryset = queryset.filter(type__code = type)
-            
+        
+        q = str(queryset.query)
+ 
         if queryset.count()>0:
-
+            # first in first out - return earliest entry 
             return queryset.order_by('added')[0]
         else:
             raise NoMatchInPoolException()
             
+    @classmethod
+    def LISTTYPES(self, blank=None):
+        """
+        return list of product types for available items in the pool
+        eg. returns [(u'HYDR', u'Hydro'), (u'WIND', u'Wind')]
+        blank is an optional label to use to create a blank first option
+        eg. blank='Any', returns [(u'', u'Any'), (u'HYDR', u'Hydro'), (u'WIND', u'Wind')]
+        """
+        
+        items = self.objects.filter(quantity__gte = config_value('web','MIN_QUANTITY')).values_list('type','type__name').distinct().order_by('type')
+
+        # convert to list of tuples
+        
+        if blank:
+            types=[('',blank),]
+        else:
+            types = []
+        
+        for (code, name) in items:
+            types.append((code,name))
+  
+        return types
+
+    @classmethod
+    def LISTQUALITIES(self, blank=None):
+        """
+        return list of product types for available items in the pool
+        eg. returns [('G', 'Gold'), ('P', 'Platinum')]
+        blank is an optional label to use to create a blank first option
+        eg. blank='Any', returns [(u'', u'Any'), ('G', 'Gold'), ('P', 'Platinum')]
+        """
+        
+        items = self.objects.filter(quantity__gte = Decimal(config_value('web','MIN_QUANTITY'))).values_list('quality').distinct().order_by('quality')
+        # flatten list
+        print items.query
+        items = [item for sublist in items for item in sublist]
+        
+        # build list from all possible qualities so you get description
+
+        # convert to list of tuples
+        
+        if blank:
+            qualities=[('',blank),]
+        else:
+            qualities = []
+
+        for (code,name) in QUALITIES:
+            if code in items:
+                qualities.append((code,name))
+
+        return qualities
+            
+        
+    @classmethod
+    def clean(cls):
+        """
+        remove all items in the pool with quantities less than the minimum quantity that
+        can be sold.
+        do not remove if there is a transaction referencing this pool item as that will 
+        be a pending Transaction
+        create an adjusting transaction to remove the remaining quantity so the books balance
+        """
+        
+class TransItemMixin(object):
+
+    def open(self):
+        return self.filter(status='A')
+ 
+        
+class TransItemQuerySet(QuerySet, TransItemMixin):
+    pass
+
+class TransManager(models.Manager, TransItemMixin):
+    def get_query_set(self):
+        return TransItemQuerySet(self.model, using=self._db)
         
 class Transaction(models.Model):
     """
@@ -294,15 +423,19 @@ class Transaction(models.Model):
     closed = models.DateTimeField(_('Closed Date/Time'), null=True)
     expire_at = models.DateTimeField(_('Expire ated Date/Time'), null=True)
     
+    objects = TransManager()
+    
     def __unicode__(self):
-        return self.product 
+        return self.product.name
 
     class Meta:
         ordering = ['-id', ]
 
     def save(self, *args, **kwargs):
         
-        self.expire_at = datetime.now() + timedelta(seconds=config_value('web','EXPIRE_TRANSACTIONS_AFTER_SECONDS'))
+        # set expire_at datetime if blank
+        if not self.id:
+            self.expire_at = datetime.now() + timedelta(seconds=config_value('web','EXPIRE_TRANSACTIONS_AFTER_SECONDS'))
                     
         super(Transaction, self).save(*args, **kwargs)
 
@@ -343,6 +476,9 @@ class Transaction(models.Model):
             quantity = qty,
             )        
         
+        # remove items from the Pool
+        item.remove_quantity(qty)
+        
         return t
         
         
@@ -362,7 +498,24 @@ class Transaction(models.Model):
         self.pool = None
         self.save()
         return p
+
+    @classmethod
+    def expire_all(self):
+        """
+        expire all transactions past their expiry date
+        """
         
+        items = self.objects.filter(expire_at__lt = datetime.now())
+        n = 0
+        
+        for item in items:
+            if self.is_open:
+                item.expire()
+                n += 1
+                
+        return n
+        
+                
     def expire(self):
         """
         update status to expired and put quanity back in the pool

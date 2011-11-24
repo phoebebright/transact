@@ -1,0 +1,46 @@
+{% extends "test.html" %}
+
+{% block heading %}LISTPRODUCTS{% endblock heading %}</h1>
+
+{% block doc %}<p>Get a list of all Products currently available to purchase {% endblock doc %}
+{% block examplejson %}{"call":"LISTPRODUCTS"}{% endblock examplejson %}
+
+/////////////////////////////////////////////////////////////////////
+// LISTPRODUCTS REQUEST
+{
+	"call": "LISTPRODUCTS", // required
+	"token": "1db6b44cafa0494a950d9ef531c02e69" // required
+}
+// LISTPRODUCTS RESPONSE
+{
+	"call": "LISTPRODUCTS",
+	"timestamp": 1321267155000,
+	"status": "OK",
+	"types": [
+		{
+		    "id": 13452678321
+			"type": "WIND",
+			"quality": "G",
+			"name": "Tamil Nadu Wind Project",
+			"price": "7.75",
+			"currency": "EUR"
+		},
+		{
+		    "id": 13452678322
+			"type": "BIOM",
+			"quality": "P",
+			"name": "Nobrecel Biomass Energy Project",
+			"price": "9.00",
+			"currency": "EUR"
+		},
+		{
+		    "id": 13452678323
+			"type": "HYDR",
+			"quality": "P",
+			"name": "Tongren Hydro Project in Guizhou Province",
+			"price": "8.50",
+			"currency": "EUR"
+		}
+		
+	]
+}

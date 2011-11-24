@@ -125,6 +125,7 @@ INSTALLED_APPS = (
     'api',
     'web',
     'webtest',
+
 )
 
 # A sample logging configuration. The only tangible logging

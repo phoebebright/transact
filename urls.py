@@ -2,6 +2,7 @@ import os.path
 
 from django.conf.urls.defaults import patterns, include, url
 from django.contrib import admin
+from django.conf import settings
 
 admin.autodiscover()
 
@@ -20,3 +21,8 @@ urlpatterns += patterns('',
     url(r'^settings/', include('livesettings.urls')),
 )
 
+# for development only
+if settings.DEBUG:
+    urlpatterns += patterns('web.views',
+    url(r'^transact/', 'transaction'),
+    )

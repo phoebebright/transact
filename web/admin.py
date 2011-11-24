@@ -37,6 +37,17 @@ class ClientAdmin(admin.ModelAdmin):
     search_fields =	 ('name','uuid')
     ordering = ('-name',)
 
+class AuthAdmin(admin.ModelAdmin):
+
+    class Meta:
+        model = Trade 
+        
+        
+    list_display = ('alias','uuid','user','expire_at')
+   
+    search_fields =	 ('alias','uuid','user.username')
+
+
 class ProductTypeAdmin(admin.ModelAdmin):
 
     class Meta:
@@ -93,3 +104,4 @@ admin.site.register(Product, ProductAdmin)
 admin.site.register(ProductType, ProductTypeAdmin)
 admin.site.register(Pool, PoolAdmin)
 admin.site.register(Transaction, TransactionAdmin)
+admin.site.register(Auth, AuthAdmin)
