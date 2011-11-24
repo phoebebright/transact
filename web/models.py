@@ -146,6 +146,32 @@ class Relationship(models.Model):
     client = models.ForeignKey(Client)
     
 
+class Auth(models.Model):
+    """
+    Authority given by a User to access the system
+    Privileges can be controlled
+    """
+    
+    uuid = UUIDField(auto=True)
+    user = models.ForeignKey(User)
+    alias = models.CharField(_('Alias'),  max_length=32, null=True)
+    allowed = models.CharField(_('Allowed API Calls'),  max_length=100, blank=True, null=True)
+    expire_at = models.DateTimeField(_('Expire ated Date/Time'), null=True)
+    
+    def __unicode__(self):
+        return self.alias 
+
+    class Meta:
+        ordering = ['-uuid', ]
+    
+    def save(self, *args, **kwargs):
+        # set alias to uuid if alias not specified
+        if not self.alias:
+            self.alias = self.uuid
+            
+        super(Auth, self).save(*args, **kwargs)
+   
+
 class Trade(models.Model):
     """
     Record purchase of Carbon Credits from an Exchange
