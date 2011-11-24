@@ -217,7 +217,7 @@ class TradeTest(ApiTestCase):
         data = self._api_call(call)
         self.assertEqual(data.get('status'), "FAILED")
         self.assertEqual(data.get('call'), 'PRICECHECK')
-        self.assertEqual(data.get('code'), 403)
+        self.assertEqual(data.get('code'), 401)
 
         auth_call = {
             "call": "LOGIN",
@@ -228,7 +228,7 @@ class TradeTest(ApiTestCase):
         token = data.get('token')
         call['token'] = token
         data = self._api_call(call)
-        self.assertEqual(data.get('status'), "OK")
+        self.assertEqual(data.get('status'), "OK", data)
         self.assertEqual(data.get('call'), 'PRICECHECK')
         self.assertEqual(data.get('quantity'), 10.0)
         self.assertEqual(data.get('type'), "HYDR")

@@ -6,6 +6,9 @@ import micromodels
 
 import dispatcher
 
+from web.exceptions import ModelException
+from api.exceptions import ApiException
+
 ENCODING_JSON = 1
 
 
@@ -134,10 +137,19 @@ class ErrorResponse(Response):
     code = micromodels.IntegerField()
     description = micromodels.CharField()
 
-    def __init__(self, code=500, call="None", status="FAILED", *args, **kw):
+    def __init__(self, request=None, exception=None, status="FAILED", *args, **kw):
         super(ErrorResponse, self).__init__(*args, **kw)
+        call = "None"
+        code = 500
+        description = str(exception)
+        if request:
+            call = request.response()._call()
+        if isinstance(exception, (ModelException, ApiException)):
+            code = exception.errorCode
+            description = exception.txtMessage
         self.add_field("call", call, micromodels.CharField())
         self.status = status
         self.code = code
+        self.description = description
 
     

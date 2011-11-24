@@ -1,3 +1,3 @@
-401 = auth failed
+500 = serious error contact admins 
 402 = wrong username/password
-403 = invalid token or not authenticated
+401 = invalid token or not authenticated

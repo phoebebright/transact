@@ -1,8 +1,11 @@
 from django.utils.translation import ugettext_lazy as _
 
 class ModelException(Exception):
-
-    pass
+    errorCode = 100
+    txtMessage = ""
+    def __init__(self, message=None, *args, **kwargs):
+        if message:
+            self.txtMessage = message
     
 class NoMatchInPoolException(ModelException):
     '''
