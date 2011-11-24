@@ -35,9 +35,9 @@ def list_pool():
 
 
 def list_transactions():
-
-        for t in Transaction.objects.all():
-            print t.__dict__
+        print "TRANSACTIONS"
+        for p in Transaction.objects.all():
+            print "%s |%30s | %s | %s | %.2f | %s | %.2f | %s" % (p.status, p.product, p.pool, p.fee, p.quantity, p.currency, p.price, p.expire_at)
 
 def list_products():
 
@@ -126,6 +126,19 @@ class BaseTestMoreData(BaseTest):
         product.save()
         product.move2pool()          
         
+        # add products to the pool
+        trade = Trade.objects.create(name = 'Carbon Credit 3', 
+            purchfrom = 'MEX',
+            total = '800',
+            currency = 'EUR',
+            tonnes = '200',
+            ref='test 3',
+            )        
+        product = Product.objects.get(trade=trade)
+        product.quality = 'P'
+        product.type=ProductType.objects.get(code='WIND')
+        product.save()
+        product.move2pool()          
         
 class BasicTests(TestCase):
     """
@@ -324,6 +337,28 @@ class DownstreamTests(BaseTestMoreData):
         #DO NEXT
         #cancel, expire, refund, pay
         
+
+    def test_expire_transactions(self):
+    
+        # create some open transactions
+        t1 = Transaction.new(self.client1, 1)
+        t2 = Transaction.new(self.client1, 2)
+        t3 = Transaction.new(self.client2, 3)
+        t4 = Transaction.new(self.client2, 4)
+
+        c = Transaction.objects.open().count()
+        
+        self.assertEqual(c,4)
+        
+        # now expire one
+        t1=Transaction.objects.get(id=t1.id)
+        t1.expire_at = datetime.now() - timedelta(seconds=60)
+        t1.save()        
+        
+        n = Transaction.expire_all()
+        
+        # one item expired
+        self.assertEqual(Transaction.objects.open().count(),3)
         
 
     def test_pool(self):
@@ -352,19 +387,45 @@ class ListTests(BaseTestMoreData):
                 
         
     def test_listtype(self):
-    
+        """
+        check both LISTTYPE calls
+        """
+        
+        # get list of all possible product types
         types = ProductType.LISTTYPES()
         self.assertEqual(types.count(),3)
         
         ProductType.objects.create(code='TST', name='Tests')
         types = ProductType.LISTTYPES()
         self.assertEqual(types.count(),4)
+
+        # get list of all product types in the pool
+        types = Pool.LISTTYPES()
+        self.assertEqual(len(types),2)
+
+        # get list of all product types in the pool with optional first blank param
+        types = Pool.LISTTYPES('Any')
+        self.assertEqual(len(types),3)
+        self.assertEqual(types[0][0],'')
+        self.assertEqual(types[0][1],'Any')
+
         
     def test_qualities(self):
         
-        q = LISTQUALITIES()
-        
+        q = LISTQUALITIES()       
         self.assertEqual(len(q),4)
+        
+         # get list of all product qualities in the pool
+        qualities = Pool.LISTQUALITIES()
+        self.assertEqual(len(qualities),2)
+       
+
+        # get list of all product qualities in the pool with optional first blank param
+        qualities = Pool.LISTQUALITIES('Any')
+        self.assertEqual(len(qualities),3)
+        self.assertEqual(qualities[0][0],'')
+        self.assertEqual(qualities[0][1],'Any')
+
   
     def test_listproducts(self):
     
@@ -378,5 +439,4 @@ class ListTests(BaseTestMoreData):
 
         products = Pool.LISTPRODUCTS()
         self.assertEqual(products.count(),1)
-
         
