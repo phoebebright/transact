@@ -15,9 +15,9 @@
     
     <h3>Recent Transactions</h3>
     <table>
-    <th>
+    <tr>
         <td>Status</td><td>Product</td><td>Type</td><td>Quality</td><td>Qty</td><td>Price</td><td>Fee</td>
-    </th>
+    </tr>
     {% for item in transactions %}
         <tr>
             <td>{{item.status}}</td>
