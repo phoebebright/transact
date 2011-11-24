@@ -1,0 +1,37 @@
+{% extends "test.html" %}
+
+{% block heading %}LISTQUALITIES{% endblock heading %}</h1>
+
+{% block doc %}<p>Get a list of all valid Product Qualities {% endblock doc %}
+{% block examplejson %}{"call":"LISTQUALITIES"}{% endblock examplejson %}
+
+
+{
+	"call": "LISTQUALITIES", // required
+	"token": "1db6b44cafa0494a950d9ef531c02e69" // required
+}
+// LISTTYPES RESPONSE
+{
+	"call": "LISTQUALITIES",
+	"timestamp": 1321267155000,
+	"status": "OK",
+	"types": [
+		{
+			"code": "B",
+			"name": "Bronze"
+		},
+		{
+			"code": "S",
+			"name": "Silver"
+		},
+		{
+			"code": "G",
+			"name": "Gold"
+		},
+		{
+			"code": "P",
+			"name": "Platinum"
+		}
+		
+	]
+}
