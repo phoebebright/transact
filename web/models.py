@@ -19,7 +19,7 @@ from django.utils.html import strip_tags
 #app
 import config
 from livesettings import config_value
-from web.exceptions import NoMatchInPoolException, BelowMinQuantity, AboveMaxQuantity
+from web.exceptions import *
 
 CURRENCIES = (('EUR','EUR'), ('GBP','GBP'), ('USD','USD'))
 QUALITIES = (
@@ -40,7 +40,14 @@ PAYMENT_STATUS = (
     ('S', 'Success'),
     )
 
-
+def LISTQUALITIES():
+    """
+    List of valid Product Qualities
+    """
+    
+    return QUALITIES
+    
+    
 class ProductType(models.Model):
     """
     Each product has a type
@@ -243,11 +250,25 @@ class Pool(models.Model):
         verbose_name = "Pool"
         verbose_name_plural = "Pool"
 
-    def remove_quanity(self, units):
+    @classmethod
+    def LISTPRODUCTS(self):
+        """
+        List of currently available products
+        """
+        
+        return self.objects.filter(quantity__gte = config_value('web','MIN_QUANTITY'))
+    
+    def remove_quantity(self, units):
         """
         decrease quantity by units
         """
-        return True        
+        
+        if units > self.quantity:
+            raise Unable2RemoveUnits()
+        else:
+            self.quantity = self.quantity - Decimal(str(units))
+            self.save()
+            
         
     @classmethod
     def price_check(cls, quantity, quality=None, type=None):
@@ -272,11 +293,24 @@ class Pool(models.Model):
             queryset = queryset.filter(type__code = type)
             
         if queryset.count()>0:
-
+            # first in first out - return earliest entry 
             return queryset.order_by('added')[0]
         else:
             raise NoMatchInPoolException()
             
+
+class TransItemMixin(object):
+
+    def open(self):
+        return self.filter(status='A')
+ 
+        
+class TransItemQuerySet(QuerySet, TransItemMixin):
+    pass
+
+class TransManager(models.Manager, TransItemMixin):
+    def get_query_set(self):
+        return TransItemQuerySet(self.model, using=self._db)
         
 class Transaction(models.Model):
     """
@@ -298,15 +332,19 @@ class Transaction(models.Model):
     closed = models.DateTimeField(_('Closed Date/Time'), null=True)
     expire_at = models.DateTimeField(_('Expire ated Date/Time'), null=True)
     
+    objects = TransManager()
+    
     def __unicode__(self):
-        return self.product 
+        return self.product.name
 
     class Meta:
         ordering = ['-id', ]
 
     def save(self, *args, **kwargs):
         
-        self.expire_at = datetime.now() + timedelta(seconds=config_value('web','EXPIRE_TRANSACTIONS_AFTER_SECONDS'))
+        # set expire_at datetime if blank
+        if not self.id:
+            self.expire_at = datetime.now() + timedelta(seconds=config_value('web','EXPIRE_TRANSACTIONS_AFTER_SECONDS'))
                     
         super(Transaction, self).save(*args, **kwargs)
 
@@ -347,6 +385,9 @@ class Transaction(models.Model):
             quantity = qty,
             )        
         
+        # remove items from the Pool
+        item.remove_quantity(qty)
+        
         return t
         
         
@@ -366,7 +407,24 @@ class Transaction(models.Model):
         self.pool = None
         self.save()
         return p
+
+    @classmethod
+    def expire_all(self):
+        """
+        expire all transactions past their expiry date
+        """
         
+        items = self.objects.filter(expire_at__lt = datetime.now())
+        n = 0
+        
+        for item in items:
+            if self.is_open:
+                item.expire()
+                n += 1
+                
+        return n
+        
+                
     def expire(self):
         """
         update status to expired and put quanity back in the pool
