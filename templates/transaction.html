@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block main %}
+    <h2 class="title"><a href="#">Add Transaction</a></h2>
+    
+    <form name='trans' method='post' action="" accept-charset="utf-8">{% csrf_token %}
+    <table>
+    {{form}}
+    </table>
+    <button  class="button" type="submit" id="save" name="save">Save</button>
+    </form>
+
+    {{item}}
+    
+    <hr>
+    
+    <h3>Recent Transactions</h3>
+    <table>
+    <th>
+        <td>Status</td><td>Product</td><td>Type</td><td>Quality</td><td>Qty</td><td>Price</td><td>Fee</td>
+    </th>
+    {% for item in transactions %}
+        <tr>
+            <td>{{item.status}}</td>
+            <td>{{item.product}}</td>
+            <td>{{item.product.type}}</td>
+            <td>{{item.product.quality}}</td>
+            <td>{{item.quantity}}</td>
+            <td>{{item.price}}</td>
+            <td>{{item.fee}}</td>
+        </tr>
+    {% endfor %}
+    </table>
+    
+    <h3>Pool</h3>
+    <table>
+    <tr>
+        <td>Product</td><td>Type</td><td>Quality</td><td>Qty</td>
+    </tr>
+    {% for item in pool %}
+        <tr>
+            <td>{{item.product}}</td>
+            <td>{{item.type}}</td>
+            <td>{{item.quality}}</td>
+            <td>{{item.quantity}}</td>
+        </tr>
+    {% endfor %}
+    </table>
+    
+{% endblock main %}
+
