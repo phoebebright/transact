@@ -2,7 +2,9 @@ import abc
 import json
 import time
 import uuid
+from api.exceptions import ValidationException
 import micromodels
+from django.utils.translation import ugettext_lazy as _
 
 import dispatcher
 
@@ -97,7 +99,22 @@ Request at the end, ie. SomeRequest")
         Pass reference of this method to wrapper when unwrapping data
         """
         return cls.from_dict(data)
+    def get(self, itemname, default=None):
+        """ Get optional parameters
+        """
+        if itemname in self.__dict__:
+            return self.__getattribute__(itemname)
+        else:
+            return default
 
+    def require(self, itemname):
+        """ require parameter optional parameters
+            Raises ValidationError if parameter does not exist
+        """
+        if itemname in self.__dict__:
+            return self.__getattribute__(itemname)
+        else:
+            raise ValidationException(_("parameter '%s' is required" % itemname))
 
 class Response(micromodels.Model, dict):
     def __new__(cls, *args, **kw):
