@@ -28,3 +28,17 @@ class ValidationException(Exception):
     def __init__(self, message=None, *args, **kwargs):
         if message:
             self.txtMessage = message
+
+    def __str__(self):
+        return "(%s) %s [%s]" % (
+            self.__class__.__name__,
+            self.txtMessage,
+            self.errorCode
+        )
+
+class ValidationDecimalException(ValidationException):
+    errorCode = 301
+    txtMessage = "not valid decimal format"
+    def __init__(self, message=None, *args, **kwargs):
+        if message:
+            self.txtMessage = message

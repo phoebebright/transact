@@ -13,7 +13,6 @@ from api.exceptions import ApiException
 
 ENCODING_JSON = 1
 
-
 class StaticClassError(Exception):
     pass
 
@@ -114,7 +113,7 @@ Request at the end, ie. SomeRequest")
         if itemname in self.__dict__:
             return self.__getattribute__(itemname)
         else:
-            raise ValidationException(_("parameter '%s' is required" % itemname))
+            raise ValidationException(_("parameter '%s' is required") % itemname)
 
 class Response(micromodels.Model, dict):
     def __new__(cls, *args, **kw):
@@ -147,6 +146,10 @@ Response at the end, ie. SomeResponse")
         """
         return self.to_dict(serial=True)
 
+    def get_json(self):
+        """ Return wrapped response to json
+        """
+        return JsonWrapper.wrap(self.get_response())
 
 # API REQUESTS AND RESPONSES
 

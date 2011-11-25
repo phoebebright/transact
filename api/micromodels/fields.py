@@ -1,5 +1,6 @@
 import datetime
-
+from decimal import Decimal, InvalidOperation
+from api.exceptions import ValidationDecimalException
 
 class BaseField(object):
     """Base class for all field types.
@@ -129,6 +130,16 @@ class DateField(DateTimeField):
     def to_python(self):
         datetime = super(DateField, self).to_python()
         return datetime.date()
+
+class DecimalField(BaseField):
+    """Field to represent a :mod:`decimal.Decimal`"""
+
+    def populate(self, data):
+        """Make sure we have proper Decimal field"""
+        try:
+            self.data = Decimal(data)
+        except InvalidOperation:
+            raise ValidationDecimalException()
 
 
 class TimeField(DateTimeField):

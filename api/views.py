@@ -14,5 +14,5 @@ def call(request):
         result = base.ErrorResponse(request=apirequest, exception=e, status="FAILED VALIDATION")
     except Exception, e:
         result = base.ErrorResponse(request=apirequest, exception=e)
-    return HttpResponse(base.JsonWrapper.wrap(result.get_response()),
+    return HttpResponse(result.get_json(),
         content_type='application/json')

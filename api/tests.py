@@ -10,6 +10,7 @@ from django.core.cache import cache
 
 from django.test import TestCase
 from web.models import *
+from api import base
 
 class ApiTestCase(TestCase):
 
@@ -235,3 +236,54 @@ class TradeTest(ApiTestCase):
         self.assertEqual(data.get('quality'), 'G')
         self.assertEqual(data['currencies']['EUR']['total'], 44.25)
         self.assertEqual(data['currencies']['EUR']['unit'], 4.4)
+
+    def test_price_check_errors(self):
+        auth_call = {
+            "call": "LOGIN",
+            "username": "system",
+            "password": "pass"
+        }
+        data = self._api_call(auth_call)
+        token = data.get('token')
+        call = {
+            "call": "PRICECHECK",
+            "token": token,
+            "quantity": "bugger"
+        }
+        data = self._api_call(call)
+        self.assertEqual(data.get('status'), "FAILED", data)
+        self.assertEqual(data.get('call'), 'PRICECHECK')
+        self.assertEqual(data.get('description'), "parameter 'quantity' has not valid value")
+
+        call = {
+            "call": "PRICECHECK",
+            "token": token,
+        }
+        data = self._api_call(call)
+        self.assertEqual(data.get('status'), "FAILED VALIDATION", data)
+        self.assertEqual(data.get('call'), 'PRICECHECK')
+        self.assertEqual(data.get('description'), "parameter 'quantity' is required")
+
+class UnitTests(TestCase):
+
+    def setUp(self):
+        self.system_user = User.objects.create_user('system', 'system@trialflight.com', 'pass')
+        auth_call = {
+            "call": "LOGIN",
+            "username": "system",
+            "password": "pass"
+        }
+        apirequest = base.Request.dispatch(json.dumps(auth_call))
+        result = apirequest.run()
+        result = result.get_response()
+        self.token = result.get('token')
+
+    def test_validation(self):
+        data = {
+            "call": "PRICECHECK",
+            "token": self.token,
+            "quantity": "bugger"
+        }
+        apirequest = base.Request.dispatch(json.dumps(data))
+        result = apirequest.run()
+        result = result.get_response()

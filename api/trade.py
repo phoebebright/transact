@@ -13,7 +13,7 @@ class PriceCheckResponse(Response):
 
 class PriceCheckRequest(Request):
     response = PriceCheckResponse
-    quantity = micromodels.FloatField()
+    quantity = micromodels.DecimalField()
     type = micromodels.CharField()
     quality = micromodels.CharField()
     token = micromodels.CharField()
