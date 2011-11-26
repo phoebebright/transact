@@ -137,10 +137,16 @@ class DecimalField(BaseField):
     def populate(self, data):
         """Make sure we have proper Decimal field"""
         try:
+            print repr(data)
+            if isinstance(data, (int,  float)):
+                data = str(data)
+            print repr(data)
             self.data = Decimal(data)
         except InvalidOperation:
             raise ValidationDecimalException()
 
+    def to_serial(self):
+        return str(self.data)
 
 class TimeField(DateTimeField):
     """Field to represent a :mod:`datetime.time`"""

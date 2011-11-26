@@ -157,14 +157,12 @@ class ErrorResponse(Response):
     code = micromodels.IntegerField()
     description = micromodels.CharField()
 
-    def __init__(self, request=None, exception=None, status="FAILED", *args, **kw):
+    def __init__(self, request=None, exception=None, status="FAILED", call="None", code=500, *args, **kw):
         super(ErrorResponse, self).__init__(*args, **kw)
-        call = "None"
-        code = 500
         description = str(exception)
         if request:
             call = request.response()._call()
-        if isinstance(exception, (ModelException, ApiException)):
+        if isinstance(exception, (ModelException, ApiException, ValidationException)):
             code = exception.errorCode
             description = exception.txtMessage
         self.add_field("call", call, micromodels.CharField())

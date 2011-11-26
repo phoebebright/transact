@@ -102,10 +102,9 @@ class Model(object):
                 field.populate(value)
                 super(Model, self).__setattr__(key, field.to_python())
             except ValidationException, e:
-                message = _('%s failed validation with %s ') % (
+                message = _('%s failed validation with %s') % (
                      key,
                      e.txtMessage,)
-                print message
                 raise e.__class__(message=message)
             except:
                 try:

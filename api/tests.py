@@ -11,6 +11,7 @@ from django.core.cache import cache
 from django.test import TestCase
 from web.models import *
 from api import base
+from api.exceptions import ValidationDecimalException
 
 class ApiTestCase(TestCase):
 
@@ -251,9 +252,9 @@ class TradeTest(ApiTestCase):
             "quantity": "bugger"
         }
         data = self._api_call(call)
-        self.assertEqual(data.get('status'), "FAILED", data)
+        self.assertEqual(data.get('status'), "FAILED VALIDATION", data)
         self.assertEqual(data.get('call'), 'PRICECHECK')
-        self.assertEqual(data.get('description'), "parameter 'quantity' has not valid value")
+        self.assertEqual(data.get('description'), "quantity failed validation with not valid decimal format")
 
         call = {
             "call": "PRICECHECK",
@@ -284,6 +285,5 @@ class UnitTests(TestCase):
             "token": self.token,
             "quantity": "bugger"
         }
-        apirequest = base.Request.dispatch(json.dumps(data))
-        result = apirequest.run()
-        result = result.get_response()
+        json_data = json.dumps(data)
+        self.assertRaises(ValidationDecimalException, base.Request.dispatch, json_data)
