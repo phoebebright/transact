@@ -48,6 +48,8 @@ class ListTypesResponse(Response):
     pass
 
 class ListTypesRequest(Request):
+    response = ListTypesResponse
 
     def run(self):
         response = self.response()
+        return response
