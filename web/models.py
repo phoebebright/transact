@@ -302,8 +302,10 @@ class Pool(models.Model):
         """
         returns the product id of the first product added to the pool that matches the requirements
         """
-        
-        qty = Decimal(str(quantity))
+        if isinstance(quality,Decimal):
+            qty=quantity
+        else:
+            qty = Decimal(str(quantity))
 
         if qty < config_value('web','MIN_QUANTITY'):
             raise BelowMinQuantity

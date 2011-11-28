@@ -11,7 +11,8 @@ from django.core.cache import cache
 from django.test import TestCase
 from web.models import *
 from api import base
-from api.exceptions import ValidationDecimalException
+from api.exceptions import ValidationDecimalException, DispatcherException
+
 
 class ApiTestCase(TestCase):
 
@@ -25,6 +26,100 @@ class ApiTestCase(TestCase):
             return json_content
         except ValueError:
             self.fail("no json in response\nWe got\n%s" % content)
+
+    def setUp(self):
+        self.system_user = User.objects.create_user('system', 'system@trialflight.com', 'pass')
+        self.cleanup_objects = [self.system_user]
+
+    def tearDown(self):
+        for obj in self.cleanup_objects:
+            obj.delete()
+
+    def _auth(self):
+        auth_call = {
+            "call": "LOGIN",
+            "username": "system",
+            "password": "pass"
+        }
+        data = self._api_call(auth_call)
+        self.token = data.get('token')
+        return self.token
+    
+class ApiWithDataTestCase(ApiTestCase):
+
+    def setUp(self):
+        super(ApiWithDataTestCase, self).setUp()
+        cleanup_objects = self.cleanup_objects
+        self.client1 = Client.objects.create(name='Client 1')
+        self.client2 = Client.objects.create(name='Client 2')
+        cleanup_objects.append(self.client1)
+        cleanup_objects.append(self.client2)
+        self.custA = Customer.objects.create(name='Customer A of Client 1')
+        cleanup_objects.append(self.custA)
+        o=Relationship.objects.create(client=self.client1, customer=self.custA)
+        cleanup_objects.append(o)
+        # create users
+
+        '''
+        # client 1 has two users
+        u= User.objects.create_user('uclient1a','ucient1a@trialflight.com','pass')
+        profile = u.get_profile()
+        profile.client = self.client1
+        profile.save()
+
+        u= User.objects.create_user('uclient1b','ucient1b@trialflight.com','pass')
+        profile = self.u.get_profile()
+        profile.client = self.client1
+        profile.save()
+
+        # client 2 has two users
+        u= User.objects.create_user('uclient2a','ucient2a@trialflight.com','pass')
+        profile = self.u.get_profile()
+        profile.client = self.client2
+        profile.save()
+
+        '''
+
+        #  add product types
+        o=ProductType.objects.create(code='WIND', name='Wind')
+        cleanup_objects.append(o)
+        o=ProductType.objects.create(code='HYDR', name='Hydro')
+        cleanup_objects.append(o)
+        o=ProductType.objects.create(code='BIOM', name='Biomass')
+        cleanup_objects.append(o)
+        # add products to the pool
+        trade = Trade.objects.create(name='Carbon Credit 1',
+            purchfrom='EXCH',
+            total='10000.00',
+            currency='EUR',
+            tonnes='2500',
+            ref='test 1',
+            )
+        product = Product.objects.get(trade=trade)
+        product.quality = 'G'
+        product.type = ProductType.objects.get(code='HYDR')
+        product.save()
+        product.move2pool()
+        cleanup_objects.append(product)
+        cleanup_objects.append(trade)
+
+        # add products to the pool
+        trade = Trade.objects.create(name='Carbon Credit 2',
+            purchfrom='EXCH',
+            total='1532.22',
+            currency='EUR',
+            tonnes='3221',
+            ref='test 2',
+            )
+        product = Product.objects.get(trade=trade)
+        product.quality = 'P'
+        product.type = ProductType.objects.get(code='HYDR')
+        product.save()
+        product.move2pool()
+        cleanup_objects.append(product)
+        cleanup_objects.append(trade)
+        self.cleanup_objects = cleanup_objects
+
 
 class UtilsTest(ApiTestCase):
     def test_ping(self):
@@ -108,7 +203,7 @@ class AuthTest(ApiTestCase):
         value = cache.get(jsoncontent['token'])
         self.assertEquals(value,'tester')
 
-class TradeTest(ApiTestCase):
+class TradeTest(ApiWithDataTestCase):
     """
     {
         "call": "PRICECHECK", // required
@@ -145,70 +240,6 @@ class TradeTest(ApiTestCase):
         }
     }
     """
-    def setUp(self):
-        """ running setup """
-
-        self.client1 = Client.objects.create(name='Client 1')
-        self.client2 = Client.objects.create(name='Client 2')
-
-        self.custA = Customer.objects.create(name='Customer A of Client 1')
-        Relationship.objects.create(client=self.client1, customer=self.custA)
-
-        # create users
-        self.system_user = User.objects.create_user('system', 'system@trialflight.com', 'pass')
-
-        '''
-        # client 1 has two users
-        u= User.objects.create_user('uclient1a','ucient1a@trialflight.com','pass')
-        profile = u.get_profile()
-        profile.client = self.client1
-        profile.save()
-
-        u= User.objects.create_user('uclient1b','ucient1b@trialflight.com','pass')
-        profile = self.u.get_profile()
-        profile.client = self.client1
-        profile.save()
-
-        # client 2 has two users
-        u= User.objects.create_user('uclient2a','ucient2a@trialflight.com','pass')
-        profile = self.u.get_profile()
-        profile.client = self.client2
-        profile.save()
-
-        '''
-
-        #  add product types
-        ProductType.objects.create(code='WIND', name='Wind')
-        ProductType.objects.create(code='HYDR', name='Hydro')
-        ProductType.objects.create(code='BIOM', name='Biomass')
-        # add products to the pool
-        trade = Trade.objects.create(name='Carbon Credit 1',
-            purchfrom='EXCH',
-            total='10000.00',
-            currency='EUR',
-            tonnes='2500',
-            ref='test 1',
-            )
-        product = Product.objects.get(trade=trade)
-        product.quality = 'G'
-        product.type = ProductType.objects.get(code='HYDR')
-        product.save()
-        product.move2pool()
-
-        # add products to the pool
-        trade = Trade.objects.create(name='Carbon Credit 2',
-            purchfrom='EXCH',
-            total='1532.22',
-            currency='EUR',
-            tonnes='3221',
-            ref='test 2',
-            )
-        product = Product.objects.get(trade=trade)
-        product.quality = 'P'
-        product.type = ProductType.objects.get(code='HYDR')
-        product.save()
-        product.move2pool()
-
     def test_simple_pricecheck(self):
         token = "1db6b44cafa0494a950d9ef531c02e69"
         call = {
@@ -221,14 +252,8 @@ class TradeTest(ApiTestCase):
         self.assertEqual(data.get('call'), 'PRICECHECK')
         self.assertEqual(data.get('code'), 401)
 
-        auth_call = {
-            "call": "LOGIN",
-            "username": "system",
-            "password": "pass"
-        }
-        data = self._api_call(auth_call)
-        token = data.get('token')
-        call['token'] = token
+
+        call['token'] = self._auth()
         data = self._api_call(call)
         self.assertEqual(data.get('status'), "OK", data)
         self.assertEqual(data.get('call'), 'PRICECHECK')
@@ -264,6 +289,43 @@ class TradeTest(ApiTestCase):
         self.assertEqual(data.get('status'), "FAILED VALIDATION", data)
         self.assertEqual(data.get('call'), 'PRICECHECK')
         self.assertEqual(data.get('description'), "parameter 'quantity' is required")
+    def test_type_check(self):
+        """ api.TradeTest.test_type_check
+        /////////////////////////////////////////////////////////////////////
+        // LISTTYPES REQUEST
+        {
+        "call": "LISTTYPES", // required
+        "token": "1db6b44cafa0494a950d9ef531c02e69" // required
+        }
+        // LISTTYPES RESPONSE
+        {
+        "call": "LISTTYPES",
+        "timestamp": 1321267155000,
+        "status": "OK",
+        "types": [
+        {
+        "code": "BIOM",
+        "name": "Biomass"
+        },
+        {
+        "code": "HYDR",
+        "name": "Hydro"
+        },
+        {
+        "code": "WIND",
+        "name": "Wind"
+        }
+
+        """
+        call_data ={
+            "call": "LISTTYPES",
+            "token": self._auth()
+            }
+        data = self._api_call(call_data)
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'LISTTYPES')
+
+
 
 class UnitTests(TestCase):
 
@@ -287,3 +349,12 @@ class UnitTests(TestCase):
         }
         json_data = json.dumps(data)
         self.assertRaises(ValidationDecimalException, base.Request.dispatch, json_data)
+
+    def test_unknowncall(self):
+        data = {
+            "call": "BENIU",
+            "token": self.token,
+            "quantity": "bugger"
+        }
+        json_data = json.dumps(data)
+        self.assertRaises(DispatcherException, base.Request.dispatch, json_data)

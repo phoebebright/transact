@@ -43,3 +43,11 @@ class PriceCheckRequest(Request):
         response.type = item.type.code
         response.quality = item.quality
         return response
+
+class ListTypesResponse(Response):
+    pass
+
+class ListTypesRequest(Request):
+
+    def run(self):
+        response = self.response()

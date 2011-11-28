@@ -3,7 +3,7 @@ from decimal import Decimal
 import json
 import time
 import uuid
-from api.exceptions import ValidationException
+from api.exceptions import ValidationException, DispatcherException
 import micromodels
 from django.utils.translation import ugettext_lazy as _
 
@@ -50,10 +50,13 @@ class JsonWrapper(StaticClass):
         call = data.get('call')
         if not call or not isinstance(call, basestring):
             raise AttributeError("'call' missing")
-        (module, klass) = dispatcher.calls.get(call.upper())
-        import api
-        module = api.__dict__[module]
-        klass = module.__dict__[klass]
+        try:
+            (module, klass) = dispatcher.calls.get(call.upper())
+            import api
+            module = api.__dict__[module]
+            klass = module.__dict__[klass]
+        except (TypeError, KeyError):
+            raise DispatcherException()
         return klass.factory(data)
 
 

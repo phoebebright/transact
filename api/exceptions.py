@@ -22,6 +22,7 @@ class LoginFailedException(ApiException):
     txtMessage = _('username/password not valid')
     errorCode = 402
 
+
 class ValidationException(Exception):
     errorCode = 300
     txtMessage = ""
@@ -42,3 +43,8 @@ class ValidationDecimalException(ValidationException):
     def __init__(self, message=None, *args, **kwargs):
         if message:
             self.txtMessage = message
+
+class DispatcherException(ValidationException):
+    """raises if dispacher fails to find api call"""
+    txtMessage = _('API Call not supported')
+    errorCode = 302
