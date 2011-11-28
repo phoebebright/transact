@@ -1,4 +1,5 @@
 import abc
+from decimal import Decimal
 import json
 import time
 import uuid
@@ -28,11 +29,12 @@ class StaticClass:
 
 class ResponseJsonEncoder(json.JSONEncoder):
     def default(self, o):
+        if isinstance(o, Decimal):
+            return float(o)
         if hasattr(o, "__class__") \
-        and issubclass(o.__class__, Response):
+                and issubclass(o.__class__, Response):
             return o.get_response()
         return json.JSONEncoder.default(self, o)
-
 
 class JsonWrapper(StaticClass):
     @staticmethod
