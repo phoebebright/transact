@@ -322,9 +322,26 @@ class TradeTest(ApiWithDataTestCase):
             "token": self._auth()
             }
         data = self._api_call(call_data)
+        print data
         self.assertEqual(data.get('status'), "OK", data)
         self.assertEqual(data.get('call'), 'LISTTYPES')
-
+        self.assertEqual(type(data.get('types')), type([]))
+        listtypes = data.get('types')
+        self.assertEqual(len(listtypes), 3)
+        testlist = {
+                'WIND':'Wind',
+                'HYDR':'Hydro',
+                'BIOM':'Biomass'
+            }
+        for item in listtypes:
+            self.assertTrue(item.get('code'))
+            self.assertTrue(item.get('name'))
+            code = item.get('code')
+            if code in testlist.keys():
+                self.assertEquals(item.get('name'), testlist[code])
+                del testlist[code]
+            else:
+                self.fail("missing code '%s' in response [%s]" % (code, data))
 
 
 class UnitTests(TestCase):

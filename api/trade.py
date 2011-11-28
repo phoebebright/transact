@@ -3,6 +3,7 @@ from decorators import authenticated
 from api.base import *
 import config
 from livesettings import config_value
+from web.models import ProductType
 
 class PriceCheckResponse(Response):
     quantity = micromodels.FloatField()
@@ -44,12 +45,28 @@ class PriceCheckRequest(Request):
         response.quality = item.quality
         return response
 
+class ListTypeModel(micromodels.Model):
+    code = micromodels.CharField()
+    name = micromodels.CharField()
+
+    def __str__(self):
+        return "List Type (%s %s)" % (self.code, self.name)
+
+    def __repr__(self):
+        return self.__str__()
 class ListTypesResponse(Response):
-    pass
+    types = micromodels.ModelCollectionField(ListTypeModel)
 
 class ListTypesRequest(Request):
     response = ListTypesResponse
 
     def run(self):
-        response = self.response()
+        qs = ProductType.LISTTYPES()
+        types_list = []
+        for item in qs:
+            print item
+            types_list.append(ListTypeModel.from_kwargs(code=item.code, name=item.name))
+        print types_list
+        response = self.response(types = types_list)
+        print response.types
         return response
