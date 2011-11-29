@@ -1,22 +1,26 @@
 # Create your views here.
 from django.http import HttpResponse
-from api import base
+from api.calls import base
 from django.views.decorators.csrf import csrf_exempt
 from api.exceptions import ValidationException
 import json
 
 @csrf_exempt
 def call(request):
-    data = request.raw_post_data
+    jsondata = request.raw_post_data
     apirequest=None
+    data = base.unwrap(jsondata)
+    apirequest = base.dispatch(data)
+    result = apirequest.run()
     try:
-        apirequest = base.Request.dispatch(data)
+        data = base.unwrap(jsondata)
+        apirequest = base.dispatch(data)
         result = apirequest.run()
     except ValidationException, e:
         if apirequest:
             result = base.ErrorResponse(request=apirequest, exception=e, status="FAILED VALIDATION")
         else:
-            data = json.loads(data, encoding='utf8')
+            data = json.loads(jsondata, encoding='utf8')
             call = data.get('call')
             result = base.ErrorResponse(request=None, exception=e, status="FAILED VALIDATION", call=call)
     except Exception, e:
