@@ -365,6 +365,7 @@ class DownstreamTests(BaseTestMoreData):
         """
         misc tests on pool
         """
+        list_pool()
         
         p = Pool.objects.get(id=1)
         self.assertEqual(p.quantity, 2500)
@@ -378,7 +379,61 @@ class DownstreamTests(BaseTestMoreData):
         p.remove_quantity(0.3)
         p = Pool.objects.get(id=1)
         self.assertEqual(p.quantity, Decimal('2399.7'))
+
+        # trying putting products in the pool without quality or type
+        # add products to the pool
+        trade = Trade.objects.create(name = 'Test not Quality', 
+            purchfrom = 'EXCH',
+            total = '10.00',
+            currency = 'EUR',
+            tonnes = '101',
+            ref='test',
+            )        
+        product = Product.objects.get(trade=trade)
+        self.assertRaises(ProductQualityRequired, product.move2pool  )
+
+        product.quality = 'G'
+        product.save()
         
+        self.assertRaises(ProductTypeRequired, product.move2pool  )
+        
+        product.type=ProductType.objects.get(code='HYDR')
+        product.save()
+        
+        product.move2pool()
+        
+
+    def test_poollevel(self):
+        """
+        test whether low pool level is identified
+        """
+        
+        self.assertEqual(Pool.level(), Decimal(5921))
+        self.assertEqual(Pool.level(quality='P'), Decimal(3421))
+        self.assertEqual(Pool.level(quality='G'), Decimal(2500))
+        self.assertEqual(Pool.level(type='HYDR'), Decimal(5721))       
+
+        # poollevel items created automatically when products were added to pool
+        self.assertEqual(PoolLevel.objects.count(),3)       
+        
+        # remove a small amount
+        p = Pool.objects.get(id=1)
+        p.remove_quantity(3)
+        
+        self.assertEqual(config_value('web','DEFAULT_MIN_POOL_LEVEL'),Decimal('100'))
+
+        self.assertTrue(PoolLevel.check_level_ok(quality=p.quality, type=p.type))
+
+        
+        # remove a big amount so level below minlevel of 100
+        p.remove_quantity(2400)    
+        self.assertFalse(PoolLevel.check_level_ok(quality=p.quality, type=p.type))
+        self.assertEqual(p.quantity, Decimal('97'))
+
+        # create a transaction
+        trans = Transaction.new(self.client1, 100, type='WIND')
+        self.assertFalse(PoolLevel.check_level_ok(quality=p.quality, type=p.type))
+
         
 class ListTests(BaseTestMoreData):
     """
@@ -430,7 +485,7 @@ class ListTests(BaseTestMoreData):
     def test_listproducts(self):
     
         products = Pool.LISTPRODUCTS()
-        self.assertEqual(products.count(),2)
+        self.assertEqual(products.count(),3)
         
         # if quantity is below minimum then won't be counted
         p = Pool.objects.get(id=1)
@@ -438,5 +493,5 @@ class ListTests(BaseTestMoreData):
         p.remove_quantity(2499.9)
 
         products = Pool.LISTPRODUCTS()
-        self.assertEqual(products.count(),1)
+        self.assertEqual(products.count(),2)
         

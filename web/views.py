@@ -9,7 +9,8 @@ from web.models import Pool, Transaction, Client
 def transaction(request):
 
     item = None
-    client = Client.objects.get(name='test')
+    
+    client = Client.objects.get_or_create(name='test')
     
     if request.method == "POST":
         form = TransactForm(data = request.POST)

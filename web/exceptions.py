@@ -52,4 +52,22 @@ class Unable2RemoveUnits(ModelException):
     units available
     '''
     txtMessage = _('Trying to remove more units than are available')
-    errorCode = 106            
+    errorCode = 107        
+    
+class ProductQualityRequired(ModelException):
+    '''
+    raised if trying to put a product in the pool where quality has not been defined
+    '''
+    txtMessage = _('Product must have a Quality before being put in the Pool')
+    errorCode = 108        
+    
+class ProductTypeRequired(ModelException):
+    '''
+    raised if trying to remove more units from a Pool item than there are
+    units available
+    '''
+    txtMessage = _('Product must have a Product Type before being put in the Pool')
+    errorCode = 109
+    
+
+    
