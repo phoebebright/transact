@@ -8,8 +8,11 @@ admin.autodiscover()
 
 
 urlpatterns = patterns('',
-   url(r'(.+\.html)$', 'django.views.generic.simple.direct_to_template'),
-   url(r'^$',  'django.views.generic.simple.direct_to_template',{'template': 'index.html'}),
+    url(r'^login/$', 'django.contrib.auth.views.login', name="login"),
+    url(r'^accounts/login/$', 'django.contrib.auth.views.login', name="login"),
+    url(r'^logout/$', 'django.contrib.auth.views.logout', {'template_name': 'login.html'}, name="logout"),
+    url(r'^password_reset/$', 'django.contrib.auth.views.password_reset', name="password_reset"),
+    url(r'^password_reset/done/$', 'django.contrib.auth.views.password_reset_done', name="password_reset_done"),
 )
 
 
@@ -21,8 +24,18 @@ urlpatterns += patterns('',
     url(r'^settings/', include('livesettings.urls')),
 )
 
+urlpatterns += patterns('web.views',
+    url(r'^client_portal/', 'client_portal'),
+    )
+
 # for development only
 if settings.DEBUG:
     urlpatterns += patterns('web.views',
     url(r'^transact/', 'transaction'),
     )
+    
+urlpatterns += patterns('',
+    url(r'(.+\.html)$', 'django.views.generic.simple.direct_to_template'),
+    url(r'^$',  'django.views.generic.simple.direct_to_template',{'template': 'index.html'}),
+)
+

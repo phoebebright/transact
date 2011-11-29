@@ -7,7 +7,7 @@ sys.path.insert(0, '/home/django/')
 
 gettext = lambda s: s
 
-SITE_URL = "http://transactcarbon.com"
+SITE_URL = "http://dev.trialflight.com"
 
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
@@ -18,7 +18,7 @@ TEMPLATE_DEBUG = True
 # if email in debug mode - don't sent externally
 EMAIL_DEBUG = False
 # where emails are sent in debug mode
-TEST_EMAIL = 'phoebebright310+transact@gmail.com'
+TEST_EMAIL = 'phoebebright310+dev@gmail.com'
 
 ADMINS = (
      ('Phoebe Bright', 'phoebebright310@gmail.com'),
@@ -108,6 +108,7 @@ ROOT_URLCONF = 'transact.urls'
 
 TEMPLATE_DIRS = (
     os.path.join(os.path.dirname(__file__), "templates"),
+    os.path.join(os.path.dirname(__file__), "templates/registration"),
 )
 
 

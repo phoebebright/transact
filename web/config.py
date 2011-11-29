@@ -58,3 +58,11 @@ config_register(DecimalValue(
         help_text = _("Set quantity"),
         default = '1000',
 ))
+
+config_register(DecimalValue(
+    TRANSACT_GROUP,
+        'DEFAULT_MIN_POOL_LEVEL',
+        description = _('Default recommended level of Quality/Type products in the Pool.'),
+        help_text = _("Set default level based on activity"),
+        default = '100',
+))

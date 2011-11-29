@@ -234,8 +234,15 @@ class Product(models.Model):
         
         # check quality and type have been added
         
-        # add multiple records if required
+        if not self.quality:
+            raise ProductQualityRequired
+        if not self.type:
+            raise ProductTypeRequired
         
+
+        # TODO: split a large quantity into multiple records if required
+        
+        # add product to pool
         
         Pool.objects.create(product=self,
             quantity=self.quantity_purchased,
@@ -246,6 +253,10 @@ class Product(models.Model):
         # deduct from quantity2pool 
         self.quantity2pool = self.quantity_purchased
         self.save()
+        
+        # call PoolLevel to ensure there is a record in there for this quality/type
+        PoolLevel.check_level_ok(self.quality, self.type)
+        
                  
         return True
 
@@ -291,17 +302,41 @@ class Pool(models.Model):
         """
         
         if units > self.quantity:
-            raise Unable2RemoveUnits()
+            raise Unable2RemoveUnits
         else:
             self.quantity = self.quantity - Decimal(str(units))
             self.save()
             
+            PoolLevel.check_level_ok(quality = self.quality, type = self.type)
+            
+    @classmethod
+    def level(self, quality=None, type=None):
+        """
+        calculate the number of units in the pool for a specific
+        quality and type.  If quality and/or type not specified, 
+        calculate for all.
+        """
+        
+        query = self.objects.all()
+        
+        if quality:
+            query = query.filter(quality=quality)
+            
+        if type:
+            query = query.filter(type=type)
+            
+        return query.aggregate(Sum('quantity')).values()[0]
+        
+        
         
     @classmethod
-    def price_check(cls, quantity, quality=None, type=None):
+    def PRICECHECK(cls, quantity, quality=None, type=None, client=None):
         """
         returns the product id of the first product added to the pool that matches the requirements
         """
+        
+        # valid quantity
+        
         if isinstance(quality,Decimal):
             qty=quantity
         else:
@@ -313,21 +348,42 @@ class Pool(models.Model):
         if qty > config_value('web','MAX_QUANTITY'):
             raise AboveMaxQuantity
             
+        # convert type to ProductType if required
+        if type and type>' ' and not isinstance(type, ProductType):
+            try:
+                type = ProductType.objects.get(code=type)
+            except ProductType.DoesNotExist:
+                raise InvalidProductType
+        
+        # use client default is quality/type not specified
+
+        if not quality and client:
+            quality = client.quality
+            
+        if not type and client:
+            type = client.type
+            
+        # get a price 
+        
         queryset = cls.objects.filter(quantity__gte = qty)
         
         if quality and quality>" ":
             queryset = queryset.filter(quality = quality)
             
-        if type and type>" ":
+        if type:
             queryset = queryset.filter(type__code = type)
         
-        q = str(queryset.query)
- 
+        #q = str(queryset.query)
+
+
         if queryset.count()>0:
             # first in first out - return earliest entry 
             return queryset.order_by('added')[0]
         else:
-            raise NoMatchInPoolException()
+            if client:
+                raise NoMatchInPoolClientException()
+            else:
+                raise NoMatchInPoolException()
             
     @classmethod
     def LISTTYPES(self, blank=None):
@@ -363,7 +419,7 @@ class Pool(models.Model):
         
         items = self.objects.filter(quantity__gte = Decimal(config_value('web','MIN_QUANTITY'))).values_list('quality').distinct().order_by('quality')
         # flatten list
-        print items.query
+
         items = [item for sublist in items for item in sublist]
         
         # build list from all possible qualities so you get description
@@ -417,16 +473,19 @@ class Transaction(models.Model):
     status = models.CharField(_('Status'),  max_length=1, choices=STATUS, default='A')
     pool = models.ForeignKey(Pool, null=True)
     product = models.ForeignKey(Product)
+    client = models.ForeignKey(Client)    
+    customer = models.ForeignKey(Customer, blank=True, null=True)
     price =  models.DecimalField(_('Price'), max_digits=9, decimal_places=2, default=0)
     fee =  models.DecimalField(_('Fee'), max_digits=9, decimal_places=2, default=0)
     currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
     quantity =  models.DecimalField(_('Quantity'), max_digits=9, decimal_places=2)
     created = models.DateTimeField(_('Created Date/Time'), auto_now_add=True, editable=False)
-    closed = models.DateTimeField(_('Closed Date/Time'), null=True)
+    closed = models.DateTimeField(_('Closed Date/Time'), null=True, blank=True)
     expire_at = models.DateTimeField(_('Expire ated Date/Time'), null=True)
     
     objects = TransManager()
-    
+
+
     def __unicode__(self):
         return self.product.name
 
@@ -441,6 +500,9 @@ class Transaction(models.Model):
                     
         super(Transaction, self).save(*args, **kwargs)
 
+    @property
+    def total(self):
+        return self.price + self.fee
         
     @property
     def is_open(self):
@@ -453,6 +515,14 @@ class Transaction(models.Model):
     @property
     def total(self):
         return self.price + self.fee
+        
+    @property
+    def payment(self):
+        
+        try:
+            return Payment.objects.get(trans=self)
+        except Payment.DoesNotExist:
+            return None
    
     @classmethod
     def new(self, client, quantity, quality=None, type=None):
@@ -466,10 +536,11 @@ class Transaction(models.Model):
         # creating a transaction
         
         # first get the item to purchase
-        item = Pool.price_check(qty, quality=quality, type=type)
+        item = Pool.PRICECHECK(qty, quality=quality, type=type)
         
         
         t = Transaction.objects.create(
+            client = client,
             pool = item,
             product = item.product,
             price = (item.price*qty),
@@ -569,7 +640,7 @@ class Payment(models.Model):
     currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
     
     def __unicode__(self):
-        return self.id 
+        return self.payment_date 
 
     class Meta:
         ordering = ['-id', ]
@@ -590,3 +661,60 @@ class UserProfile(models.Model):
     def __str__(self):
         return "%s's profile" % self.user
 
+
+class PoolLevel(models.Model):
+    """
+    Monitor usage and minimum levels of quality/producttype items in the pool
+    One record for each possible comibination of quality/producttype 
+    
+    Initially only used for the admin user to set the minimum level in the pool
+    When the minimum level is reached an email is sent to admin.
+    """
+    
+    quality = models.CharField(_('Default Quality'),  max_length=1, choices=QUALITIES, blank=True, null=True)
+    type =  models.ForeignKey(ProductType, verbose_name = _('Default Product Type'), blank=True, null=True)
+    minlevel =  models.DecimalField(_('Minimum Units'), max_digits=9, decimal_places=2)
+    
+    
+    def __unicode__(self):
+        return "%s/%s" % (self.quality, self.type)
+
+    class Meta:
+        ordering = ['quality','type__name' ]
+
+
+                
+        
+    @classmethod
+    def check_level_ok(self, quality, type):
+        """ 
+        pass a quality/type and check if the total units of this
+        quality/type are below minimum levels
+        """
+
+        
+            
+        # allow passing the product type code 
+        if not isinstance(type, ProductType):
+            try:
+                type = ProductType.objects.get(code=type)
+            except ProductType.DoesNotExist:
+                raise InvalidProductType
+        
+            
+        try:
+            item = self.objects.get(quality=quality, type=type)
+        except self.DoesNotExist:
+            item = self.objects.create(quality=quality, type=type,
+                minlevel = config_value('web','DEFAULT_MIN_POOL_LEVEL'))
+            #TODO write to a log file here or send notification that new record created.
+            
+        level = Pool.level(quality=quality, type=type)
+        
+        if level < item.minlevel:
+            #TODO send notification
+            return False
+        else:
+            return True
+                
+        

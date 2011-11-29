@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block main %}
+		{% if user.is_authenticated %}
+             Logged in as {{ user.first_name }} {{ user.last_name }} &nbsp;<a href="/logout/?next=/">Logout</a>
+
+                {% else %}
+                
+                    <font face="tahoma" size="1" color="#486270">
+		    <form action="/accounts/login/?next=/" method="post" accept-charset="utf-8">{% csrf_token %}
+                    <label for="username">USERNAME </label><input style="width: 160px; border: 1px solid gray" type="text" name="username" value="" id="username" /><br />
+                    <label for="password">PASSWORD </label><input style="width: 160px; border: 1px solid gray" type="password" name="password" value="" id="password" /><br />
+                    <button type="submit">Login</button><br />
+		    <a class="a2" href="{% url password_reset %}">Forgotten Password?</a>
+                    </form>
+		    </font>
+
+                {% endif %}
+    <h2>Recent Transactions</h2>
+   <table>
+    <tr>
+        <td>Created</td><td>Status</td><td>Product</td><td>Type</td><td>Quality</td><td>Qty</td><td>Price</td><td>Fee</td><td>Total</td><td>Payment</td>
+    </tr>
+    {% for item in transactions %}
+        <tr>
+            <td>{{item.created}}</td>
+            <td>{{item.get_status_display}}</td>
+            <td>{{item.product}}</td>
+            <td>{{item.product.type}}</td>
+            <td>{{item.product.quality}}</td>
+            <td>{{item.quantity}}</td>
+            <td>{{item.price}}</td>
+            <td>{{item.fee}}</td>
+            <td>{{item.total}}</td>
+            <td>{{item.payment}}</td>
+            </tr>
+    {% endfor %}
+    </table>
+    
+
+
+{% endblock main %}
+

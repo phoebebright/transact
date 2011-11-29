@@ -13,6 +13,14 @@ class NoMatchInPoolException(ModelException):
     '''
     txtMessage = _('No match found in Pool')
     errorCode = 101
+
+class NoMatchInPoolClientException(ModelException):
+    '''
+    raised if no match found criteria when searching the pool
+    used the criteria set for the client
+    '''
+    txtMessage = _('No match found in Pool for this clients defaults')
+    errorCode = 101
     
 class BelowMinQuantity(ModelException):
     '''
@@ -55,4 +63,30 @@ class Unable2RemoveUnits(ModelException):
     units available
     '''
     txtMessage = _('Trying to remove more units than are available')
-    errorCode = 106            
+    errorCode = 107        
+    
+class ProductQualityRequired(ModelException):
+    '''
+    raised if trying to put a product in the pool where quality has not been defined
+    '''
+    txtMessage = _('Product must have a Quality before being put in the Pool')
+    errorCode = 108        
+    
+class ProductTypeRequired(ModelException):
+    '''
+    raised if trying to remove more units from a Pool item than there are
+    units available
+    '''
+    txtMessage = _('Product must have a Product Type before being put in the Pool')
+    errorCode = 109
+
+class InvalidProductType(ModelException):
+    '''
+    A string product type has been passed to a function but it does not match
+    a code in ProductType
+    '''
+    txtMessage = _('Invalid Product Type')
+    errorCode = 110
+    
+
+    
