@@ -330,12 +330,17 @@ class Pool(models.Model):
         
         
     @classmethod
-    def price_check(cls, quantity, quality=None, type=None):
+    def PRICECHECK(cls, quantity, quality=None, type=None, client=None):
         """
         returns the product id of the first product added to the pool that matches the requirements
         """
         
-        qty = Decimal(str(quantity))
+        # valid quantity
+        
+        if isinstance(quality,Decimal):
+            qty=quantity
+        else:
+            qty = Decimal(str(quantity))
 
         if qty < config_value('web','MIN_QUANTITY'):
             raise BelowMinQuantity
@@ -343,21 +348,42 @@ class Pool(models.Model):
         if qty > config_value('web','MAX_QUANTITY'):
             raise AboveMaxQuantity
             
+        # convert type to ProductType if required
+        if type and type>' ' and not isinstance(type, ProductType):
+            try:
+                type = ProductType.objects.get(code=type)
+            except ProductType.DoesNotExist:
+                raise InvalidProductType
+        
+        # use client default is quality/type not specified
+
+        if not quality and client:
+            quality = client.quality
+            
+        if not type and client:
+            type = client.type
+            
+        # get a price 
+        
         queryset = cls.objects.filter(quantity__gte = qty)
         
         if quality and quality>" ":
             queryset = queryset.filter(quality = quality)
             
-        if type and type>" ":
+        if type:
             queryset = queryset.filter(type__code = type)
         
-        q = str(queryset.query)
- 
+        #q = str(queryset.query)
+
+
         if queryset.count()>0:
             # first in first out - return earliest entry 
             return queryset.order_by('added')[0]
         else:
-            raise NoMatchInPoolException()
+            if client:
+                raise NoMatchInPoolClientException()
+            else:
+                raise NoMatchInPoolException()
             
     @classmethod
     def LISTTYPES(self, blank=None):
@@ -447,16 +473,19 @@ class Transaction(models.Model):
     status = models.CharField(_('Status'),  max_length=1, choices=STATUS, default='A')
     pool = models.ForeignKey(Pool, null=True)
     product = models.ForeignKey(Product)
+    client = models.ForeignKey(Client)    
+    customer = models.ForeignKey(Customer, blank=True, null=True)
     price =  models.DecimalField(_('Price'), max_digits=9, decimal_places=2, default=0)
     fee =  models.DecimalField(_('Fee'), max_digits=9, decimal_places=2, default=0)
     currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
     quantity =  models.DecimalField(_('Quantity'), max_digits=9, decimal_places=2)
     created = models.DateTimeField(_('Created Date/Time'), auto_now_add=True, editable=False)
-    closed = models.DateTimeField(_('Closed Date/Time'), null=True)
+    closed = models.DateTimeField(_('Closed Date/Time'), null=True, blank=True)
     expire_at = models.DateTimeField(_('Expire ated Date/Time'), null=True)
     
     objects = TransManager()
-    
+
+
     def __unicode__(self):
         return self.product.name
 
@@ -471,6 +500,9 @@ class Transaction(models.Model):
                     
         super(Transaction, self).save(*args, **kwargs)
 
+    @property
+    def total(self):
+        return self.price + self.fee
         
     @property
     def is_open(self):
@@ -483,6 +515,14 @@ class Transaction(models.Model):
     @property
     def total(self):
         return self.price + self.fee
+        
+    @property
+    def payment(self):
+        
+        try:
+            return Payment.objects.get(trans=self)
+        except Payment.DoesNotExist:
+            return None
    
     @classmethod
     def new(self, client, quantity, quality=None, type=None):
@@ -496,10 +536,11 @@ class Transaction(models.Model):
         # creating a transaction
         
         # first get the item to purchase
-        item = Pool.price_check(qty, quality=quality, type=type)
+        item = Pool.PRICECHECK(qty, quality=quality, type=type)
         
         
         t = Transaction.objects.create(
+            client = client,
             pool = item,
             product = item.product,
             price = (item.price*qty),
@@ -599,7 +640,7 @@ class Payment(models.Model):
     currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
     
     def __unicode__(self):
-        return self.id 
+        return self.payment_date 
 
     class Meta:
         ordering = ['-id', ]
@@ -655,8 +696,11 @@ class PoolLevel(models.Model):
             
         # allow passing the product type code 
         if not isinstance(type, ProductType):
-            type = ProductType.objects.get(code=type)
-            
+            try:
+                type = ProductType.objects.get(code=type)
+            except ProductType.DoesNotExist:
+                raise InvalidProductType
+        
             
         try:
             item = self.objects.get(quality=quality, type=type)

@@ -8,7 +8,7 @@ sys.path.insert(0, '/home/django/')
 gettext = lambda s: s
 
 SITE_URL = "http://dev.trialflight.com"
-transact
+
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
@@ -108,6 +108,7 @@ ROOT_URLCONF = 'transact.urls'
 
 TEMPLATE_DIRS = (
     os.path.join(os.path.dirname(__file__), "templates"),
+    os.path.join(os.path.dirname(__file__), "templates/registration"),
 )
 
 

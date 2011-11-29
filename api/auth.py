@@ -1,3 +1,4 @@
+from api.exceptions import NotAuthenticatedException, LoginFailedException
 from django.contrib.auth import authenticate
 from api.base import *
 from livesettings import config_value
@@ -19,9 +20,7 @@ class AuthRequest(Request):
             return self.response(token=uuid.uuid4().hex,
                             expires=int((time.time() + 300) * 1000)
                             )
-        else:
-            return ErrorResponse(code=401, call="AUTH",
-                                description="Authentication failed.")
+        raise NotAuthenticatedException()
 
 class LoginResponse(Response):
     token = micromodels.CharField()
@@ -44,6 +43,4 @@ class LoginRequest(Request):
             return self.response(token=token,
                             expires=expires
                             )
-        else:
-            return ErrorResponse(code=402, call="LOGIN",
-                                description="Login failed.")
+        raise LoginFailedException()

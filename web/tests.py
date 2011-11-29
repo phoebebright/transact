@@ -84,9 +84,11 @@ class BaseTest(TestCase):
         '''
         
         #  add product types
-        ProductType.objects.create(code='WIND', name='Wind')
+        p=ProductType.objects.create(code='WIND', name='Wind')
         ProductType.objects.create(code='HYDR', name='Hydro')
         ProductType.objects.create(code='BIOM', name='Biomass')
+        
+        
 
 class BaseTestMoreData(BaseTest):
     """
@@ -245,7 +247,7 @@ class DownstreamTests(BaseTestMoreData):
         product.save()
         product.move2pool()  
         poolitem = Pool.objects.get(product=product)
-    
+
 
         # add products to the pool
         trade = Trade.objects.create(name = 'Yesterday', 
@@ -267,49 +269,85 @@ class DownstreamTests(BaseTestMoreData):
 
         # check earliest is being picked 
         earliestpoolitem = Pool.objects.get(product__name ='Yesterday')
-        item = Pool.price_check(10.1)
+        item = Pool.PRICECHECK(10.1)
         self.assertEqual(item, earliestpoolitem)
         
         
         # but if quality is specified, now choose a that one
         platinumpoolitem = Pool.objects.get(quality='P', type__code='HYDR')
-        item = Pool.price_check(10, quality='P')
+        item = Pool.PRICECHECK(10, quality='P')
         self.assertEqual(item, platinumpoolitem)
         
         # look for items that have no match in the pool
         
         #quantity too high
-        self.assertRaises(AboveMaxQuantity,  Pool.price_check, 10000)
+        self.assertRaises(AboveMaxQuantity,  Pool.PRICECHECK, 10000)
 
         #quantity too low
-        self.assertRaises(BelowMinQuantity,  Pool.price_check, 0.1)
+        self.assertRaises(BelowMinQuantity,  Pool.PRICECHECK, 0.1)
 
         #no quality of type S
-        self.assertRaises(NoMatchInPoolException,  Pool.price_check, 10, quality='S')
+        self.assertRaises(NoMatchInPoolException,  Pool.PRICECHECK, 10, quality='S')
 
         #no type 'XXX'
-        self.assertRaises(NoMatchInPoolException,  Pool.price_check, 10, type='XXX')
+        self.assertRaises(InvalidProductType,  Pool.PRICECHECK, 10, type='XXX')
         
         #no quality G, type 'XXX'
-        self.assertRaises(NoMatchInPoolException,  Pool.price_check, 10, quality='G', type='XXX')
+        self.assertRaises(NoMatchInPoolException,  Pool.PRICECHECK, 10, quality='G', type='BIOM')
         
         
         #test for matches
         #quantity = available
-        item = Pool.price_check(101)
+        item = Pool.PRICECHECK(101)
         self.assertEqual(item, earliestpoolitem)
-        item = Pool.price_check(101, quality='G')
+        item = Pool.PRICECHECK(101, quality='G')
         self.assertEqual(item, earliestpoolitem)
-        item = Pool.price_check(101, type='HYDR' )
+        item = Pool.PRICECHECK(101, type='HYDR' )
         self.assertEqual(item, earliestpoolitem)
-        item = Pool.price_check(101, type='HYDR' , quality='G')
+        item = Pool.PRICECHECK(101, type='HYDR' , quality='G')
         self.assertEqual(item, earliestpoolitem)
 
+        # set default for client 1 only
+        self.client1.quality='G'  
+        self.client1.type = ProductType.objects.get(code='WIND')
+        self.client1.save()
 
+
+        # use client defaults if quality/type not specified
+        # test for defaults not being in pool
+        self.assertRaises(NoMatchInPoolClientException,  Pool.PRICECHECK, 10, client=self.client1)
+
+        # change so there is a match in the pool
+        self.client1.quality='P'  
+        self.client1.type = ProductType.objects.get(code='HYDR')
+        self.client1.save()
+
+        item = Pool.PRICECHECK(101, client=self.client1)
+        self.assertEqual(item.product.name, 'Carbon Credit 2')
+
+        # Any Hydro
+        self.client1.quality=None  
+        self.client1.save()
+
+        item = Pool.PRICECHECK(101, client=self.client1)
+        self.assertEqual(item.product.name, 'Yesterday')
+
+        # Any Platinum - change a date to yesterday to be able to ensure this one is picked
+        self.client1.quality='P'  
+        self.client1.type = None
+        self.client1.save()
+        item = Pool.objects.get(product__name = 'Carbon Credit 3')
+        item.added=YESTERDAY
+        item.save()
+
+        item = Pool.PRICECHECK(101, client=self.client1)
+        self.assertEqual(item.product.name, 'Carbon Credit 3')
+        
+        
     def test_transaction(self):
 
         # get item that matches 10.55 units
-        item = Pool.price_check(10.55)
+        item = Pool.PRICECHECK(10.55)
         before_qty = item.quantity
         
         # create a transaction
@@ -365,7 +403,6 @@ class DownstreamTests(BaseTestMoreData):
         """
         misc tests on pool
         """
-        list_pool()
         
         p = Pool.objects.get(id=1)
         self.assertEqual(p.quantity, 2500)

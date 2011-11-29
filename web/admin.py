@@ -95,7 +95,7 @@ class TransactionAdmin(admin.ModelAdmin):
         model = Transaction 
         
         
-    list_display = ('uuid','status', 'pool', 'product','price','currency','fee', 'quantity')
+    list_display = ('uuid','client','status', 'pool', 'product','price','currency','fee', 'quantity')
 
 
 admin.site.register(Trade, TradeAdmin)    
@@ -106,3 +106,4 @@ admin.site.register(Pool, PoolAdmin)
 admin.site.register(Transaction, TransactionAdmin)
 admin.site.register(Auth, AuthAdmin)
 admin.site.register(PoolLevel)
+admin.site.register(UserProfile)

@@ -1,16 +1,28 @@
-from django.shortcuts import render_to_response
-
+#app
 from web.forms import TransactForm
-from django.template.context import RequestContext
-
 from web.models import Pool, Transaction, Client
+
+#django
+from django.shortcuts import render_to_response
+from django.template.context import RequestContext
+from django.contrib.auth.decorators import login_required, user_passes_test
+
+
+#python
+
+
+
+
 
 
 def transaction(request):
 
     item = None
-    
-    client = Client.objects.get_or_create(name='test')
+    if request.user.is_authenticated():
+        profile = request.user.get_profile()
+        client = profile.client
+    else:
+        client, created = Client.objects.get_or_create(name='test')
     
     if request.method == "POST":
         form = TransactForm(data = request.POST)
@@ -34,3 +46,19 @@ def transaction(request):
         'pool': pool,
         'transactions': transactions,
        },context_instance=RequestContext(request))        
+ 
+@login_required
+def client_portal(request):
+
+    profile = request.user.get_profile()
+    
+    client = profile.client
+
+    
+    transactions = Transaction.objects.filter(client=client)
+    
+
+    return render_to_response('client_portal.html',{
+        'client': client,
+        'transactions': transactions,
+       },context_instance=RequestContext(request))         

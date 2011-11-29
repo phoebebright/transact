@@ -1,3 +1,6 @@
+from api.exceptions import ValidationException
+from django.utils.translation import ugettext_lazy as _
+
 try:
     import json
 except ImportError:
@@ -98,6 +101,11 @@ class Model(object):
             try:
                 field.populate(value)
                 super(Model, self).__setattr__(key, field.to_python())
+            except ValidationException, e:
+                message = _('%s failed validation with %s') % (
+                     key,
+                     e.txtMessage,)
+                raise e.__class__(message=message)
             except:
                 try:
                     field.to_serial()

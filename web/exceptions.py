@@ -1,14 +1,25 @@
 from django.utils.translation import ugettext_lazy as _
 
 class ModelException(Exception):
-
-    pass
+    errorCode = 100
+    txtMessage = ""
+    def __init__(self, message=None, *args, **kwargs):
+        if message:
+            self.txtMessage = message
     
 class NoMatchInPoolException(ModelException):
     '''
     raised if no match found criteria when searching the pool
     '''
     txtMessage = _('No match found in Pool')
+    errorCode = 101
+
+class NoMatchInPoolClientException(ModelException):
+    '''
+    raised if no match found criteria when searching the pool
+    used the criteria set for the client
+    '''
+    txtMessage = _('No match found in Pool for this clients defaults')
     errorCode = 101
     
 class BelowMinQuantity(ModelException):
@@ -68,6 +79,14 @@ class ProductTypeRequired(ModelException):
     '''
     txtMessage = _('Product must have a Product Type before being put in the Pool')
     errorCode = 109
+
+class InvalidProductType(ModelException):
+    '''
+    A string product type has been passed to a function but it does not match
+    a code in ProductType
+    '''
+    txtMessage = _('Invalid Product Type')
+    errorCode = 110
     
 
     

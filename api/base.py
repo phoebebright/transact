@@ -1,13 +1,18 @@
 import abc
+from decimal import Decimal
 import json
 import time
 import uuid
+from api.exceptions import ValidationException, DispatcherException
 import micromodels
+from django.utils.translation import ugettext_lazy as _
 
 import dispatcher
 
-ENCODING_JSON = 1
+from web.exceptions import ModelException
+from api.exceptions import ApiException
 
+ENCODING_JSON = 1
 
 class StaticClassError(Exception):
     pass
@@ -24,11 +29,12 @@ class StaticClass:
 
 class ResponseJsonEncoder(json.JSONEncoder):
     def default(self, o):
+        if isinstance(o, Decimal):
+            return float(o)
         if hasattr(o, "__class__") \
-        and issubclass(o.__class__, Response):
+                and issubclass(o.__class__, Response):
             return o.get_response()
         return json.JSONEncoder.default(self, o)
-
 
 class JsonWrapper(StaticClass):
     @staticmethod
@@ -44,10 +50,13 @@ class JsonWrapper(StaticClass):
         call = data.get('call')
         if not call or not isinstance(call, basestring):
             raise AttributeError("'call' missing")
-        (module, klass) = dispatcher.calls.get(call.upper())
-        import api
-        module = api.__dict__[module]
-        klass = module.__dict__[klass]
+        try:
+            (module, klass) = dispatcher.calls.get(call.upper())
+            import api
+            module = api.__dict__[module]
+            klass = module.__dict__[klass]
+        except (TypeError, KeyError):
+            raise DispatcherException()
         return klass.factory(data)
 
 
@@ -94,7 +103,22 @@ Request at the end, ie. SomeRequest")
         Pass reference of this method to wrapper when unwrapping data
         """
         return cls.from_dict(data)
+    def get(self, itemname, default=None):
+        """ Get optional parameters
+        """
+        if itemname in self.__dict__:
+            return self.__getattribute__(itemname)
+        else:
+            return default
 
+    def require(self, itemname):
+        """ require parameter optional parameters
+            Raises ValidationError if parameter does not exist
+        """
+        if itemname in self.__dict__:
+            return self.__getattribute__(itemname)
+        else:
+            raise ValidationException(_("parameter '%s' is required") % itemname)
 
 class Response(micromodels.Model, dict):
     def __new__(cls, *args, **kw):
@@ -127,6 +151,10 @@ Response at the end, ie. SomeResponse")
         """
         return self.to_dict(serial=True)
 
+    def get_json(self):
+        """ Return wrapped response to json
+        """
+        return JsonWrapper.wrap(self.get_response())
 
 # API REQUESTS AND RESPONSES
 
@@ -134,8 +162,17 @@ class ErrorResponse(Response):
     code = micromodels.IntegerField()
     description = micromodels.CharField()
 
-    def __init__(self, code=500, call="None", status="FAILED", *args, **kw):
+    def __init__(self, request=None, exception=None, status="FAILED", call="None", code=500, *args, **kw):
         super(ErrorResponse, self).__init__(*args, **kw)
+        description = str(exception)
+        if request:
+            call = request.response()._call()
+        if isinstance(exception, (ModelException, ApiException, ValidationException)):
+            code = exception.errorCode
+            description = exception.txtMessage
         self.add_field("call", call, micromodels.CharField())
         self.status = status
         self.code = code
+        self.description = description
+
+    
