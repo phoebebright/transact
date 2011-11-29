@@ -35,7 +35,7 @@ class PriceCheckRequest(Request):
         # or you get error
         from web.models import Pool
 
-        item = Pool.price_check(self.qty, type=self.get("type"), quality=self.get("quality"))
+        item = Pool.PRICECHECK(self.qty, type=self.get("type"), quality=self.get("quality"))
 
         response_data = {}
 
