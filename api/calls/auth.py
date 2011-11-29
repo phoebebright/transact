@@ -1,17 +1,21 @@
 from api.exceptions import NotAuthenticatedException, LoginFailedException
 from django.contrib.auth import authenticate
-from api.base import *
+from api.calls.base import *
 from livesettings import config_value
 from django.core.cache import cache
 
 class AuthResponse(Response):
-    token = micromodels.CharField()
-    expires = micromodels.IntegerField()
+    """
+    token - string
+    expires - integer
+    """
 
 
 class AuthRequest(Request):
-    authID = micromodels.CharField()
-    secret = micromodels.CharField()
+    """
+    authID - string
+    secret - string
+    """
 
     response = AuthResponse
 
@@ -23,18 +27,20 @@ class AuthRequest(Request):
         raise NotAuthenticatedException()
 
 class LoginResponse(Response):
-    token = micromodels.CharField()
-    expires = micromodels.IntegerField()
+    """
+#    token = micromodels.CharField()
+#    expires = micromodels.IntegerField()
+    """
 
 class LoginRequest(Request):
-    username = micromodels.CharField()
-    password = micromodels.CharField()
-
+    """
+#    username = micromodels.CharField()
+#    password = micromodels.CharField()
+    """
     response = LoginResponse
 
     def run(self):
-        user = authenticate(username=self.username, password=self.password)
-        from django.contrib.auth.models import User
+        user = authenticate(username=self.require("username"), password=self.require("password"))
         if user and user.is_active:
             token = uuid.uuid4().hex
 

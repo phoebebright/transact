@@ -10,7 +10,7 @@ from django.core.cache import cache
 
 from django.test import TestCase
 from web.models import *
-from api import base
+from api.calls import base
 from api.exceptions import ValidationDecimalException, DispatcherException
 
 
@@ -139,7 +139,7 @@ class UtilsTest(ApiTestCase):
             "call": 'PING'
         }
         jsoncontent = self._api_call(call_data)
-        self.assertEquals(jsoncontent['call'],'PING')
+        self.assertEquals(jsoncontent['call'],'PING', jsoncontent)
         self.assertEquals(jsoncontent['status'],'OK')
         self.assertTrue(int(jsoncontent['timestamp']) > 0)
 
@@ -249,8 +249,8 @@ class TradeTest(ApiWithDataTestCase):
         }
         data = self._api_call(call)
         self.assertEqual(data.get('status'), "FAILED")
-        self.assertEqual(data.get('call'), 'PRICECHECK')
-        self.assertEqual(data.get('code'), 401)
+        self.assertEqual(data.get('call'), 'PRICECHECK', data)
+        self.assertEqual(data.get('code'), 401, data)
 
 
         call['token'] = self._auth()
@@ -279,7 +279,7 @@ class TradeTest(ApiWithDataTestCase):
         data = self._api_call(call)
         self.assertEqual(data.get('status'), "FAILED VALIDATION", data)
         self.assertEqual(data.get('call'), 'PRICECHECK')
-        self.assertEqual(data.get('description'), "quantity failed validation with not valid decimal format")
+        self.assertEqual(data.get('description'), "failed validation with not valid decimal format")
 
         call = {
             "call": "PRICECHECK",
@@ -322,10 +322,9 @@ class TradeTest(ApiWithDataTestCase):
             "token": self._auth()
             }
         data = self._api_call(call_data)
-        print data
         self.assertEqual(data.get('status'), "OK", data)
         self.assertEqual(data.get('call'), 'LISTTYPES')
-        self.assertEqual(type(data.get('types')), type([]))
+        self.assertEqual(type(data.get('types')), type([]), data)
         listtypes = data.get('types')
         self.assertEqual(len(listtypes), 3)
         testlist = {
@@ -353,9 +352,9 @@ class UnitTests(TestCase):
             "username": "system",
             "password": "pass"
         }
-        apirequest = base.Request.dispatch(json.dumps(auth_call))
+        apirequest = base.dispatch(auth_call)
         result = apirequest.run()
-        result = result.get_response()
+        result = result.data
         self.token = result.get('token')
 
     def test_validation(self):
@@ -364,8 +363,7 @@ class UnitTests(TestCase):
             "token": self.token,
             "quantity": "bugger"
         }
-        json_data = json.dumps(data)
-        self.assertRaises(ValidationDecimalException, base.Request.dispatch, json_data)
+        self.assertRaises(ValidationDecimalException, base.dispatch, data)
 
     def test_unknowncall(self):
         data = {
@@ -373,5 +371,15 @@ class UnitTests(TestCase):
             "token": self.token,
             "quantity": "bugger"
         }
-        json_data = json.dumps(data)
-        self.assertRaises(DispatcherException, base.Request.dispatch, json_data)
+        self.assertRaises(DispatcherException, base.dispatch, data)
+
+    def test_ping(self):
+        call_data = {
+            "call": 'PING'
+        }
+        request = base.dispatch(call_data)
+        response = request.run()
+        content = response.data
+        self.assertEquals(content['call'],'PING')
+        self.assertEquals(content['status'],'OK')
+        self.assertTrue(int(content['timestamp']) > 0)
