@@ -1,4 +1,5 @@
 #from decimal import Decimal
+from api.calls.fields import DecimalField
 from decorators import authenticated
 from api.calls.base import *
 import api.config
@@ -21,7 +22,7 @@ class PriceCheckRequest(Request):
 #    token = micromodels.CharField()
 #
     def sanitize(self):
-        self.data['quantity'] = Decimal(self.require('quantity'))
+        self.data['quantity'] = DecimalField().populate(self.require('quantity')).to_python()
 
     @authenticated
     def run(self):

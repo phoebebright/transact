@@ -9,9 +9,9 @@ import json
 def call(request):
     jsondata = request.raw_post_data
     apirequest=None
-    data = base.unwrap(jsondata)
-    apirequest = base.dispatch(data)
-    result = apirequest.run()
+#    data = base.unwrap(jsondata)
+#    apirequest = base.dispatch(data)
+#    result = apirequest.run()
     try:
         data = base.unwrap(jsondata)
         apirequest = base.dispatch(data)

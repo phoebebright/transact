@@ -62,11 +62,7 @@ Request at the end, ie. SomeRequest")
 
     def __init__(self, data):
         self.data = data
-        try:
-            self.sanitize()
-        except:
-            raise ValidationException(_("parameter '%s' is required") % itemname)
-            
+        self.sanitize()
 
     def sanitize(self):
         """ Validation and clearing of data should be done here
