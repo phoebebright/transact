@@ -62,10 +62,20 @@ Request at the end, ie. SomeRequest")
 
     def __init__(self, data):
         self.data = data
-        self.sanitize()
+        self.validate()
+        try:
+            self.sanitize()
+        except ValidationException, e:
+            message = _('failed validation with %s') % e.txtMessage
+            raise e.__class__(message=message)
 
     def sanitize(self):
-        """ Validation and clearing of data should be done here
+        """ type checking of data should be done here
+        """
+        pass
+
+    def validate(self):
+        """ Validation of data should be done here
         """
         pass
 

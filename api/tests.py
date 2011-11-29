@@ -279,7 +279,7 @@ class TradeTest(ApiWithDataTestCase):
         data = self._api_call(call)
         self.assertEqual(data.get('status'), "FAILED VALIDATION", data)
         self.assertEqual(data.get('call'), 'PRICECHECK')
-        self.assertEqual(data.get('description'), "quantity failed validation with not valid decimal format")
+        self.assertEqual(data.get('description'), "failed validation with not valid decimal format")
 
         call = {
             "call": "PRICECHECK",
