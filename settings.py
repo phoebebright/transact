@@ -2,13 +2,13 @@
 import sys, os
 ROOT = lambda base : os.path.abspath(os.path.join(os.path.dirname(__file__), base).replace('\\','/'))
 
-sys.path.insert(0, '/home/django/dev/')
+sys.path.insert(0, '/home/django/transact/')
 sys.path.insert(0, '/home/django/')
 
 gettext = lambda s: s
 
 SITE_URL = "http://dev.trialflight.com"
-
+transact
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
@@ -29,7 +29,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'dev',   
+        'NAME': 'transact',   
         'USER': 'root',               
         'PASSWORD': '578632',           
         'HOST': '',                  
@@ -103,7 +103,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 
-ROOT_URLCONF = 'dev.urls'
+ROOT_URLCONF = 'transact.urls'
 
 
 TEMPLATE_DIRS = (
