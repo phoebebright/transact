@@ -1,35 +1,40 @@
 {% extends "test.html" %}
 
 {% block heading %}TRANSACT{% endblock heading %}</h1>
-
-{% block doc %}<p>Create a pending transaction to purchase a given quantity, optionally speicify the Quality and Product Type.</p>  
+{% block flow %}<li class="required"><a href="/docs/LOGIN.html">LOGIN</a></li><li>TRANSACT</li>{% endblock %}
+{% block doc %}<p>Create a pending transaction to purchase a given quantity OR quantity for a given value, optionally speicify the Quality and Product Type.</p>
 <p>If no parameters are passed, return first available product</p>
 
-<code>
-{"call":"TRANSACT",<br />
-   "quantity": 100,}
-</code>
+<pre>
+{"call":"TRANSACT",
+   "quantity": 100}
+</pre>
+<p>OR</p>
+<pre>
+{"call":"TRANSACT",
+   "value": 10}
+</pre>
 
 <p>Can optionally specify what Quality and/or Product Type, for example</p>
 
-<code>
-{"call":"TRANSACT",<br />
+<pre>
+{"call":"TRANSACT",
 "quantity": 100,
 "quality": "P"}
-</code>
+</pre>
 <p> OR </p>
-<code>
-{"call":"TRANSACT",<br />
+<pre>
+{"call":"TRANSACT",
 "quantity": 0.15,
 "type": "WIND"}
-</code>
+</pre>
 <p> OR </p>
-<code>
-{"call":"TRANSACT",<br />
+<pre>
+{"call":"TRANSACT",
 "quantity": 1.25,
 "quality": "P",
 "type": "WIND"}
-</code>
+</pre>
 
 
 {% endblock doc %}
