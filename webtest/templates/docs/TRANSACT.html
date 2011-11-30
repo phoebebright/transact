@@ -3,13 +3,21 @@
 
 {% block heading %}TRANSACT{% endblock heading %}</h1>
 
-{% block doc %}<p>Create a pending transaction to purchase a given quantity (or purchase , optionally speicify the Quality and Product Type.</p>  
+{% block doc %}<p>Create a pending transaction to purchase a given quantity or value of units. Optionally specify the Quality and Product Type.</p>  
 <p>If no parameters are passed, return first available product</p>
 
+<p><b>Purchase 100 units</p></p>
 <code>
 {"call":"TRANSACT",<br />
 "token": "{% token %}",
  "quantity": 100,}
+</code>
+
+<p><b>Purchase 100 Euros worth</b></p>
+<code>
+{"call":"TRANSACT",<br />
+"token": "{% token %}",
+ "value": 100,}
 </code>
 
 <p>Can optionally specify what Quality and/or Product Type, for example</p>
@@ -17,7 +25,7 @@
 <code>
 {"call":"TRANSACT",<br />
 "token": "{% token %}",
-"quantity": 100,
+"value": 10,
 "quality": "P"}
 </code>
 <p> OR </p>
@@ -38,5 +46,5 @@
 
 
 {% endblock doc %}
-{% block examplejson %}{"call":"TRANSACT", "quantity": 100}{% endblock examplejson %}
+{% block examplejson %}{"call":"TRANSACT","token": "{% token %}", "quantity": 100}{% endblock examplejson %}
 
