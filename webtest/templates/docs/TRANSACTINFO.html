@@ -1,0 +1,20 @@
+{% extends "test.html" %}
+{% load webtags %}
+
+{% block heading %}TRANSACTINFO{% endblock heading %}</h1>
+
+{% block doc %}<p>Display information for a specific transaction.</p>
+
+<p><b>Transaction Info</p></p>
+<pre>
+{"call":"TRANSACTINFO",<br />
+"token": "{% token %}",
+"transID": "{% transid %}" }
+</pre>
+
+
+
+
+{% endblock doc %}
+{% block examplejson %}{"call":"TRANSACTINFO","token": "{% token %}", "transID": "{% transid %}"}{% endblock examplejson %}
+
