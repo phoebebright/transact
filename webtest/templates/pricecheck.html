@@ -9,6 +9,24 @@
     <script type="text/javascript" src="/static/js/JSON.js"></script>
     <script type="text/javascript" src="/static/webtest/js/main.js"></script>
     <script type="text/javascript">
+
+        function login(){
+            /* uses login to authenticate the user */
+            var data = {
+                "call": "LOGIN",
+                "username": "test",
+                "password": "silicon"
+            }
+            send_call(JSON.stringify(data), function(response){
+                if(response["status"]=="OK"){
+                    jQuery("#id_token").val(response['token']);
+                }else{
+                    var box_content = "<p>Sorry, authentication was not possible at this moment. Try refreshing the page.</p>";
+                    showModal(box_content);
+                }
+            });
+        }
+
         function alertBox(data){
             var box_content = "";
             for (var key in data["currencies"]) {
@@ -28,6 +46,7 @@
         }
 
         jQuery(document).ready(function() {
+            login();
             jQuery('#call_api').click(function(){
                 sendFormCall(jQuery("#call_form"));
                 return false;
