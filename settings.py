@@ -1,5 +1,6 @@
 # settings for viv
 import sys, os
+import logging
 ROOT = lambda base : os.path.abspath(os.path.join(os.path.dirname(__file__), base).replace('\\','/'))
 
 sys.path.insert(0, '/home/django/transact/')
@@ -151,6 +152,9 @@ LOGGING = {
         },
     }
 }
+
+APILOG = "/home/django/transact/api.log"
+APILOG_LEVEL = logging.INFO
 
 DATE_FORMAT = "M d, Y"
 DATE_PY_FORMAT = "%b %d, %Y"
