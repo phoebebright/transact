@@ -1,5 +1,5 @@
 #from decimal import Decimal
-from telepathy._generated.errors import DoesNotExist
+
 from api.calls.fields import DecimalField
 from api.exceptions import TransactionClosedException, TransactionNotExistException
 from decorators import authenticated
@@ -127,7 +127,7 @@ class PayRequest(Request):
         from web.models import Transaction
         try:
             self.trans = Transaction.objects.get(uuid=self.require('transID'))
-        except DoesNotExist:
+        except:
             raise TransactionNotExistException()
 
         if self.trans.is_closed:
