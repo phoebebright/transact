@@ -41,11 +41,11 @@ class ApiTestCase(TestCase):
         for obj in self.cleanup_objects:
             obj.delete()
 
-    def _auth(self):
+    def _auth(self, name="system", password="pass"):
         auth_call = {
             "call": "LOGIN",
-            "username": "system",
-            "password": "pass"
+            "username": name,
+            "password": password
         }
         data = self._api_call(auth_call)
         self.token = data.get('token')
@@ -66,25 +66,9 @@ class ApiWithDataTestCase(ApiTestCase):
         cleanup_objects.append(o)
         # create users
 
-        '''
-        # client 1 has two users
-        u= User.objects.create_user('uclient1a','ucient1a@trialflight.com','pass')
-        profile = u.get_profile()
-        profile.client = self.client1
-        profile.save()
 
-        u= User.objects.create_user('uclient1b','ucient1b@trialflight.com','pass')
-        profile = self.u.get_profile()
-        profile.client = self.client1
-        profile.save()
 
-        # client 2 has two users
-        u= User.objects.create_user('uclient2a','ucient2a@trialflight.com','pass')
-        profile = self.u.get_profile()
-        profile.client = self.client2
-        profile.save()
-
-        '''
+        
 
         #  add product types
         o=ProductType.objects.create(code='WIND', name='Wind')
@@ -132,6 +116,28 @@ class ApiWithDataTestCase(ApiTestCase):
         cleanup_objects.append(product)
         self.cleanup_objects = cleanup_objects
 
+    def _add_users_clients(self):
+# client 1 has two users
+        from web.models import User
+        u= User.objects.create_user('uclient1a','ucient1a@trialflight.com','pass')
+        u.save()
+        profile = u.profile
+        profile.client = self.client1
+        profile.save()
+        self.cleanup_objects.append(u)
+        u= User.objects.create_user('uclient1b','ucient1b@trialflight.com','pass')
+        u.save()
+        profile = u.profile
+        profile.client = self.client1
+        profile.save()
+        self.cleanup_objects.append(u)
+        # client 2 has two users
+        u= User.objects.create_user('uclient2a','ucient2a@trialflight.com','pass')
+        u.save()
+        profile = u.profile
+        profile.client = self.client2
+        profile.save()
+        self.cleanup_objects.append(u)
 
 class UtilsTest(ApiTestCase):
     def test_ping(self):
@@ -562,13 +568,21 @@ class TradeTest(ApiWithDataTestCase):
         """
 #        item = Pool.PRICECHECK(10.55)
 #        before_qty = item.quantity
+        self._add_users_clients()
         call_data ={
             "call": "TRANSACT",
-            "token": self._auth(),
+            "token": self._auth("uclient1a"),
+            "quantity": 10.0,
         }
         data = self._api_call(call_data)
+
         self.assertEqual(data.get('status'), "OK", data)
         self.assertEqual(data.get('call'), 'TRANSACT')
+        self.assertEqual(data.get('quantity'), 10.0)
+        self.assertEqual(data.get('type'), 'HYDR')
+        self.assertEqual(data.get('quality'), 'Gold')
+        self.assertEqual(data.get('currency'), 'EUR')
+        self.assertEqual(data.get('total'), 44.25)
 #
 #        # create a transaction
 #        trans = Transaction.new(self.client1, 10.55)
@@ -670,18 +684,17 @@ class UnitTests(TestCase):
         self.assertEquals(content['call'],'PRICECHECK')
         self.assertEquals(content['status'],'OK')
         self.assertTrue(int(content['timestamp']) > 0)           
-    """        
+
     def test_transact(self):
-        call_data = {
-            "call": 'TRANSACT'
+        call_data ={
+            "call": "TRANSACT",
+            "token": self.token,
+            "quantity": 10.0,
         }
         request = base.dispatch(call_data)
-        response = request.run()
-        content = response.data
-        self.assertEquals(content['call'],'TRANSACT')
-        self.assertEquals(content['status'],'OK')
-        self.assertTrue(int(content['timestamp']) > 0)                   
-        
+
+        self.assertRaises(NoMatchInPoolException, request.run)
+    """
     def test_pay(self):
         call_data = {
             "call": 'PAY'
