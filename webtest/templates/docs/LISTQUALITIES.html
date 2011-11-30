@@ -2,36 +2,25 @@
 
 {% block heading %}LISTQUALITIES{% endblock heading %}</h1>
 
-{% block doc %}<p>Get a list of all valid Product Qualities {% endblock doc %}
+{% block doc %}<p>Get a list of all valid Product Qualities.  
+To get all Product Qualities currently available</p>
+<code>
+{"call":"LISTQUALITIES"}
+</code>
+
+<p>This call will normally be used to create a dropdown list sot here is an optional parameter to be able to start with a blank option meaning "Any". You can use any string as the parameter and it will appear in your list. </p>
+
+<code>
+{"call":"LISTQUALITIES",<br />
+"blank": "Any"}
+</code>
+<p> OR </p>
+<code>
+{"call":"LISTQUALITIES",<br />
+"blank": " "}
+</code>
+
+{% endblock doc %}
+
 {% block examplejson %}{"call":"LISTQUALITIES"}{% endblock examplejson %}
 
-
-{
-	"call": "LISTQUALITIES", // required
-	"token": "1db6b44cafa0494a950d9ef531c02e69" // required
-}
-// LISTTYPES RESPONSE
-{
-	"call": "LISTQUALITIES",
-	"timestamp": 1321267155000,
-	"status": "OK",
-	"types": [
-		{
-			"code": "B",
-			"name": "Bronze"
-		},
-		{
-			"code": "S",
-			"name": "Silver"
-		},
-		{
-			"code": "G",
-			"name": "Gold"
-		},
-		{
-			"code": "P",
-			"name": "Platinum"
-		}
-		
-	]
-}
