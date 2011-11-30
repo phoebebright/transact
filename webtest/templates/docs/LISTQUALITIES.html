@@ -6,21 +6,21 @@
 
 {% block doc %}<p>Get a list of all valid Product Qualities.  
 To get all Product Qualities currently available</p>
-<code>
+<pre>
 {"call":"LISTQUALITIES"}
-</code>
+</pre>
 
 <p>This call will normally be used to create a dropdown list sot here is an optional parameter to be able to start with a blank option meaning "Any". You can use any string as the parameter and it will appear in your list. </p>
 
-<code>
+<pre>
 {"call":"LISTQUALITIES",<br />
 "blank": "Any"}
-</code>
+</pre>
 <p> OR </p>
-<code>
+<pre>
 {"call":"LISTQUALITIES",<br />
 "blank": " "}
-</code>
+</pre>
 
 {% endblock doc %}
 
