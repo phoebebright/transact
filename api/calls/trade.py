@@ -7,6 +7,7 @@ from api.calls.base import *
 import api.config
 from livesettings import config_value
 
+
 #
 class PriceCheckResponse(Response):
     pass
@@ -56,12 +57,51 @@ class PriceCheckRequest(Request):
         response_data["quality"] = item.quality
         return self.response(**response_data)
 
+class QtyCheckResponse(Response):
+    pass
+#    quantity = micromodels.FloatField()
+#    type = micromodels.CharField()
+#    quality = micromodels.CharField()
+#    currencies = micromodels.BaseField()  # dictionary of currencies
+
+class QtyCheckRequest(Request):
+    response = QtyCheckResponse
+
+    def validate(self):
+        self.price = self.require("price")
+
+    def sanitize(self):
+        field = DecimalField()
+        field.populate(self.price)
+        self.price = field.to_python()
+
+    @authenticated
+    def run(self):
+        from web.models import Pool
+        item = Pool.QTYCHECK(self.price, type=self.get("type"), quality=self.get("quality"))
+
+        response_data = {}
+
+        fee = config_value("web", "DEFAULT_FEE")
+        response_data["currencies"] = {
+            item.currency: {
+                "total": float((item.price * item.quantity) + fee),
+                "unit": float(item.price)
+            }
+        }
+        response_data["quantity"] = item.quantity
+        response_data["type"] = item.type.code
+        response_data["quality"] = item.quality
+        return self.response(**response_data)
+
+
 class ListTypesResponse(Response):
     pass
 
 class ListTypesRequest(Request):
     response = ListTypesResponse
 
+    @authenticated
     def run(self):
         from web.models import Pool
         qs = Pool.LISTTYPES(self.get('blank'))
@@ -78,6 +118,7 @@ class ListQualitiesResponse(Response):
 class ListQualitiesRequest(Request):
     response = ListQualitiesResponse
 
+    @authenticated
     def run(self):
         from web.models import Pool
         qs = Pool.LISTQUALITIES(self.get('blank'))
@@ -94,7 +135,11 @@ class TransactRequest(Request):
     response = TransactResponse
 
     def validate(self):
-        self.qty = self.require('quantity')
+        self.qty = self.get('quantity')
+        self.value = self.get('value')
+        
+        if not (self.qty or self.value):
+            raise TransactionNeedsQtyorValException
 
     @authenticated
     def run(self):
@@ -115,7 +160,6 @@ class TransactRequest(Request):
             "transID": transaction.uuid
         }
         response = self.response(**data)
-        PoolLevel.check_level_ok(quality=product.quality, type=product.type)
         return response
 
 class PayResponse(Response):
@@ -147,4 +191,54 @@ class PayRequest(Request):
             "transID": self.trans.uuid
         }
         response = self.response(**data)
+        return response
+
+class TransactInfoResponse(Response):
+    pass
+
+class TransactInfoRequest(Request):
+    response = TransactInfoResponse
+
+    def validate(self):
+        from web.models import Transaction
+        try:
+            self.trans = Transaction.objects.get(uuid=self.require('transID'))
+        except:
+            raise TransactionNotExistException()
+
+    @authenticated
+    def run(self):
+        product = self.trans.product
+        data = {
+            "quantity": self.trans.quantity,
+            "type": product.type.code,
+            "quality": product.quality_name,
+            "currency": self.trans.currency,
+            "total": self.trans.total,
+            "transID": self.trans.uuid,
+            "state": self.trans.status_name.upper(),
+            "name": product.name,
+            "productID": product.uuid,
+        }
+        response = self.response(**data)
+        return response
+
+class TransactCancelResponse(Response):
+    pass
+
+class TransactCancelRequest(Request):
+    response = TransactCancelResponse
+
+    def validate(self):
+        from web.models import Transaction
+        try:
+            self.trans = Transaction.objects.get(uuid=self.require('transID'))
+        except:
+            raise TransactionNotExistException()
+
+
+    @authenticated
+    def run(self):
+        self.trans.cancel()
+        response = self.response()
         return response

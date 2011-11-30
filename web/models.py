@@ -16,8 +16,6 @@ from django.http import Http404
 from django.utils.translation import ugettext_lazy as _
 from django.core.mail import send_mail, EmailMessage
 from django.utils.html import strip_tags
-from django.db.models.signals import post_save
-from django.core.mail import mail_managers
 
 #app
 import config
@@ -590,7 +588,8 @@ class Transaction(models.Model):
         create a new transaction of status Pending
         """
         
-        # TODO check for either quantity or value
+        if not quantity and not value:
+            raise TransactionNeedsQtyorVal
         
         if quantity:
             qty = Decimal(str(quantity))
@@ -673,7 +672,7 @@ class Transaction(models.Model):
         update status to cancelled and put quanity back in the pool
         """
         
-        if self.is_open:
+        if self.is_closed:
             raise Unable2CancelTransaction()
         else:
             self.status = 'C'
@@ -691,7 +690,13 @@ class Transaction(models.Model):
             self.cancel()
             #NOW UNDO PAYMENT
             
-        
+    @property
+    def status_name(self):
+        """return status name from status field"""
+        for (code,name) in STATUS:
+            if code == self.status:
+                return name
+
 class Payment(models.Model):
     """
     Attempted and successful payments of a transaction.
@@ -727,13 +732,6 @@ class UserProfile(models.Model):
     
     def __str__(self):
         return "%s's profile" % self.user
-
-
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
-
-post_save.connect(create_user_profile, sender=User)
 
 
 class PoolLevel(models.Model):
@@ -786,11 +784,9 @@ class PoolLevel(models.Model):
         level = Pool.level(quality=quality, type=type)
         
         if level < item.minlevel:
-            mail_managers('Pool of type %s and quality %s is low!' % (type, quality),
-                      'Pool of type %s and quality %s is now at %s' % (type, quality, level),
-                        fail_silently=False)
+            #TODO send notification
             return False
-        else:
+        else: 
             return True
                 
         

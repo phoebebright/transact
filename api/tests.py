@@ -261,10 +261,9 @@ class TradeTest(ApiWithDataTestCase):
     
         """
       
-        token = "1db6b44cafa0494a950d9ef531c02e69"
         call = {
             "call": "LISTQUALITIES",
-            "token": token
+            "token": self._auth()
         }
         data = self._api_call(call)
         self.assertEqual(data.get('status'), "OK")
@@ -330,6 +329,28 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data.get('type'), "HYDR")
         self.assertEqual(data.get('quality'), 'G')
         self.assertEqual(data['currencies']['EUR']['total'], 44.25)
+        self.assertEqual(data['currencies']['EUR']['unit'], 4.4)
+
+    def test_simple_qtycheck(self):
+        token = "1db6b44cafa0494a950d9ef531c02e69"
+        call = {
+            "call": "QTYCHECK",
+            "token": token,
+            "price": 4.4
+        }
+        data = self._api_call(call)
+        self.assertEqual(data.get('status'), "FAILED")
+        self.assertEqual(data.get('call'), 'QTYCHECK', data)
+        self.assertEqual(data.get('code'), 401, data)
+
+        call['token'] = self._auth()
+        data = self._api_call(call)
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'QTYCHECK')
+        self.assertEqual(data.get('quantity'), 2500.0)
+        self.assertEqual(data.get('type'), "HYDR")
+        self.assertEqual(data.get('quality'), 'G')
+        self.assertEqual(data['currencies']['EUR']['total'], 11000.25)
         self.assertEqual(data['currencies']['EUR']['unit'], 4.4)
 
     def test_price_check_errors(self):
@@ -527,6 +548,99 @@ class TradeTest(ApiWithDataTestCase):
                 self.fail("missing code '%s' in response [%s]" % (code, data))
         self.assertEquals(len(testlist),0)
 
+    def test_list_products(self):
+        """api.TradeTest.test_list_products
+            ///////////////////////////////////////////////////////
+            // LISTPRODUCTS REQUEST
+            {
+            "call": "LISTPRODUCTS", // required
+            "token": "1db6b44cafa0494a950d9ef531c02e69" // required
+            }
+            // LISTPRODUCTS RESPONSE
+            {
+            "call": "LISTPRODUCTS",
+            "timestamp": 1321267155000,
+            "status": "OK",
+            "types": [
+            {
+            "id": 13452678321
+            "type": "WIND",
+            "quality": "G",
+            "name": "Tamil Nadu Wind Project",
+            "price": "7.75",
+            "currency": "EUR"
+            },
+            {
+            "id": 13452678322
+            "type": "BIOM",
+            "quality": "P",
+            "name": "Nobrecel Biomass Energy Project",
+            "price": "9.00",
+            "currency": "EUR"
+            },
+            {
+            "id": 13452678323
+            "type": "HYDR",
+            "quality": "P",
+            !
+            }
+            }
+
+        """
+        #test without blank call
+        call_data ={
+            "call": "LISTPRODUCTS",
+            "token": self._auth(),
+        }
+        data = self._api_call(call_data)
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'LISTPRODUCTS')
+        self.assertEqual(type(data.get('types')), type([]), data)
+        listtypes = data.get('types')
+        self.assertEqual(len(listtypes), 2, listtypes)
+        testlist = {
+                'G':'Gold',
+                'P':'Platinum',
+            }
+        for item in listtypes:
+            self.assertTrue(item.get('code'))
+            self.assertTrue(item.get('name'))
+            code = item.get('code')
+            if code in testlist.keys():
+                self.assertEquals(item.get('name'), testlist[code])
+                del testlist[code]
+            else:
+                self.fail("missing code '%s' in response [%s]" % (code, data))
+        self.assertEquals(len(testlist),0)
+        #test with blank option
+        call_data ={
+            "call": "LISTPRODUCTS",
+            "blank": "Any quality",
+            "token": self._auth(),
+        }
+        data = self._api_call(call_data)
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'LISTPRODUCTS')
+        self.assertEqual(type(data.get('types')), type([]), data)
+        listtypes = data.get('types')
+        self.assertEqual(len(listtypes), 3, listtypes)
+        testlist = {
+                '':"Any quality",
+                'G':'Gold',
+                'P':'Platinum',
+            }
+        for item in listtypes:
+            # check for any code ''
+            self.assertTrue(item.get('code') or item.get('code') == '')
+            self.assertTrue(item.get('name'))
+            code = item.get('code')
+            if code in testlist.keys():
+                self.assertEquals(item.get('name'), testlist[code])
+                del testlist[code]
+            else:
+                self.fail("missing code '%s' in response [%s]" % (code, data))
+        self.assertEquals(len(testlist),0)
+
 
     def test_transact(self):
         """api.TradeTest.test_transact
@@ -645,6 +759,186 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data.get('total'), 44.25)
         data = self._api_call(call_data)
 
+    def test_transact_info(self):
+        """api.TradeTest.test_transact_info
+            /////////////////////////////////////////////////////////////////////
+            // TRANSACTINFO REQUEST
+            {
+            "call": "TRANSACTINFO",
+            "token": "1db6b44cafa0494a950d9ef531c02e69", // required
+            "transID": "9d664a382e6f4dbd8cfd9cf2bf96040b" // required
+            }
+            // TRANSACTINFO RESPONSE
+            {
+            "call": "TRANSACTINFO",
+            "status": "OK",
+            "transID": "9d664a382e6f4dbd8cfd9cf2bf96040b",
+            "state": "PENDING", // PENDING, PAID, EXPIRED, CANCELLED
+            "timestamp": 1321267155000,
+            "quantity": 100.000,
+            "type": "TNWP",
+            "quality": "BRONZE",
+            "name": "Tamil Nadu Wind Project",
+            "productID": "Dd664a382e6f4dbd8cfd9cf2bf96040a",
+            "currency": "EUR",
+            "total": 245.67,
+            "authID": "51a93cda2d654ca882e0373b2c25cee3",
+            "customer":
+            {
+            "customerID": "123123"
+
+        """
+        self._add_users_clients()
+        self._auth("uclient1a")
+        call_data ={
+            "call": "TRANSACTINFO",
+            "token": self.token,
+            "transID": 123,
+        }
+        data = self._api_call(call_data)
+
+        self.assertEqual(data.get('status'), "FAILED VALIDATION", data)
+        self.assertEqual(data.get('call'), 'TRANSACTINFO')
+        self.assertEqual(data.get('code'), 304)
+        self.assertEqual(data.get('description'), 'Transaction does not exist', data)
+
+
+        call_data ={
+            "call": "TRANSACT",
+            "token": self.token,
+            "quantity": 10.0,
+        }
+        data = self._api_call(call_data)
+        self.assertTrue(data.get('transID'), data)
+
+        call_data ={
+            "call": "TRANSACTINFO",
+            "token": self.token,
+            "transID": data.get('transID'),
+        }
+        data = self._api_call(call_data)
+
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'TRANSACTINFO')
+        self.assertEqual(data.get('quantity'), 10.0)
+        self.assertEqual(data.get('type'), 'HYDR')
+        self.assertEqual(data.get('quality'), 'Gold')
+        self.assertEqual(data.get('currency'), 'EUR')
+        self.assertEqual(data.get('total'), 44.25)
+        self.assertEqual(data.get('state'), 'PENDING')
+        self.assertEqual(data.get('name'), 'Carbon Credit 1')
+        self.assertTrue(data.get('productID'))
+
+        call_data ={
+            "call": "PAY",
+            "token": self._auth("uclient1a"),
+            "transID": data.get('transID'),
+        }
+        data = self._api_call(call_data)
+
+        call_data ={
+            "call": "TRANSACTINFO",
+            "token": self.token,
+            "transID": data.get('transID'),
+        }
+        data = self._api_call(call_data)
+
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'TRANSACTINFO')
+        self.assertEqual(data.get('quantity'), 10.0)
+        self.assertEqual(data.get('type'), 'HYDR')
+        self.assertEqual(data.get('quality'), 'Gold')
+        self.assertEqual(data.get('currency'), 'EUR')
+        self.assertEqual(data.get('total'), 44.25)
+        self.assertEqual(data.get('state'), 'PAID')
+        self.assertEqual(data.get('name'), 'Carbon Credit 1')
+        self.assertTrue(data.get('productID'))
+
+    def test_transact_cancel(self):
+        """api.TradeTest.test_transact_cancel
+            /////////////////////////////////////////////////////////////////////
+            // TRANSACTCANCEL REQUEST
+            {
+            "call": "TRANSACTCANCEL",
+            "token": "1db6b44cafa0494a950d9ef531c02e69", // required
+            "transID": "9d664a382e6f4dbd8cfd9cf2bf96040b" // required
+            }
+            // TRANSACTCANCEL RESPONSE
+            {
+            "call": "TRANSACTCANCEL",
+            "status": "OK",
+            "timestamp": 1321267155000
+            }
+
+        """
+        self._add_users_clients()
+        self._auth("uclient1a")
+        call_data ={
+            "call": "TRANSACTCANCEL",
+            "token": self.token,
+            "transID": 123,
+        }
+        data = self._api_call(call_data)
+
+        self.assertEqual(data.get('status'), "FAILED VALIDATION", data)
+        self.assertEqual(data.get('call'), 'TRANSACTCANCEL')
+        self.assertEqual(data.get('code'), 304, data)
+        self.assertEqual(data.get('description'), 'Transaction does not exist', data)
+
+
+        call_data ={
+            "call": "TRANSACT",
+            "token": self.token,
+            "quantity": 10.0,
+        }
+        data = self._api_call(call_data)
+        self.assertTrue(data.get('transID'), data)
+        transact_id = data.get('transID')
+        call_data ={
+            "call": "TRANSACTINFO",
+            "token": self.token,
+            "transID": transact_id,
+        }
+        data = self._api_call(call_data)
+
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'TRANSACTINFO')
+        self.assertEqual(data.get('quantity'), 10.0)
+        self.assertEqual(data.get('type'), 'HYDR')
+        self.assertEqual(data.get('quality'), 'Gold')
+        self.assertEqual(data.get('currency'), 'EUR')
+        self.assertEqual(data.get('total'), 44.25)
+        self.assertEqual(data.get('state'), 'PENDING')
+        self.assertEqual(data.get('name'), 'Carbon Credit 1')
+        self.assertTrue(data.get('productID'))
+
+        call_data ={
+            "call": "TRANSACTCANCEL",
+            "token": self.token,
+            "transID": transact_id,
+        }
+        data = self._api_call(call_data)
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'TRANSACTCANCEL')
+
+        call_data ={
+            "call": "TRANSACTINFO",
+            "token": self.token,
+            "transID": transact_id,
+        }
+        data = self._api_call(call_data)
+
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'TRANSACTINFO')
+        self.assertEqual(data.get('quantity'), 10.0)
+        self.assertEqual(data.get('type'), 'HYDR')
+        self.assertEqual(data.get('quality'), 'Gold')
+        self.assertEqual(data.get('currency'), 'EUR')
+        self.assertEqual(data.get('total'), 44.25)
+        self.assertEqual(data.get('state'), 'CANCELLED')
+        self.assertEqual(data.get('name'), 'Carbon Credit 1')
+        self.assertTrue(data.get('productID'))
+
 class UnitTests(TestCase):
 
     def setUp(self):
@@ -688,7 +982,8 @@ class UnitTests(TestCase):
         
     def test_listtypes(self):
         call_data = {
-            "call": 'LISTTYPES'
+            "call": 'LISTTYPES',
+            "token": self.token,
         }
         request = base.dispatch(call_data)
         response = request.run()
@@ -699,7 +994,8 @@ class UnitTests(TestCase):
         
     def test_qualities(self):
         call_data = {
-            "call": 'LISTQUALITIES'
+            "call": 'LISTQUALITIES',
+            "token": self.token,
         }
         request = base.dispatch(call_data)
         response = request.run()
