@@ -88,4 +88,8 @@ class InvalidProductType(ModelException):
     errorCode = 110
     
 
+class TransactionNeedsQtyorVal(ModelException):
+    txtMessage = 'New Transaction needs a quantity or value'
+    errorCode = 111
+
     

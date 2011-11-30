@@ -52,3 +52,7 @@ class TransactionClosedException(ApiException):
 class TransactionNotExistException(ApiException):
     txtMessage = 'Transaction does not exist'
     errorCode = 404
+
+class TransactionNeedsQtyorValException(ApiException):
+    txtMessage = 'Transaction needs a quantity or value'
+    errorCode = 405

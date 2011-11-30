@@ -588,7 +588,8 @@ class Transaction(models.Model):
         create a new transaction of status Pending
         """
         
-        # TODO check for either quantity or value
+        if not quantity and not value:
+            raise TransactionNeedsQtyorVal
         
         if quantity:
             qty = Decimal(str(quantity))
