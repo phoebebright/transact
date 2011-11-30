@@ -1,26 +1,20 @@
 {% extends "test.html" %}
+{% load webtags %}
 
 {% block heading %}TRANSACTCANCEL{% endblock heading %}</h1>
-{% block flow %}<li class="required"><a href="/docs/LOGIN.html">LOGIN</a></li><li class="active">TRANSACTCANCEL</li>{% endblock %}
-{% block doc %}<p>Create a pending transaction to purchase a given quantity, optionally speicify the Quality and Product Type.</p>  
-<p>If no parameters are passed, return first available product</p>
 
-<code>
-/////////////////////////////////////////////////////////////////////
-// TRANSACTCANCEL REQUEST
-{
-	"call": "TRANSACTCANCEL",
-	"token": "1db6b44cafa0494a950d9ef531c02e69", // required
-	"transID": "9d664a382e6f4dbd8cfd9cf2bf96040b" // required
-}
-// TRANSACTCANCEL RESPONSE
-{
-	"call": "TRANSACTCANCEL",
-	"status": "OK",
-	"timestamp": 1321267155000
-}
-</code>
+{% block doc %}<p>Cancel a pending transaction.  Once a transaction is paid it cannot be cancelled.</p>
+
+<p><b>Cancel transaction</p></p>
+<pre>
+{"call":"TRANSACTCANCEL",<br />
+"token": "{% token %}",
+"transID": "{% transid %}" }
+</pre>
+
+
+
 
 {% endblock doc %}
-{% block examplejson %}{"call":"TRANSACT", "quantity": 100}{% endblock examplejson %}
+{% block examplejson %}{"call":"TRANSACTCANCEL","token": "{% token %}", "transID": "{% transid %}"}{% endblock examplejson %}
 
