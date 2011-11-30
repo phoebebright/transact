@@ -664,7 +664,7 @@ class TradeTest(ApiWithDataTestCase):
 
         self.assertEqual(data.get('status'), "OK", data)
         self.assertEqual(data.get('call'), 'TRANSACT')
-        self.assertEqual(data.get('quantity'), 10.0)
+        self.assertEqual(data.get('quantity'), 22.67)
         self.assertEqual(data.get('type'), 'HYDR')
         self.assertEqual(data.get('quality'), 'Gold')
         self.assertEqual(data.get('currency'), 'EUR')
