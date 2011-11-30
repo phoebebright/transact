@@ -154,7 +154,7 @@ LOGGING = {
 }
 
 APILOG = "/home/django/transact/api.log"
-APILOG_LEVEL = logging.INFO
+APILOG_LEVEL = logging.DEBUG
 
 DATE_FORMAT = "M d, Y"
 DATE_PY_FORMAT = "%b %d, %Y"
