@@ -78,7 +78,7 @@ class ListQualitiesRequest(Request):
 
     def run(self):
         from web.models import Pool
-        qs = Pool.LISTQUALITIES()
+        qs = Pool.LISTQUALITIES(self.get('blank'))
         types_list = []
         for (code, name) in qs:
             types_list.append(dict(code=code, name=name))

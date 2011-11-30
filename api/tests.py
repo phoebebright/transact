@@ -194,7 +194,7 @@ class AuthTest(ApiTestCase):
             "username": "tester",
             "password": "1234567890"
         }
-        #This should fail
+        #This should not fail
         jsoncontent = self._api_call(call_data)
         self.assertEquals(jsoncontent['call'],'LOGIN')
         self.assertEquals(jsoncontent['status'],'OK')
@@ -392,6 +392,34 @@ class TradeTest(ApiWithDataTestCase):
             }
         for item in listtypes:
             self.assertTrue(item.get('code'))
+            self.assertTrue(item.get('name'))
+            code = item.get('code')
+            if code in testlist.keys():
+                self.assertEquals(item.get('name'), testlist[code])
+                del testlist[code]
+            else:
+                self.fail("missing code '%s' in response [%s]" % (code, data))
+        self.assertEquals(len(testlist),0)
+        #test with blank option
+        call_data ={
+            "call": "LISTQUALITIES",
+            "blank": "Any quality",
+            "token": self._auth(),
+        }
+        data = self._api_call(call_data)
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'LISTQUALITIES')
+        self.assertEqual(type(data.get('types')), type([]), data)
+        listtypes = data.get('types')
+        self.assertEqual(len(listtypes), 3, listtypes)
+        testlist = {
+                '':"Any quality",
+                'G':'Gold',
+                'P':'Platinum',
+            }
+        for item in listtypes:
+            # check for any code ''
+            self.assertTrue(item.get('code') or item.get('code') == '')
             self.assertTrue(item.get('name'))
             code = item.get('code')
             if code in testlist.keys():
