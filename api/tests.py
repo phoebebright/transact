@@ -527,6 +527,99 @@ class TradeTest(ApiWithDataTestCase):
                 self.fail("missing code '%s' in response [%s]" % (code, data))
         self.assertEquals(len(testlist),0)
 
+    def test_list_products(self):
+        """api.TradeTest.test_list_products
+            ///////////////////////////////////////////////////////
+            // LISTPRODUCTS REQUEST
+            {
+            "call": "LISTPRODUCTS", // required
+            "token": "1db6b44cafa0494a950d9ef531c02e69" // required
+            }
+            // LISTPRODUCTS RESPONSE
+            {
+            "call": "LISTPRODUCTS",
+            "timestamp": 1321267155000,
+            "status": "OK",
+            "types": [
+            {
+            "id": 13452678321
+            "type": "WIND",
+            "quality": "G",
+            "name": "Tamil Nadu Wind Project",
+            "price": "7.75",
+            "currency": "EUR"
+            },
+            {
+            "id": 13452678322
+            "type": "BIOM",
+            "quality": "P",
+            "name": "Nobrecel Biomass Energy Project",
+            "price": "9.00",
+            "currency": "EUR"
+            },
+            {
+            "id": 13452678323
+            "type": "HYDR",
+            "quality": "P",
+            !
+            }
+            }
+
+        """
+        #test without blank call
+        call_data ={
+            "call": "LISTQUALITIES",
+            "token": self._auth(),
+        }
+        data = self._api_call(call_data)
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'LISTQUALITIES')
+        self.assertEqual(type(data.get('types')), type([]), data)
+        listtypes = data.get('types')
+        self.assertEqual(len(listtypes), 2, listtypes)
+        testlist = {
+                'G':'Gold',
+                'P':'Platinum',
+            }
+        for item in listtypes:
+            self.assertTrue(item.get('code'))
+            self.assertTrue(item.get('name'))
+            code = item.get('code')
+            if code in testlist.keys():
+                self.assertEquals(item.get('name'), testlist[code])
+                del testlist[code]
+            else:
+                self.fail("missing code '%s' in response [%s]" % (code, data))
+        self.assertEquals(len(testlist),0)
+        #test with blank option
+        call_data ={
+            "call": "LISTQUALITIES",
+            "blank": "Any quality",
+            "token": self._auth(),
+        }
+        data = self._api_call(call_data)
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'LISTQUALITIES')
+        self.assertEqual(type(data.get('types')), type([]), data)
+        listtypes = data.get('types')
+        self.assertEqual(len(listtypes), 3, listtypes)
+        testlist = {
+                '':"Any quality",
+                'G':'Gold',
+                'P':'Platinum',
+            }
+        for item in listtypes:
+            # check for any code ''
+            self.assertTrue(item.get('code') or item.get('code') == '')
+            self.assertTrue(item.get('name'))
+            code = item.get('code')
+            if code in testlist.keys():
+                self.assertEquals(item.get('name'), testlist[code])
+                del testlist[code]
+            else:
+                self.fail("missing code '%s' in response [%s]" % (code, data))
+        self.assertEquals(len(testlist),0)
+
 
     def test_transact(self):
         """api.TradeTest.test_transact
@@ -868,7 +961,8 @@ class UnitTests(TestCase):
         
     def test_listtypes(self):
         call_data = {
-            "call": 'LISTTYPES'
+            "call": 'LISTTYPES',
+            "token": self.token,
         }
         request = base.dispatch(call_data)
         response = request.run()
@@ -879,7 +973,8 @@ class UnitTests(TestCase):
         
     def test_qualities(self):
         call_data = {
-            "call": 'LISTQUALITIES'
+            "call": 'LISTQUALITIES',
+            "token": self.token,
         }
         request = base.dispatch(call_data)
         response = request.run()
