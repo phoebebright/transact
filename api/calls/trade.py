@@ -111,11 +111,11 @@ class TransactRequest(Request):
         response = self.response(**data)
         return response
 
-class TransactResponse(Response):
+class PayResponse(Response):
     pass
 
-class TransactRequest(Request):
-    response = TransactResponse
+class PayRequest(Request):
+    response = PayResponse
 
     def validate(self):
         from web.models import Transaction
