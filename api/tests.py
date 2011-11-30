@@ -521,6 +521,79 @@ class TradeTest(ApiWithDataTestCase):
                 self.fail("missing code '%s' in response [%s]" % (code, data))
         self.assertEquals(len(testlist),0)
 
+
+    def test_transact(self):
+        """api.TradeTest.test_transact
+            /////////////////////////////////////////////////////////////////////
+            // TRANSACT REQUEST
+            // Create pending transaction request
+            {
+            "call": "TRANSACT", // required
+            "token": "1db6b44cafa0494a950d9ef531c02e69", // required
+            "quantity": 100, // required
+            "type": "TNWP", // optional
+            "quality": "BRONZE", // optional
+            "currency": "EUR", // optional(?), default EUR?
+            "customer": // optional
+            { // details TBD
+            "customerID": "123123" // the way Client identifies the customer -
+            TransAct may link this Client+CustomerID information to its internal user
+            database. customerID must be unique for that Client.
+            }
+            }
+            // TRANSACT RESPONSE
+            Updated 24 Nov 2011!
+            Page 32
+            {
+            }
+            "call": "TRANSACT",
+            "status": "OK",
+            "transID": "9d664a382e6f4dbd8cfd9cf2bf96040b",
+            "timestamp": 1321267155000,
+            "quantity": 100,
+            "type": "TNWP",
+            "quality": "BRONZE",
+            "currency": "EUR",
+            "total": 245.67,
+            "customer":
+            {
+            "customerID": "123123"
+            }
+        """
+#        item = Pool.PRICECHECK(10.55)
+#        before_qty = item.quantity
+        call_data ={
+            "call": "TRANSACT",
+            "token": self._auth(),
+        }
+        data = self._api_call(call_data)
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'TRANSACT')
+#
+#        # create a transaction
+#        trans = Transaction.new(self.client1, 10.55)
+#
+#        self.assertEqual(item.product, trans.product)
+#        self.assertTrue(trans.is_open)
+#        self.assertFalse(trans.is_closed)
+#        self.assertEqual(trans.quantity, Decimal('10.55'))
+#
+#        # check this amount now removed from pool
+#        item = Pool.objects.get(id=item.id)
+#        self.assertEqual(item.quantity, before_qty - Decimal('10.55'))
+#
+#
+#        # now pay this Transaction
+#        p = trans.pay('PAYREF')
+#
+#        self.assertTrue(p.ref, 'PAYREF')
+#
+#        self.assertEqual(trans.status, 'P')
+#        self.assertFalse(trans.is_open)
+#        self.assertTrue(trans.is_closed)
+#
+#        #DO NEXT
+#        #cancel, expire, refund, pay
 class UnitTests(TestCase):
 
     def setUp(self):
