@@ -13,6 +13,12 @@ from web.models import *
 from api.calls import base
 from api.exceptions import ValidationDecimalException, DispatcherException
 
+# used for debugging only
+def list_pool():
+        print "POOL"
+        for p in Pool.objects.all():
+            print "%30s | %s | %s | %.2f | %s | %.2f | %s" % (p.product, p.quality, p.type, p.quantity, p.currency, p.price, p.added)
+            
 
 class ApiTestCase(TestCase):
 
@@ -194,6 +200,7 @@ class AuthTest(ApiTestCase):
             "username": "tester",
             "password": "1234567890"
         }
+
         #This should succeed
         jsoncontent = self._api_call(call_data)
         self.assertEquals(jsoncontent['call'],'LOGIN')
@@ -252,50 +259,6 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data.get('call'), 'LISTQUALITIES', data)
 
 
-    def test_listtypes(self):
-        """
-        // LISTTYPES REQUEST
-        {
-            "call": "LISTTYPES", // required
-            "token": "1db6b44cafa0494a950d9ef531c02e69" // required
-        }
-        // LISTTYPES RESPONSE
-        {
-            "call": "LISTTYPES",
-            "timestamp": 1321267155000,
-            "status": "OK",
-            "types": [
-                {
-                    "code": "BIOM",
-                    "name": "Biomass"
-                },
-                {
-                    "code": "HYDR",
-                    "name": "Hydro"
-                },
-                {
-                    "code": "WIND",
-                    "name": "Wind"
-                }
-                
-            ]
-        }    
-        """
-        
-        token = "1db6b44cafa0494a950d9ef531c02e69"
-        call = {
-            "call": "LISTTYPES",
-            "token": token
-        }
-        data = self._api_call(call)
-        self.assertEqual(data.get('status'), "OK")
-        self.assertEqual(data.get('call'), 'LISTTYPES', data)
-        types = data.get('types')
-        self.assertEqual(len(types), 3)
-        self.assertTrue({u'code': u'WIND', u'name': u'Wind'} in types)
-
-        
-        #TODO: add test for blank name
         
         
     """
@@ -412,6 +375,7 @@ class TradeTest(ApiWithDataTestCase):
         }
 
         """
+
         call_data ={
             "call": "LISTTYPES",
             "token": self._auth()
