@@ -1,5 +1,7 @@
 #from decimal import Decimal
+
 from api.calls.fields import DecimalField
+from api.exceptions import TransactionClosedException, TransactionNotExistException
 from decorators import authenticated
 from api.calls.base import *
 import api.config
@@ -98,6 +100,10 @@ class TransactRequest(Request):
     def run(self):
         from web.models import Transaction
         client = self.user.profile.client
+        if not client:
+            raise ValidationException("user profile has no client attached")
+
+
         transaction = Transaction.new(client, self.qty)
         product = transaction.product
         data = {
@@ -119,18 +125,25 @@ class PayRequest(Request):
 
     def validate(self):
         from web.models import Transaction
-        self.trans = Transaction.objects.get(uuid=self.require('transID'))
+        try:
+            self.trans = Transaction.objects.get(uuid=self.require('transID'))
+        except:
+            raise TransactionNotExistException()
+
+        if self.trans.is_closed:
+            raise TransactionClosedException()
 
     @authenticated
     def run(self):
         self.trans.pay()
+        product = self.trans.product
         data = {
-            "quantity": transaction.quantity,
+            "quantity": self.trans.quantity,
             "type": product.type.code,
             "quality": product.quality_name,
-            "currency": transaction.currency,
-            "total": transaction.total,
-            "transID": transaction.uuid
+            "currency": self.trans.currency,
+            "total": self.trans.total,
+            "transID": self.trans.uuid
         }
         response = self.response(**data)
         return response

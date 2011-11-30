@@ -44,3 +44,11 @@ class DispatcherException(ValidationException):
     """raises if dispacher fails to find api call"""
     txtMessage = 'API Call not supported'
     errorCode = 302
+
+class TransactionClosedException(ApiException):
+    txtMessage = 'Transaction Closed'
+    errorCode = 403
+
+class TransactionNotExistException(ApiException):
+    txtMessage = 'Transaction does not exist'
+    errorCode = 404
