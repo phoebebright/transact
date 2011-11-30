@@ -56,6 +56,37 @@ class PriceCheckRequest(Request):
         response_data["quality"] = item.quality
         return self.response(**response_data)
 
+class QuantityCheckRequest(Request):
+    response = PriceCheckResponse
+
+    def validate(self):
+        self.price = self.require("price")
+
+    def sanitize(self):
+        field = DecimalField()
+        field.populate(self.price)
+        self.price = field.to_python()
+
+    @authenticated
+    def run(self):
+        from web.models import Pool
+        item = Pool.QTYCHECK(self.price, type=self.get("type"), quality=self.get("quality"))
+
+        response_data = {}
+
+        fee = config_value("web", "DEFAULT_FEE")
+        response_data["currencies"] = {
+            item.currency: {
+                "total": float((item.price * self.qty) + fee),
+                "unit": float(item.price)
+            }
+        }
+        response_data["quantity"] = self.qty
+        response_data["type"] = item.type.code
+        response_data["quality"] = item.quality
+        return self.response(**response_data)
+
+
 class ListTypesResponse(Response):
     pass
 
