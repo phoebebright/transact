@@ -100,13 +100,13 @@ class TransactRequest(Request):
         client = self.user.get_profile().client
         transaction = Transaction.new(client, self.qty)
         product = transaction.product
-        print repr(product.quality_name)
         data = {
             "quantity": transaction.quantity,
             "type": product.type.code,
             "quality": product.quality_name,
             "currency": transaction.currency,
             "total": transaction.total,
+            "transID": transaction.uuid
         }
         response = self.response(**data)
         return response

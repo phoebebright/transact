@@ -583,31 +583,54 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data.get('quality'), 'Gold')
         self.assertEqual(data.get('currency'), 'EUR')
         self.assertEqual(data.get('total'), 44.25)
-#
-#        # create a transaction
-#        trans = Transaction.new(self.client1, 10.55)
-#
-#        self.assertEqual(item.product, trans.product)
-#        self.assertTrue(trans.is_open)
-#        self.assertFalse(trans.is_closed)
-#        self.assertEqual(trans.quantity, Decimal('10.55'))
-#
-#        # check this amount now removed from pool
-#        item = Pool.objects.get(id=item.id)
-#        self.assertEqual(item.quantity, before_qty - Decimal('10.55'))
-#
-#
-#        # now pay this Transaction
-#        p = trans.pay('PAYREF')
-#
-#        self.assertTrue(p.ref, 'PAYREF')
-#
-#        self.assertEqual(trans.status, 'P')
-#        self.assertFalse(trans.is_open)
-#        self.assertTrue(trans.is_closed)
-#
-#        #DO NEXT
-#        #cancel, expire, refund, pay
+        self.assertTrue(data.get('transID'))
+
+    def test_pay(self):
+        """api.TradeTest.test_pay
+        /////////////////////////////////////////////////////////////////////
+        // PAY REQUEST
+        // Note: PAY moves the status of a Transaction from PENDING to PAID
+        {
+        "call": "PAY",
+        "transID": "9d664a382e6f4dbd8cfd9cf2bf96040b", // required
+        "token": "1db6b44cafa0494a950d9ef531c02e69" // required
+        }
+        // PAY RESPONSE - SUCCESS
+        {
+        "call": "PAY",
+        "status": "OK",
+        "transID": "9d664a382e6f4dbd8cfd9cf2bf96040b",
+        "timestamp": 1321267155000,
+        "quantity": 100,
+        "type": "TNWP",
+        "quality": "BRONZE",
+        "currency": "EUR",
+        "total": 245.67,
+        "customer": // optional
+        {
+        "customerID": "123123"
+        }
+        }
+        // PAY RESPONSE - FAILURE
+        {
+        "call": "PAY",
+        "status": "FAILED",
+        "reason": "description here",
+        "code": 100234
+        }
+
+        """
+        self._add_users_clients()
+        call_data ={
+            "call": "PAY",
+            "token": self._auth("uclient1a"),
+            "transID": "",
+        }
+        data = self._api_call(call_data)
+
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'PAY')
+
 class UnitTests(TestCase):
 
     def setUp(self):
