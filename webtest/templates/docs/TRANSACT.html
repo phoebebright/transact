@@ -1,31 +1,36 @@
 {% extends "test.html" %}
+{% load webtags %}
 
 {% block heading %}TRANSACT{% endblock heading %}</h1>
 
-{% block doc %}<p>Create a pending transaction to purchase a given quantity, optionally speicify the Quality and Product Type.</p>  
+{% block doc %}<p>Create a pending transaction to purchase a given quantity (or purchase , optionally speicify the Quality and Product Type.</p>  
 <p>If no parameters are passed, return first available product</p>
 
 <code>
 {"call":"TRANSACT",<br />
-   "quantity": 100,}
+"token": "{% token %}",
+ "quantity": 100,}
 </code>
 
 <p>Can optionally specify what Quality and/or Product Type, for example</p>
 
 <code>
 {"call":"TRANSACT",<br />
+"token": "{% token %}",
 "quantity": 100,
 "quality": "P"}
 </code>
 <p> OR </p>
 <code>
 {"call":"TRANSACT",<br />
+"token": "{% token %}",
 "quantity": 0.15,
 "type": "WIND"}
 </code>
 <p> OR </p>
 <code>
 {"call":"TRANSACT",<br />
+"token": "{% token %}",
 "quantity": 1.25,
 "quality": "P",
 "type": "WIND"}

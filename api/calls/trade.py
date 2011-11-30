@@ -117,6 +117,7 @@ class TransactRequest(Request):
             "transID": transaction.uuid
         }
         response = self.response(**data)
+        PoolLevel.check_level_ok(quality=product.quality, type=product.type)
         return response
 
 class PayResponse(Response):
