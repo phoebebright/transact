@@ -118,6 +118,12 @@ class ApiWithDataTestCase(ApiTestCase):
         product.move2pool()
         cleanup_objects.append(product)
         cleanup_objects.append(trade)
+        product = Product.objects.get(trade=trade)
+        product.quality = 'P'
+        product.type = ProductType.objects.get(code='BIOM')
+        product.save()
+        product.move2pool()
+        cleanup_objects.append(product)
         self.cleanup_objects = cleanup_objects
 
 
@@ -326,14 +332,41 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data.get('call'), 'LISTTYPES')
         self.assertEqual(type(data.get('types')), type([]), data)
         listtypes = data.get('types')
-        self.assertEqual(len(listtypes), 3)
+        self.assertEqual(len(listtypes), 2)
         testlist = {
-                'WIND':'Wind',
                 'HYDR':'Hydro',
                 'BIOM':'Biomass'
             }
         for item in listtypes:
             self.assertTrue(item.get('code'))
+            self.assertTrue(item.get('name'))
+            code = item.get('code')
+            if code in testlist.keys():
+                self.assertEquals(item.get('name'), testlist[code])
+                del testlist[code]
+            else:
+                self.fail("missing code '%s' in response [%s]" % (code, data))
+        self.assertEquals(len(testlist),0)
+        #adding blank
+        call_data ={
+            "call": "LISTTYPES",
+            "blank": "my blank",
+            "token": self._auth()
+            }
+        data = self._api_call(call_data)
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'LISTTYPES')
+        self.assertEqual(type(data.get('types')), type([]), data)
+        listtypes = data.get('types')
+        self.assertEqual(len(listtypes), 3)
+        testlist = {
+                '': "my blank",
+                'HYDR':'Hydro',
+                'BIOM':'Biomass'
+            }
+        for item in listtypes:
+            # test blank code ''
+            self.assertTrue(item.get('code') or item.get('code') == '')
             self.assertTrue(item.get('name'))
             code = item.get('code')
             if code in testlist.keys():
