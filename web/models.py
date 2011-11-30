@@ -729,7 +729,7 @@ class PoolLevel(models.Model):
         if level < item.minlevel:
             #TODO send notification
             return False
-        else:
+        else: 
             return True
                 
         
