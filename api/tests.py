@@ -583,21 +583,22 @@ class UnitTests(TestCase):
         self.assertEquals(content['call'],'LISTQUALITIES')
         self.assertEquals(content['status'],'OK')
         self.assertTrue(int(content['timestamp']) > 0)                
-
+    """   
     def test_pricecheck(self):
+
         call_data = {
             "call": 'PRICECHECK',
             "quantity": 10,
             "token": self.token
         }
-        
+
         request = base.dispatch(call_data)
         response = request.run()
         content = response.data
         self.assertEquals(content['call'],'PRICECHECK')
         self.assertEquals(content['status'],'OK')
         self.assertTrue(int(content['timestamp']) > 0)           
-    """        
+     
     def test_transact(self):
         call_data = {
             "call": 'TRANSACT'
