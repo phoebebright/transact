@@ -609,7 +609,7 @@ class Transaction(models.Model):
             client = client,
             pool = item,
             product = item.product,
-            price = Decimal(item.price*qty),
+            price = Decimal(str(round(item.price*qty,2))) ,
             fee = client.transaction_fee(),
             currency = item.currency,
             quantity = qty,
