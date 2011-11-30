@@ -341,7 +341,47 @@ class TradeTest(ApiWithDataTestCase):
                 del testlist[code]
             else:
                 self.fail("missing code '%s' in response [%s]" % (code, data))
+        self.assertEquals(len(testlist),0)
 
+    def test_list_quantities(self):
+        """api.TradeTest.test_list_quantities
+            /////////////////////////////////////////////////////////////////////
+            // LISTQUALITIES REQUEST
+            {
+            "call": "LISTQUALITIES", // required
+            "token": "1db6b44cafa0494a950d9ef531c02e69" // required
+            }
+            // LISTTYPES RESPONSE
+            {
+            "call": "LISTQUALITIES",
+            "timestamp": 1321267155000,
+            "status": "OK",
+            "types": [
+            {
+            "code": "B",
+            "name": "Bronze"
+            },
+            {
+            "code": "S",
+            "name": "Silver"
+            },
+            {
+            "code": "G",
+            "name": "Gold"
+            },
+            {
+            "code": "P",
+            "name": "Platinum"
+            }
+            }
+        """
+        call_data ={
+            "call": "LISTQUALITIES",
+            "token": self._auth(),
+        }
+        data = self._api_call(call_data)
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'LISTQUALITIES')
 
 class UnitTests(TestCase):
 

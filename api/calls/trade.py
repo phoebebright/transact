@@ -72,3 +72,5 @@ class ListTypesRequest(Request):
         response = self.response(types=types_list)
         #print response.types
         return response
+
+
