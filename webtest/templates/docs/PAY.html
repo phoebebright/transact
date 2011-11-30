@@ -1,0 +1,18 @@
+{% extends "test.html" %}
+{% load webtags %}
+
+{% block heading %}PAY{% endblock heading %}</h1>
+{% block flow %}<li class="required"><a href="/docs/LOGIN.html">LOGIN</a></li><li href="/docs/TRANSACT.html">TRANSACT</li><li><a>PAY</a></li>{% endblock %}
+{% block doc %}<p></p>
+
+<pre>
+{"call":"PAY",
+ "token": {% token %},
+ "transID": }
+</pre>
+
+
+
+{% endblock doc %}
+{% block examplejson %}{"call":"TRANSACT", "quantity": 100}{% endblock examplejson %}
+
