@@ -1,0 +1,41 @@
+#content .post{
+    width:800px;
+}
+
+#gameWindowz{
+    position: relative;
+    background: url("/static/webtest/images/gameWindow.jpeg") no-repeat;
+    width: 800px;
+    height: 600px;
+}
+
+#buyButton{
+    cursor: pointer;
+    position:absolute;
+    top: 363px;
+    right: 50px;
+    color: #fff600;
+    display: block;
+    width: 100px;
+    height: 12px;
+    font-size: 11px;
+    border: 1px #ffc600 solid;
+    background-color: #a59047;
+    text-align:center;
+}
+
+#buyButton:hover{
+    color: #ffc600;
+    background-color: #604f15;
+}
+
+#showGoldz{
+    position:absolute;
+    top: 508px;
+    right: 50px;
+    color: #fff600;
+    font-size: 11px;
+    width: 120px;
+    text-align: right;
+    height: 12px;
+}

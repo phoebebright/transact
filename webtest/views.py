@@ -30,3 +30,8 @@ def transact(request):
 def flight_demo(request):
 
     return render_to_response("flight_demo.html")
+
+
+def voucher_demo(request):
+
+    return render_to_response("voucher_demo.html")

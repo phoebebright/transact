@@ -4,7 +4,7 @@ from decorators import authenticated
 from api.calls.base import *
 import api.config
 from livesettings import config_value
-from web.models import ProductType
+
 #
 class PriceCheckResponse(Response):
     pass
@@ -85,3 +85,52 @@ class ListQualitiesRequest(Request):
         response = self.response(types=types_list)
         return response
 
+class TransactResponse(Response):
+    pass
+
+class TransactRequest(Request):
+    response = TransactResponse
+
+    def validate(self):
+        self.qty = self.require('quantity')
+
+    @authenticated
+    def run(self):
+        from web.models import Transaction
+        client = self.user.profile.client
+        transaction = Transaction.new(client, self.qty)
+        product = transaction.product
+        data = {
+            "quantity": transaction.quantity,
+            "type": product.type.code,
+            "quality": product.quality_name,
+            "currency": transaction.currency,
+            "total": transaction.total,
+            "transID": transaction.uuid
+        }
+        response = self.response(**data)
+        return response
+
+class PayResponse(Response):
+    pass
+
+class PayRequest(Request):
+    response = PayResponse
+
+    def validate(self):
+        from web.models import Transaction
+        self.trans = Transaction.objects.get(uuid=self.require('transID'))
+
+    @authenticated
+    def run(self):
+        self.trans.pay()
+        data = {
+            "quantity": transaction.quantity,
+            "type": product.type.code,
+            "quality": product.quality_name,
+            "currency": transaction.currency,
+            "total": transaction.total,
+            "transID": transaction.uuid
+        }
+        response = self.response(**data)
+        return response
