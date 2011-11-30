@@ -261,10 +261,9 @@ class TradeTest(ApiWithDataTestCase):
     
         """
       
-        token = "1db6b44cafa0494a950d9ef531c02e69"
         call = {
             "call": "LISTQUALITIES",
-            "token": token
+            "token": self._auth()
         }
         data = self._api_call(call)
         self.assertEqual(data.get('status'), "OK")
@@ -568,12 +567,12 @@ class TradeTest(ApiWithDataTestCase):
         """
         #test without blank call
         call_data ={
-            "call": "LISTQUALITIES",
+            "call": "LISTPRODUCTS",
             "token": self._auth(),
         }
         data = self._api_call(call_data)
         self.assertEqual(data.get('status'), "OK", data)
-        self.assertEqual(data.get('call'), 'LISTQUALITIES')
+        self.assertEqual(data.get('call'), 'LISTPRODUCTS')
         self.assertEqual(type(data.get('types')), type([]), data)
         listtypes = data.get('types')
         self.assertEqual(len(listtypes), 2, listtypes)
@@ -593,13 +592,13 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEquals(len(testlist),0)
         #test with blank option
         call_data ={
-            "call": "LISTQUALITIES",
+            "call": "LISTPRODUCTS",
             "blank": "Any quality",
             "token": self._auth(),
         }
         data = self._api_call(call_data)
         self.assertEqual(data.get('status'), "OK", data)
-        self.assertEqual(data.get('call'), 'LISTQUALITIES')
+        self.assertEqual(data.get('call'), 'LISTPRODUCTS')
         self.assertEqual(type(data.get('types')), type([]), data)
         listtypes = data.get('types')
         self.assertEqual(len(listtypes), 3, listtypes)
