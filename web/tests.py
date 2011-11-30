@@ -289,7 +289,7 @@ class DownstreamTests(BaseTestMoreData):
         self.assertRaises(AboveMaxQuantity,  Pool.PRICECHECK, 10000)
 
         #quantity too low
-        self.assertRaises(BelowMinQuantity,  Pool.PRICECHECK, 0.01)
+        self.assertRaises(BelowMinQuantity,  Pool.PRICECHECK, 0.001)
 
         #no quality of type S
         self.assertRaises(NoMatchInPoolException,  Pool.PRICECHECK, 10, quality='S')
