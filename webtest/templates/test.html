@@ -13,6 +13,27 @@
             send_call(jQuery('#call_content').val(), display_call);
             return false;
         });
+        
+        
+        
+        function login(){
+            /* uses login to authenticate the user */
+            var data = {
+                "call": "LOGIN",
+                "username": "test",
+                "password": "silicon"
+            }
+            send_call(data, function(response){
+                if(response["status"]=="OK"){
+                
+                    jQuery(response["token"]).replaceAll(".token");
+                }else{
+                    var box_content = "<p>Sorry, authentication was not possible at this moment. Try refreshing the page.";
+                    showModal(box_content);
+                }
+            });
+        
+        }        
     });
     </script>
 
