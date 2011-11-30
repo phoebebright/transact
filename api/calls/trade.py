@@ -53,22 +53,35 @@ class PriceCheckRequest(Request):
         response_data["type"] = item.type.code
         response_data["quality"] = item.quality
         return self.response(**response_data)
-#
-#
+
 class ListTypesResponse(Response):
-#    types = micromodels.ModelCollectionField(ListTypeModel)
-#    #types = micromodels.FieldCollectionField(ListTypeModel())
-#    #types = micromodels.BaseField()
     pass
 
 class ListTypesRequest(Request):
     response = ListTypesResponse
-#
+
     def run(self):
-        qs = ProductType.LISTTYPES()
+        from web.models import Pool
+        qs = Pool.LISTTYPES(self.get('blank'))
         types_list = []
-        for item in qs:
-            types_list.append(dict(code=item.code, name=item.name))
+        for (code, name) in qs:
+            types_list.append(dict(code=code, name=name))
         response = self.response(types=types_list)
         #print response.types
         return response
+
+class ListQualitiesResponse(Response):
+    pass
+
+class ListQualitiesRequest(Request):
+    response = ListQualitiesResponse
+
+    def run(self):
+        from web.models import Pool
+        qs = Pool.LISTQUALITIES(self.get('blank'))
+        types_list = []
+        for (code, name) in qs:
+            types_list.append(dict(code=code, name=name))
+        response = self.response(types=types_list)
+        return response
+

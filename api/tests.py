@@ -13,6 +13,12 @@ from web.models import *
 from api.calls import base
 from api.exceptions import ValidationDecimalException, DispatcherException
 
+# used for debugging only
+def list_pool():
+        print "POOL"
+        for p in Pool.objects.all():
+            print "%30s | %s | %s | %.2f | %s | %.2f | %s" % (p.product, p.quality, p.type, p.quantity, p.currency, p.price, p.added)
+            
 
 class ApiTestCase(TestCase):
 
@@ -118,6 +124,12 @@ class ApiWithDataTestCase(ApiTestCase):
         product.move2pool()
         cleanup_objects.append(product)
         cleanup_objects.append(trade)
+        product = Product.objects.get(trade=trade)
+        product.quality = 'P'
+        product.type = ProductType.objects.get(code='BIOM')
+        product.save()
+        product.move2pool()
+        cleanup_objects.append(product)
         self.cleanup_objects = cleanup_objects
 
 
@@ -194,7 +206,8 @@ class AuthTest(ApiTestCase):
             "username": "tester",
             "password": "1234567890"
         }
-        #This should fail
+
+        #This should succeed
         jsoncontent = self._api_call(call_data)
         self.assertEquals(jsoncontent['call'],'LOGIN')
         self.assertEquals(jsoncontent['status'],'OK')
@@ -204,6 +217,56 @@ class AuthTest(ApiTestCase):
         self.assertEquals(value,'tester')
 
 class TradeTest(ApiWithDataTestCase):
+
+
+
+    def test_listqualities(self):
+        """
+        // LISTQUALITIES REQUEST
+        {
+            "call": "LISTQUALITIES", // required
+            "token": "1db6b44cafa0494a950d9ef531c02e69" // required
+        }
+        // LISTQUALITIES RESPONSE
+        {
+            "call": "LISTQUALITIES",
+            "timestamp": 1321267155000,
+            "status": "OK",
+            "types": [
+                {
+                    "code": "B",
+                    "name": "Bronze"
+                },
+                {
+                    "code": "S",
+                    "name": "Silver"
+                },
+                {
+                    "code": "G",
+                    "name": "Gold"
+                },
+                {
+                    "code": "P",
+                    "name": "Platinum"
+                }
+                
+            ]
+        }
+    
+        """
+      
+        token = "1db6b44cafa0494a950d9ef531c02e69"
+        call = {
+            "call": "LISTQUALITIES",
+            "token": token
+        }
+        data = self._api_call(call)
+        self.assertEqual(data.get('status'), "OK")
+        self.assertEqual(data.get('call'), 'LISTQUALITIES', data)
+
+
+        
+        
     """
     {
         "call": "PRICECHECK", // required
@@ -289,6 +352,7 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data.get('status'), "FAILED VALIDATION", data)
         self.assertEqual(data.get('call'), 'PRICECHECK')
         self.assertEqual(data.get('description'), "parameter 'quantity' is required")
+        
     def test_type_check(self):
         """ api.TradeTest.test_type_check
         /////////////////////////////////////////////////////////////////////
@@ -317,6 +381,7 @@ class TradeTest(ApiWithDataTestCase):
         }
 
         """
+
         call_data ={
             "call": "LISTTYPES",
             "token": self._auth()
@@ -326,9 +391,8 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data.get('call'), 'LISTTYPES')
         self.assertEqual(type(data.get('types')), type([]), data)
         listtypes = data.get('types')
-        self.assertEqual(len(listtypes), 3)
+        self.assertEqual(len(listtypes), 2)
         testlist = {
-                'WIND':'Wind',
                 'HYDR':'Hydro',
                 'BIOM':'Biomass'
             }
@@ -341,7 +405,121 @@ class TradeTest(ApiWithDataTestCase):
                 del testlist[code]
             else:
                 self.fail("missing code '%s' in response [%s]" % (code, data))
+        self.assertEquals(len(testlist),0)
+        #adding blank
+        call_data ={
+            "call": "LISTTYPES",
+            "blank": "my blank",
+            "token": self._auth()
+            }
+        data = self._api_call(call_data)
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'LISTTYPES')
+        self.assertEqual(type(data.get('types')), type([]), data)
+        listtypes = data.get('types')
+        self.assertEqual(len(listtypes), 3)
+        testlist = {
+                '': "my blank",
+                'HYDR':'Hydro',
+                'BIOM':'Biomass'
+            }
+        for item in listtypes:
+            # test blank code ''
+            self.assertTrue(item.get('code') or item.get('code') == '')
+            self.assertTrue(item.get('name'))
+            code = item.get('code')
+            if code in testlist.keys():
+                self.assertEquals(item.get('name'), testlist[code])
+                del testlist[code]
+            else:
+                self.fail("missing code '%s' in response [%s]" % (code, data))
+        self.assertEquals(len(testlist),0)
 
+    def test_list_quantities(self):
+        """api.TradeTest.test_list_quantities
+            /////////////////////////////////////////////////////////////////////
+            // LISTQUALITIES REQUEST
+            {
+            "call": "LISTQUALITIES", // required
+            "token": "1db6b44cafa0494a950d9ef531c02e69" // required
+            }
+            // LISTTYPES RESPONSE
+            {
+            "call": "LISTQUALITIES",
+            "timestamp": 1321267155000,
+            "status": "OK",
+            "types": [
+            {
+            "code": "B",
+            "name": "Bronze"
+            },
+            {
+            "code": "S",
+            "name": "Silver"
+            },
+            {
+            "code": "G",
+            "name": "Gold"
+            },
+            {
+            "code": "P",
+            "name": "Platinum"
+            }
+            }
+        """
+        #test without blank call
+        call_data ={
+            "call": "LISTQUALITIES",
+            "token": self._auth(),
+        }
+        data = self._api_call(call_data)
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'LISTQUALITIES')
+        self.assertEqual(type(data.get('types')), type([]), data)
+        listtypes = data.get('types')
+        self.assertEqual(len(listtypes), 2, listtypes)
+        testlist = {
+                'G':'Gold',
+                'P':'Platinum',
+            }
+        for item in listtypes:
+            self.assertTrue(item.get('code'))
+            self.assertTrue(item.get('name'))
+            code = item.get('code')
+            if code in testlist.keys():
+                self.assertEquals(item.get('name'), testlist[code])
+                del testlist[code]
+            else:
+                self.fail("missing code '%s' in response [%s]" % (code, data))
+        self.assertEquals(len(testlist),0)
+        #test with blank option
+        call_data ={
+            "call": "LISTQUALITIES",
+            "blank": "Any quality",
+            "token": self._auth(),
+        }
+        data = self._api_call(call_data)
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'LISTQUALITIES')
+        self.assertEqual(type(data.get('types')), type([]), data)
+        listtypes = data.get('types')
+        self.assertEqual(len(listtypes), 3, listtypes)
+        testlist = {
+                '':"Any quality",
+                'G':'Gold',
+                'P':'Platinum',
+            }
+        for item in listtypes:
+            # check for any code ''
+            self.assertTrue(item.get('code') or item.get('code') == '')
+            self.assertTrue(item.get('name'))
+            code = item.get('code')
+            if code in testlist.keys():
+                self.assertEquals(item.get('name'), testlist[code])
+                del testlist[code]
+            else:
+                self.fail("missing code '%s' in response [%s]" % (code, data))
+        self.assertEquals(len(testlist),0)
 
 class UnitTests(TestCase):
 
@@ -383,3 +561,96 @@ class UnitTests(TestCase):
         self.assertEquals(content['call'],'PING')
         self.assertEquals(content['status'],'OK')
         self.assertTrue(int(content['timestamp']) > 0)
+        
+    def test_listtypes(self):
+        call_data = {
+            "call": 'LISTTYPES'
+        }
+        request = base.dispatch(call_data)
+        response = request.run()
+        content = response.data
+        self.assertEquals(content['call'],'LISTTYPES')
+        self.assertEquals(content['status'],'OK')
+        self.assertTrue(int(content['timestamp']) > 0)        
+        
+    def test_qualities(self):
+        call_data = {
+            "call": 'LISTQUALITIES'
+        }
+        request = base.dispatch(call_data)
+        response = request.run()
+        content = response.data
+        self.assertEquals(content['call'],'LISTQUALITIES')
+        self.assertEquals(content['status'],'OK')
+        self.assertTrue(int(content['timestamp']) > 0)                
+
+    def test_pricecheck(self):
+        call_data = {
+            "call": 'PRICECHECK',
+            "quantity": 10,
+            "token": self.token
+        }
+        
+        request = base.dispatch(call_data)
+        response = request.run()
+        content = response.data
+        self.assertEquals(content['call'],'PRICECHECK')
+        self.assertEquals(content['status'],'OK')
+        self.assertTrue(int(content['timestamp']) > 0)           
+    """        
+    def test_transact(self):
+        call_data = {
+            "call": 'TRANSACT'
+        }
+        request = base.dispatch(call_data)
+        response = request.run()
+        content = response.data
+        self.assertEquals(content['call'],'TRANSACT')
+        self.assertEquals(content['status'],'OK')
+        self.assertTrue(int(content['timestamp']) > 0)                   
+        
+    def test_pay(self):
+        call_data = {
+            "call": 'PAY'
+        }
+        request = base.dispatch(call_data)
+        response = request.run()
+        content = response.data
+        self.assertEquals(content['call'],'PAY')
+        self.assertEquals(content['status'],'OK')
+        self.assertTrue(int(content['timestamp']) > 0)       
+        
+    def test_transactcancel(self):
+        call_data = {
+            "call": 'TRANSACTCANCEL'
+        }
+        request = base.dispatch(call_data)
+        response = request.run()
+        content = response.data
+        self.assertEquals(content['call'],'TRANSACTCANCEL')
+        self.assertEquals(content['status'],'OK')
+        self.assertTrue(int(content['timestamp']) > 0)       
+        
+
+    def test_transactinfo(self):
+        call_data = {
+            "call": 'TRANSACTINFO'
+        }
+        request = base.dispatch(call_data)
+        response = request.run()
+        content = response.data
+        self.assertEquals(content['call'],'TRANSACTINFO')
+        self.assertEquals(content['status'],'OK')
+        self.assertTrue(int(content['timestamp']) > 0)       
+        
+    def test_listproducts(self):
+        call_data = {
+            "call": 'LISTPRODUCTS'
+        }
+        request = base.dispatch(call_data)
+        response = request.run()
+        content = response.data
+        self.assertEquals(content['call'],'LISTPRODUCTS')
+        self.assertEquals(content['status'],'OK')
+        self.assertTrue(int(content['timestamp']) > 0)       
+    """        

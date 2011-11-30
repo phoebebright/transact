@@ -2,7 +2,25 @@
 
 {% block heading %}LISTTYPES{% endblock heading %}</h1>
 
-{% block doc %}<p>Get a list of all valid Product Types {% endblock doc %}
+{% block doc %}<p>Get a list of all valid Product Types.  
+To get all Product Types currently available</p>
+<code>
+{"call":"LISTTYPES"}
+</code>
+
+<p>This call will normally be used to create a dropdown list sot here is an optional parameter to be able to start with a blank option meaning "Any". You can use any string as the parameter and it will appear in your list. </p>
+
+<code>
+{"call":"LISTTYPES",<br />
+"blank": "Any"}
+</code>
+<p> OR </p>
+<code>
+{"call":"LISTTYPES",<br />
+"blank": " "}
+</code>
+
+{% endblock doc %}
 {% block examplejson %}{"call":"LISTTYPES"}{% endblock examplejson %}
 
 
