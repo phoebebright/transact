@@ -48,7 +48,7 @@ config_register(DecimalValue(
         'MIN_QUANTITY',
         description = _('Minimum Quantity that can be purchased'),
         help_text = _("Set quantity"),
-        default = '0.01',
+        default = '0.02',
 ))
 
 config_register(DecimalValue(
