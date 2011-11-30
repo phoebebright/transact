@@ -375,6 +375,7 @@ class TradeTest(ApiWithDataTestCase):
             }
             }
         """
+        #test without blank call
         call_data ={
             "call": "LISTQUALITIES",
             "token": self._auth(),
@@ -382,6 +383,23 @@ class TradeTest(ApiWithDataTestCase):
         data = self._api_call(call_data)
         self.assertEqual(data.get('status'), "OK", data)
         self.assertEqual(data.get('call'), 'LISTQUALITIES')
+        self.assertEqual(type(data.get('types')), type([]), data)
+        listtypes = data.get('types')
+        self.assertEqual(len(listtypes), 2, listtypes)
+        testlist = {
+                'G':'Gold',
+                'P':'Platinum',
+            }
+        for item in listtypes:
+            self.assertTrue(item.get('code'))
+            self.assertTrue(item.get('name'))
+            code = item.get('code')
+            if code in testlist.keys():
+                self.assertEquals(item.get('name'), testlist[code])
+                del testlist[code]
+            else:
+                self.fail("missing code '%s' in response [%s]" % (code, data))
+        self.assertEquals(len(testlist),0)
 
 class UnitTests(TestCase):
 

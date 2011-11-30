@@ -61,10 +61,11 @@ class ListTypesRequest(Request):
     response = ListTypesResponse
 
     def run(self):
-        qs = ProductType.LISTTYPES()
+        from web.models import Pool
+        qs = Pool.LISTTYPES()
         types_list = []
-        for item in qs:
-            types_list.append(dict(code=item.code, name=item.name))
+        for (code, name) in qs:
+            types_list.append(dict(code=code, name=name))
         response = self.response(types=types_list)
         #print response.types
         return response
@@ -76,6 +77,11 @@ class ListQualitiesRequest(Request):
     response = ListQualitiesResponse
 
     def run(self):
-        response = self.response()
+        from web.models import Pool
+        qs = Pool.LISTQUALITIES()
+        types_list = []
+        for (code, name) in qs:
+            types_list.append(dict(code=code, name=name))
+        response = self.response(types=types_list)
         return response
 
