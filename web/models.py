@@ -386,7 +386,7 @@ class Pool(models.Model):
                 raise NoMatchInPoolException()
             
     @classmethod
-    def LISTTYPES(self, blank=None):
+    def LISTTYPES(self, blank_name=None):
         """
         return list of product types for available items in the pool
         eg. returns [(u'HYDR', u'Hydro'), (u'WIND', u'Wind')]
@@ -398,8 +398,8 @@ class Pool(models.Model):
 
         # convert to list of tuples
         
-        if blank:
-            types=[('',blank),]
+        if blank_name:
+            types=[('',blank_name),]
         else:
             types = []
         
@@ -409,7 +409,7 @@ class Pool(models.Model):
         return types
 
     @classmethod
-    def LISTQUALITIES(self, blank=None):
+    def LISTQUALITIES(self, blank_name=None):
         """
         return list of product types for available items in the pool
         eg. returns [('G', 'Gold'), ('P', 'Platinum')]
@@ -426,8 +426,8 @@ class Pool(models.Model):
 
         # convert to list of tuples
         
-        if blank:
-            qualities=[('',blank),]
+        if blank_name:
+            qualities=[('',blank_name),]
         else:
             qualities = []
 
