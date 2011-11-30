@@ -16,6 +16,7 @@ from django.http import Http404
 from django.utils.translation import ugettext_lazy as _
 from django.core.mail import send_mail, EmailMessage
 from django.utils.html import strip_tags
+from django.db.models.signals import post_save
 
 #app
 import config
@@ -734,6 +735,11 @@ class UserProfile(models.Model):
     def __str__(self):
         return "%s's profile" % self.user
 
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+
+post_save.connect(create_user_profile, sender=User)
 
 class PoolLevel(models.Model):
     """

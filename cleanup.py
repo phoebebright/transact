@@ -10,7 +10,7 @@ from web.models import Transaction
 print "Looking for old, expired transactions..."
 # add two days just to be safe...
 expiry_safedate = datetime.now() + timedelta(days=2)
-trans = Transaction.objects.filter(expire_at__gt=expiry_safedate)
+trans = Transaction.objects.filter(expire_at__lt=expiry_safedate, status__in=["A", "X", "C"])
 print "Found %d old entries." % trans.count()
 if trans.count():
     print "Deleting now..."
