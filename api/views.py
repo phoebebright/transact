@@ -2,7 +2,7 @@
 from django.http import HttpResponse
 from api.calls import base
 from django.views.decorators.csrf import csrf_exempt
-from api.exceptions import ValidationException
+from api.exceptions import ValidationException, ApiException
 from logger import log
 import uuid
 import json
@@ -34,6 +34,8 @@ def call(request):
                 }
             )
         log.debug("API CALLID=\"%(callid)s\" RESPONSEDATA=%(data)s" % {"callid": callid, "data": result.get_json()})
+    except ApiException, e:
+        result = base.ErrorResponse(request=apirequest, exception=e)
     except ValidationException, e:
         if apirequest:
             result = base.ErrorResponse(request=apirequest, exception=e, status="FAILED VALIDATION")

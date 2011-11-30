@@ -4,3 +4,5 @@
 
 301 when value is not valid deciaml format (5,2)
 302 API Call not supported
+303 transaction closed
+304 transaction does not exists
