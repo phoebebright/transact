@@ -344,7 +344,7 @@ class Pool(models.Model):
         
         # valid quantity
         
-        if isinstance(quality,Decimal):
+        if isinstance(quantity,Decimal):
             qty=quantity
         else:
             qty = Decimal(str(quantity))
@@ -391,7 +391,58 @@ class Pool(models.Model):
                 raise NoMatchInPoolClientException()
             else:
                 raise NoMatchInPoolException()
+
+    @classmethod
+    def QTYCHECK(cls, value, quality=None, type=None, client=None):
+        """
+        returns the product id of the first product added to the pool that matches the requirements
+        """
+        
+        # valid quantity
+        
+        if isinstance(value,Decimal):
+            v=value
+        else:
+            v = Decimal(str(value))
+
             
+        # convert type to ProductType if required
+        if type and type>' ' and not isinstance(type, ProductType):
+            try:
+                type = ProductType.objects.get(code=type)
+            except ProductType.DoesNotExist:
+                raise InvalidProductType
+        
+        # use client default is quality/type not specified
+
+        if not quality and client:
+            quality = client.quality
+            
+        if not type and client:
+            type = client.type
+            
+        # get a price 
+        
+        queryset = cls.objects.all()
+        
+        if quality and quality>" ":
+            queryset = queryset.filter(quality = quality)
+            
+        if type:
+            queryset = queryset.filter(type__code = type)
+        
+        #q = str(queryset.query)
+
+        # take first item where there are enough units
+        for item in queryset.order_by('added'):
+            if item.price * item.quantity > v:
+                return item
+        
+        if client:
+            raise NoMatchInPoolClientException()
+        else:
+            raise NoMatchInPoolException()
+        
     @classmethod
     def LISTTYPES(self, blank_name=None):
         """
@@ -532,18 +583,25 @@ class Transaction(models.Model):
             return None
    
     @classmethod
-    def new(self, client, quantity, quality=None, type=None):
+    def new(self, client, quantity=None, value=None, quality=None, type=None):
         """
         create a new transaction of status Pending
         """
         
-        qty = Decimal(str(quantity))
+        # TODO check for either quantity or value
         
-        # in future need to do a lock between doing a price check and
+        if quantity:
+            qty = Decimal(str(quantity))
+            item = Pool.PRICECHECK(qty, quality=quality, type=type)
+            v = item.price*qty
+        if value:
+            v = Decimal(str(value))
+            item = Pool.QTYCHECK(v, quality=quality, type=type)
+            
+            qty = Decimal(str(round((v - client.transaction_fee() ) / item.price,2)))
+            
+        # TODO in future need to do a lock between doing a price check and
         # creating a transaction
-        
-        # first get the item to purchase
-        item = Pool.PRICECHECK(qty, quality=quality, type=type)
         
         
         t = Transaction.objects.create(
