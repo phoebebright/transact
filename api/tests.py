@@ -732,7 +732,7 @@ class UnitTests(TestCase):
         request = base.dispatch(call_data)
 
         self.assertRaises(NoMatchInPoolException, request.run)
-    """
+
     def test_pay(self):
         call_data = {
             "call": 'PAY'
@@ -743,7 +743,7 @@ class UnitTests(TestCase):
         self.assertEquals(content['call'],'PAY')
         self.assertEquals(content['status'],'OK')
         self.assertTrue(int(content['timestamp']) > 0)       
-        
+    """
     def test_transactcancel(self):
         call_data = {
             "call": 'TRANSACTCANCEL'
