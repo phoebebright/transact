@@ -10,15 +10,15 @@ To get all Product Types currently available</p>
 
 <p>This call will normally be used to create a dropdown list sot here is an optional parameter to be able to start with a blank option meaning "Any". You can use any string as the parameter and it will appear in your list. </p>
 
-<code>
+<pre>
 {"call":"LISTTYPES",<br />
 "blank": "Any"}
-</code>
+</pre>
 <p> OR </p>
-<code>
+<pre>
 {"call":"LISTTYPES",<br />
 "blank": " "}
-</code>
+</pre>
 
 {% endblock doc %}
 {% block examplejson %}{"call":"LISTTYPES"}{% endblock examplejson %}
