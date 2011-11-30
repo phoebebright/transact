@@ -8,16 +8,16 @@
 {% block doc %}<p>Create a pending transaction to purchase a given quantity or value of units. Optionally specify the Quality and Product Type.</p>  
 <p>If no parameters are passed, return first available product</p>
 
-<p><b>Purchase 100 units</p></p>
+<p><b>Purchase 100 units</b></p>
 <pre>
-{"call":"TRANSACT",<br />
+{"call":"TRANSACT",
 "token": "{% token %}",
  "quantity": 100}
 </pre>
 
 <p><b>Purchase 100 Euros worth</b></p>
 <pre>
-{"call":"TRANSACT",<br />
+{"call":"TRANSACT",
 "token": "{% token %}",
  "value": 100}
 </pre>
