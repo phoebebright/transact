@@ -19,7 +19,7 @@ def transaction(request):
 
     item = None
     if request.user.is_authenticated():
-        profile = request.user.get_profile()
+        profile = request.user.profile
         client = profile.client
     else:
         client, created = Client.objects.get_or_create(name='test')
@@ -50,7 +50,7 @@ def transaction(request):
 @login_required
 def client_portal(request):
 
-    profile = request.user.get_profile()
+    profile = request.user.profile
     
     client = profile.client
 
