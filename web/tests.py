@@ -531,7 +531,7 @@ class ListTests(BaseTestMoreData):
         self.assertEqual(qualities[0][0],'')
         self.assertEqual(qualities[0][1],'Any')
 
-  
+    """  
     def test_listproducts(self):
     
         products = Pool.LISTPRODUCTS()
@@ -544,3 +544,4 @@ class ListTests(BaseTestMoreData):
 
         products = Pool.LISTPRODUCTS()
         self.assertEqual(products.count(),2)
+    """
