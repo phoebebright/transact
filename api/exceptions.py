@@ -45,10 +45,14 @@ class DispatcherException(ValidationException):
     txtMessage = 'API Call not supported'
     errorCode = 302
 
-class TransactionClosedException(ValidationException):
+class TransactionClosedException(ApiException):
     txtMessage = 'Transaction Closed'
-    errorCode = 303
+    errorCode = 403
 
-class TransactionNotExistException(ValidationException):
+class TransactionNotExistException(ApiException):
     txtMessage = 'Transaction does not exist'
-    errorCode = 304
+    errorCode = 404
+
+class TransactionNeedsQtyorValException(ApiException):
+    txtMessage = 'Transaction needs a quantity or value'
+    errorCode = 405

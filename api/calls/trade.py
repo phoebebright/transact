@@ -135,7 +135,11 @@ class TransactRequest(Request):
     response = TransactResponse
 
     def validate(self):
-        self.qty = self.require('quantity')
+        self.qty = self.get('quantity')
+        self.value = self.get('value')
+        
+        if not (self.qty or self.value):
+            raise TransactionNeedsQtyorValException
 
     @authenticated
     def run(self):
