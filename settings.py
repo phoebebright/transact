@@ -165,6 +165,10 @@ SHORT_DATETIME_FORMAT = 'dM H:i'
 
 AUTH_PROFILE_MODULE = 'web.UserProfile'
 
+DEMO_USERNAME = 'test'
+DEMO_PASSWORD = 'silicon'
+
+
 CACHE_PREFIX = 'TransAct'
 CACHE_TIMEOUT = 300
 CACHES = {

@@ -1,0 +1,37 @@
+{% extends "test.html" %}
+
+{% block heading %}TRANSACT{% endblock heading %}</h1>
+
+{% block doc %}<p>Create a pending transaction to purchase a given quantity, optionally speicify the Quality and Product Type.</p>  
+<p>If no parameters are passed, return first available product</p>
+
+<code>
+{"call":"TRANSACT",<br />
+   "quantity": 100,}
+</code>
+
+<p>Can optionally specify what Quality and/or Product Type, for example</p>
+
+<code>
+{"call":"TRANSACT",<br />
+"quantity": 100,
+"quality": "P"}
+</code>
+<p> OR </p>
+<code>
+{"call":"TRANSACT",<br />
+"quantity": 0.15,
+"type": "WIND"}
+</code>
+<p> OR </p>
+<code>
+{"call":"TRANSACT",<br />
+"quantity": 1.25,
+"quality": "P",
+"type": "WIND"}
+</code>
+
+
+{% endblock doc %}
+{% block examplejson %}{"call":"TRANSACT", "quantity": 100}{% endblock examplejson %}
+
