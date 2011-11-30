@@ -632,7 +632,13 @@ class Transaction(models.Model):
             self.cancel()
             #NOW UNDO PAYMENT
             
-        
+    @property
+    def status_name(self):
+        """return status name from status field"""
+        for (code,name) in STATUS:
+            if code == self.status:
+                return name
+
 class Payment(models.Model):
     """
     Attempted and successful payments of a transaction.

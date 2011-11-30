@@ -147,3 +147,33 @@ class PayRequest(Request):
         }
         response = self.response(**data)
         return response
+
+class TransactInfoResponse(Response):
+    pass
+
+class TransactInfoRequest(Request):
+    response = TransactInfoResponse
+
+    def validate(self):
+        from web.models import Transaction
+        try:
+            self.trans = Transaction.objects.get(uuid=self.require('transID'))
+        except:
+            raise TransactionNotExistException()
+
+    @authenticated
+    def run(self):
+        product = self.trans.product
+        data = {
+            "quantity": self.trans.quantity,
+            "type": product.type.code,
+            "quality": product.quality_name,
+            "currency": self.trans.currency,
+            "total": self.trans.total,
+            "transID": self.trans.uuid,
+            "state": self.trans.status_name.upper(),
+            "name": product.name,
+            "productID": product.uuid,
+        }
+        response = self.response(**data)
+        return response
