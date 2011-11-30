@@ -24,8 +24,8 @@ function login(){
     /* uses login to authenticate the user */
     var data = {
         "call": "LOGIN",
-        "username": "baka",
-        "password": "baka"
+        "username": "test",
+        "password": "silicon"
     }
     send_call(data, function(response){
         if(response["status"]=="OK"){
@@ -48,10 +48,9 @@ function transact(){
 }
 
 function fillCarbon(response){
-    //total_carbon = response["total"];
-    total_carbon=22.50;
+    total_carbon = response["total"];
 
-    jQuery.cookie("TA_TRANS_ID", "1234")//response["transID"]);
+    jQuery.cookie("TA_TRANS_ID", response["transID"]);
     jQuery("#carbon").append(total_carbon.toFixed(2));
 }
 
@@ -66,6 +65,7 @@ function pay(){
         if(response["status"]=="OK"){
             var box_content = "<p>Successfully paid</p>";
             showModal(box_content);
+
         }else{
             var box_content = "<p>Sorry Your payment can't be processed at the moment</p>";
             showModal(box_content);
