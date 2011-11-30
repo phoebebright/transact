@@ -572,7 +572,7 @@ class Transaction(models.Model):
         
     @property
     def total(self):
-        return self.price + self.fee
+        return Decimal(str(round(self.price + self.fee, ndigits=2)))
         
     @property
     def payment(self):
@@ -583,7 +583,7 @@ class Transaction(models.Model):
             return None
    
     @classmethod
-    def new(self, client, quantity=None, value=None, quality=None, type=None):
+    def new(cls, client, quantity=None, value=None, quality=None, type=None):
         """
         create a new transaction of status Pending
         """
