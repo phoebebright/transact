@@ -98,6 +98,10 @@ class TransactRequest(Request):
     def run(self):
         from web.models import Transaction
         client = self.user.profile.client
+        if not client:
+            raise ValidationException("user profile has no client attached")
+
+
         transaction = Transaction.new(client, self.qty)
         product = transaction.product
         data = {
@@ -124,13 +128,14 @@ class PayRequest(Request):
     @authenticated
     def run(self):
         self.trans.pay()
+        product = self.trans.product
         data = {
-            "quantity": transaction.quantity,
+            "quantity": self.trans.quantity,
             "type": product.type.code,
             "quality": product.quality_name,
-            "currency": transaction.currency,
-            "total": transaction.total,
-            "transID": transaction.uuid
+            "currency": self.trans.currency,
+            "total": self.trans.total,
+            "transID": self.trans.uuid
         }
         response = self.response(**data)
         return response
