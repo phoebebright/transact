@@ -7,8 +7,26 @@
     -->
     <script type="text/javascript" src="/static/js/crsf.js"></script>
     <script type="text/javascript" src="/static/js/JSON.js"></script>
+    <script type="text/javascript" src="/static/webtest/js/jquery.cookie.min.js"></script>    
     <script type="text/javascript" src="/static/webtest/js/main.js"></script>
     <script type="text/javascript">
+    
+            function login(){
+            /* uses login to authenticate the user */
+            var data = JSON.stringify({
+                "call": "LOGIN",
+                "username": "test",
+                "password": "silicon"
+            });
+            send_call(data, function(response){
+                if(response["status"]=="OK"){
+                    jQuery('#token').attr("value", response["token"]);
+                }else{
+                    var box_content = "<p>Sorry, authentication was not possible at this moment. Try refreshing the page.";
+                    showModal(box_content);
+                }
+            });}
+            
         function alertBox(data){
             var box_content = "";
             for (var key in data["currencies"]) {
@@ -25,13 +43,16 @@
                                      }
                                   });
             display_call(data);
-        }
+        };
 
         jQuery(document).ready(function() {
+            login();
             jQuery('#call_api').click(function(){
                 sendFormCall(jQuery("#call_form"));
                 return false;
             });
+
+            
         });
     </script>
 
@@ -40,7 +61,8 @@
 <h1>Web test of TransAct api ::PRICECHECK</h1>
 <form id="call_form" target="." >
     {{ form.as_p }}
-    <p class="align-right"><input id="call_api" type="button" class="button" value="Send"></p>
+    <p class="align-right"><input id="call_api" type="button" class="button" value="Send">
+    <input id="token" type="hidden" value=""></p>
 </form>
 <h4>Call response below:</h4>
 <div id="call_response"></div>
