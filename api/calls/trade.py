@@ -123,6 +123,14 @@ class PayRequest(Request):
 
     @authenticated
     def run(self):
-        data = {}
+        self.trans.pay()
+        data = {
+            "quantity": transaction.quantity,
+            "type": product.type.code,
+            "quality": product.quality_name,
+            "currency": transaction.currency,
+            "total": transaction.total,
+            "transID": transaction.uuid
+        }
         response = self.response(**data)
         return response
