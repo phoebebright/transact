@@ -1,5 +1,6 @@
 # settings for viv
 import sys, os
+import logging
 ROOT = lambda base : os.path.abspath(os.path.join(os.path.dirname(__file__), base).replace('\\','/'))
 
 sys.path.insert(0, '/home/django/transact/')
@@ -152,6 +153,9 @@ LOGGING = {
     }
 }
 
+APILOG = "/home/django/transact/api.log"
+APILOG_LEVEL = logging.INFO
+
 DATE_FORMAT = "M d, Y"
 DATE_PY_FORMAT = "%b %d, %Y"
 DATETIME_FORMAT = "M d, Y H:i"
@@ -160,6 +164,10 @@ SHORT_DATE_FORMAT = "dM"
 SHORT_DATETIME_FORMAT = 'dM H:i'
 
 AUTH_PROFILE_MODULE = 'web.UserProfile'
+
+DEMO_USERNAME = 'test'
+DEMO_PASSWORD = 'silicon'
+
 
 CACHE_PREFIX = 'TransAct'
 CACHE_TIMEOUT = 300

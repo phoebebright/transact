@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<script type="text/javascript" src="/static/js/JSON.js"></script>
+<script type="text/javascript" src="/static/webtest/js/jquery.cookie.min.js"></script>
+    <link href="/static/webtest/css/fun.css" rel="stylesheet" type="text/css" media="screen" />
+<script type="text/javascript">
+function send_call(post_data, callback) {
+    /* general method handling call */
+    jQuery.ajax({
+        url:"/api/",
+        type: "POST",
+        data: JSON.stringify(post_data),
+        contentType: "application/json; charset=UTF-8",
+        success: function(data){
+            callback(data);
+        },
+        accept: 'json'
+    });
+
+}
+
+
+function login(){
+    /* uses login to authenticate the user */
+    var data = {
+        "call": "LOGIN",
+        "username": "test",
+        "password": "silicon"
+    }
+    send_call(data, function(response){
+        if(response["status"]=="OK"){
+            jQuery.cookie("TA_TOKEN", response["token"], {"expires": response['expires']}); //modified version of jQuery.cookie to accept seconds
+        }else{
+            var box_content = "Sorry, authentication was not possible at this moment. Try refreshing the page.";
+            alert(box_content);
+        }
+    });
+
+}
+
+function validate(obj){
+    var value = jQuery("#transAmount", obj).val();
+    if(!jQuery(".error", obj).hasClass("hidden")){jQuery(".error", obj).addClass("hidden")}
+    if (!value){
+        jQuery(".error", obj).empty().append("We need a value here").removeClass('hidden');
+        return false;
+    }
+    return true;
+}
+
+function pay(transID){
+    var data = {
+        "call": "PAY",
+        "token": jQuery.cookie("TA_TOKEN"),
+        "transID": transID
+    }
+    send_call(data, function(response){
+        if(response["status"]=="OK"){
+            jQuery("#box_content").empty().append("<p>Transaction successful</p>");
+            var total = parseFloat(jQuery("#showGoldz").text()) + response['quantity'];
+            jQuery("#showGolds").html(total);
+        }else{
+            jQuery("#box_content").empty().prepend("Sorry your transaction couldn't be finished");
+        }
+        jQuery(".ui-dialog-buttonset").append("<button id='TA_close' class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only'>Close</button>")
+        jQuery("#TA_close").click(function(){jQuery(obj).dialog("close")});
+    })
+}
+
+
+function transact_n_pay(obj){
+    if(!validate(obj)){return false};
+    jQuery(".ui-dialog-buttonset").empty();
+    var data = {
+        "call": "TRANSACT",
+        "token": jQuery.cookie("TA_TOKEN"),
+        "value": jQuery("#transAmount", obj).val()
+    }
+    send_call(data, function(response){
+        if(response["status"]=="OK"){
+            pay(response["transID"]);
+        }else{
+            jQuery("#box_content").empty().prepend("Sorry your transaction couldn't be initiated.");
+            jQuery(".ui-dialog-buttonset").append("<button id='TA_close' class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only'>Close</button>")
+            jQuery("#TA_close").click(function(){jQuery(obj).dialog("close")});
+        }
+    })
+}
+
+function showModal(){
+    var content = "<div id='box_content' style='text-align:center;'><div id='generalError'></div><p>How much do you want to spend</p>&nbsp;&euro;&nbsp;<input type='text' name='amount' id='transAmount'/><div class='error hidden'></div></div>"
+    var info_box = jQuery('<div/>', {'class': "dialog", 'html': content});
+    jQuery(info_box).dialog({modal:true,
+        resizable: false,
+        buttons: {
+            "Cancel": function() {jQuery(this).dialog( "close" )},
+            "Ok": function() {
+                    transact_n_pay(this);
+                }
+            }
+        });
+}
+
+jQuery(document).ready(function(){
+    var total_carbon;
+    login();
+    jQuery("#buyButton").click(showModal);
+
+});
+
+</script>
+{% endblock %}
+
+{% block main %}
+<div id="gameWindowz">
+<span id="buyButton">Buy meh gold!</span>
+<div id="showGoldz">Goldz: <span id="goldzAmmount">0</span></div>
+</div>
+{% endblock %}
