@@ -13,6 +13,12 @@ from web.models import *
 from api.calls import base
 from api.exceptions import ValidationDecimalException, DispatcherException
 
+# used for debugging only
+def list_pool():
+        print "POOL"
+        for p in Pool.objects.all():
+            print "%30s | %s | %s | %.2f | %s | %.2f | %s" % (p.product, p.quality, p.type, p.quantity, p.currency, p.price, p.added)
+            
 
 class ApiTestCase(TestCase):
 
@@ -200,7 +206,8 @@ class AuthTest(ApiTestCase):
             "username": "tester",
             "password": "1234567890"
         }
-        #This should not fail
+
+        #This should succeed
         jsoncontent = self._api_call(call_data)
         self.assertEquals(jsoncontent['call'],'LOGIN')
         self.assertEquals(jsoncontent['status'],'OK')
@@ -210,6 +217,56 @@ class AuthTest(ApiTestCase):
         self.assertEquals(value,'tester')
 
 class TradeTest(ApiWithDataTestCase):
+
+
+
+    def test_listqualities(self):
+        """
+        // LISTQUALITIES REQUEST
+        {
+            "call": "LISTQUALITIES", // required
+            "token": "1db6b44cafa0494a950d9ef531c02e69" // required
+        }
+        // LISTQUALITIES RESPONSE
+        {
+            "call": "LISTQUALITIES",
+            "timestamp": 1321267155000,
+            "status": "OK",
+            "types": [
+                {
+                    "code": "B",
+                    "name": "Bronze"
+                },
+                {
+                    "code": "S",
+                    "name": "Silver"
+                },
+                {
+                    "code": "G",
+                    "name": "Gold"
+                },
+                {
+                    "code": "P",
+                    "name": "Platinum"
+                }
+                
+            ]
+        }
+    
+        """
+      
+        token = "1db6b44cafa0494a950d9ef531c02e69"
+        call = {
+            "call": "LISTQUALITIES",
+            "token": token
+        }
+        data = self._api_call(call)
+        self.assertEqual(data.get('status'), "OK")
+        self.assertEqual(data.get('call'), 'LISTQUALITIES', data)
+
+
+        
+        
     """
     {
         "call": "PRICECHECK", // required
@@ -295,6 +352,7 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data.get('status'), "FAILED VALIDATION", data)
         self.assertEqual(data.get('call'), 'PRICECHECK')
         self.assertEqual(data.get('description'), "parameter 'quantity' is required")
+        
     def test_type_check(self):
         """ api.TradeTest.test_type_check
         /////////////////////////////////////////////////////////////////////
@@ -323,6 +381,7 @@ class TradeTest(ApiWithDataTestCase):
         }
 
         """
+
         call_data ={
             "call": "LISTTYPES",
             "token": self._auth()
@@ -502,3 +561,96 @@ class UnitTests(TestCase):
         self.assertEquals(content['call'],'PING')
         self.assertEquals(content['status'],'OK')
         self.assertTrue(int(content['timestamp']) > 0)
+        
+    def test_listtypes(self):
+        call_data = {
+            "call": 'LISTTYPES'
+        }
+        request = base.dispatch(call_data)
+        response = request.run()
+        content = response.data
+        self.assertEquals(content['call'],'LISTTYPES')
+        self.assertEquals(content['status'],'OK')
+        self.assertTrue(int(content['timestamp']) > 0)        
+        
+    def test_qualities(self):
+        call_data = {
+            "call": 'LISTQUALITIES'
+        }
+        request = base.dispatch(call_data)
+        response = request.run()
+        content = response.data
+        self.assertEquals(content['call'],'LISTQUALITIES')
+        self.assertEquals(content['status'],'OK')
+        self.assertTrue(int(content['timestamp']) > 0)                
+
+    def test_pricecheck(self):
+        call_data = {
+            "call": 'PRICECHECK',
+            "quantity": 10,
+            "token": self.token
+        }
+        
+        request = base.dispatch(call_data)
+        response = request.run()
+        content = response.data
+        self.assertEquals(content['call'],'PRICECHECK')
+        self.assertEquals(content['status'],'OK')
+        self.assertTrue(int(content['timestamp']) > 0)           
+    """        
+    def test_transact(self):
+        call_data = {
+            "call": 'TRANSACT'
+        }
+        request = base.dispatch(call_data)
+        response = request.run()
+        content = response.data
+        self.assertEquals(content['call'],'TRANSACT')
+        self.assertEquals(content['status'],'OK')
+        self.assertTrue(int(content['timestamp']) > 0)                   
+        
+    def test_pay(self):
+        call_data = {
+            "call": 'PAY'
+        }
+        request = base.dispatch(call_data)
+        response = request.run()
+        content = response.data
+        self.assertEquals(content['call'],'PAY')
+        self.assertEquals(content['status'],'OK')
+        self.assertTrue(int(content['timestamp']) > 0)       
+        
+    def test_transactcancel(self):
+        call_data = {
+            "call": 'TRANSACTCANCEL'
+        }
+        request = base.dispatch(call_data)
+        response = request.run()
+        content = response.data
+        self.assertEquals(content['call'],'TRANSACTCANCEL')
+        self.assertEquals(content['status'],'OK')
+        self.assertTrue(int(content['timestamp']) > 0)       
+        
+
+    def test_transactinfo(self):
+        call_data = {
+            "call": 'TRANSACTINFO'
+        }
+        request = base.dispatch(call_data)
+        response = request.run()
+        content = response.data
+        self.assertEquals(content['call'],'TRANSACTINFO')
+        self.assertEquals(content['status'],'OK')
+        self.assertTrue(int(content['timestamp']) > 0)       
+        
+    def test_listproducts(self):
+        call_data = {
+            "call": 'LISTPRODUCTS'
+        }
+        request = base.dispatch(call_data)
+        response = request.run()
+        content = response.data
+        self.assertEquals(content['call'],'LISTPRODUCTS')
+        self.assertEquals(content['status'],'OK')
+        self.assertTrue(int(content['timestamp']) > 0)       
+    """        
