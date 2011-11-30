@@ -16,6 +16,8 @@ from django.http import Http404
 from django.utils.translation import ugettext_lazy as _
 from django.core.mail import send_mail, EmailMessage
 from django.utils.html import strip_tags
+from django.db.models.signals import post_save
+from django.core.mail import mail_managers
 
 #app
 import config
@@ -727,6 +729,13 @@ class UserProfile(models.Model):
         return "%s's profile" % self.user
 
 
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+
+post_save.connect(create_user_profile, sender=User)
+
+
 class PoolLevel(models.Model):
     """
     Monitor usage and minimum levels of quality/producttype items in the pool
@@ -777,7 +786,9 @@ class PoolLevel(models.Model):
         level = Pool.level(quality=quality, type=type)
         
         if level < item.minlevel:
-            #TODO send notification
+            mail_managers('Pool of type %s and quality %s is low!' % (type, quality),
+                      'Pool of type %s and quality %s is now at %s' % (type, quality, level),
+                        fail_silently=False)
             return False
         else:
             return True

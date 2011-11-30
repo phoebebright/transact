@@ -743,7 +743,6 @@ class UnitTests(TestCase):
         self.assertEquals(content['call'],'PAY')
         self.assertEquals(content['status'],'OK')
         self.assertTrue(int(content['timestamp']) > 0)       
-    """
     def test_transactcancel(self):
         call_data = {
             "call": 'TRANSACTCANCEL'
