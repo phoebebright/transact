@@ -1,37 +1,44 @@
 {% extends "test.html" %}
+{% load webtags %}
 
 {% block heading %}PRICECHECK{% endblock heading %}</h1>
 
 {% block doc %}<p>Get the current price of a product for a given quantity, optionally speicify the Quality and Product Type.</p>  
 <p>If no parameters are passed, return first available product</p>
 
-<code>
+<pre>
 {"call":"PRICECHECK",<br />
    "quantity": 100,}
-</code>
+</pre>
 
 <p>Can optionally specify what Quality and/or Product Type, for example</p>
 
-<code>
-{"call":"PRICECHECK",<br />
+<pre>
+{"call":"PRICECHECK",
+"token": "{% token %}",
 "quantity": 100,
 "quality": "P"}
-</code>
+</pre>
 <p> OR </p>
-<code>
-{"call":"PRICECHECK",<br />
+<pre>
+{"call":"PRICECHECK",
+"token": "{% token %}",
 "quantity": 0.15,
 "type": "WIND"}
-</code>
+</pre>
 <p> OR </p>
-<code>
-{"call":"PRICECHECK",<br />
+<pre>
+{"call":"PRICECHECK",
+"token": "{% token %}",
 "quantity": 1.25,
 "quality": "P",
 "type": "WIND"}
-</code>
+</pre>
 
 
 {% endblock doc %}
-{% block examplejson %}{"call":"PRICECHECK","token": '<span class="token">[[token]]</span>', "quantity": 100}{% endblock examplejson %}
+{% block examplejson %}
+{% autoescape off %}
+{"call":"PRICECHECK","token": "{% token %}", "quantity": 100}{% endautoescape %}
+{% endblock examplejson %}
 
