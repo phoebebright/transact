@@ -2,7 +2,7 @@ calls = {
     "PING": ('utils', 'PingRequest'),
 	"LOGIN": ('auth', 'LoginRequest'),
     "PRICECHECK": ('trade', 'PriceCheckRequest'),
-    "QTYCHECK": ('trade', 'QuantityCheckRequest'),
+    "QTYCHECK": ('trade', 'QtyCheckRequest'),
     "LISTQUALITIES": ('trade', 'ListQualitiesRequest'),
     "LISTTYPES": ('trade', 'ListTypesRequest'),
     "TRANSACT": ('trade', 'TransactRequest'),

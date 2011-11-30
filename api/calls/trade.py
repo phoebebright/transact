@@ -57,8 +57,15 @@ class PriceCheckRequest(Request):
         response_data["quality"] = item.quality
         return self.response(**response_data)
 
-class QuantityCheckRequest(Request):
-    response = PriceCheckResponse
+class QtyCheckResponse(Response):
+    pass
+#    quantity = micromodels.FloatField()
+#    type = micromodels.CharField()
+#    quality = micromodels.CharField()
+#    currencies = micromodels.BaseField()  # dictionary of currencies
+
+class QtyCheckRequest(Request):
+    response = QtyCheckResponse
 
     def validate(self):
         self.price = self.require("price")
@@ -78,11 +85,11 @@ class QuantityCheckRequest(Request):
         fee = config_value("web", "DEFAULT_FEE")
         response_data["currencies"] = {
             item.currency: {
-                "total": float((item.price * self.qty) + fee),
+                "total": float((item.price * item.quantity) + fee),
                 "unit": float(item.price)
             }
         }
-        response_data["quantity"] = self.qty
+        response_data["quantity"] = item.quantity
         response_data["type"] = item.type.code
         response_data["quality"] = item.quality
         return self.response(**response_data)

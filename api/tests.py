@@ -341,17 +341,17 @@ class TradeTest(ApiWithDataTestCase):
         }
         data = self._api_call(call)
         self.assertEqual(data.get('status'), "FAILED")
-        self.assertEqual(data.get('call'), 'PRICECHECK', data)
+        self.assertEqual(data.get('call'), 'QTYCHECK', data)
         self.assertEqual(data.get('code'), 401, data)
 
         call['token'] = self._auth()
         data = self._api_call(call)
         self.assertEqual(data.get('status'), "OK", data)
-        self.assertEqual(data.get('call'), 'PRICECHECK')
-        self.assertEqual(data.get('quantity'), 10.0)
+        self.assertEqual(data.get('call'), 'QTYCHECK')
+        self.assertEqual(data.get('quantity'), 2500.0)
         self.assertEqual(data.get('type'), "HYDR")
         self.assertEqual(data.get('quality'), 'G')
-        self.assertEqual(data['currencies']['EUR']['total'], 44.25)
+        self.assertEqual(data['currencies']['EUR']['total'], 11000.25)
         self.assertEqual(data['currencies']['EUR']['unit'], 4.4)
 
     def test_price_check_errors(self):
