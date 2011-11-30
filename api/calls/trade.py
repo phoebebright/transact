@@ -1,7 +1,7 @@
 #from decimal import Decimal
 
 from api.calls.fields import DecimalField
-from api.exceptions import TransactionClosedException, TransactionNotExistException
+from api.exceptions import TransactionClosedException, TransactionNotExistException, TransactionNeedsQtyorValException
 from decorators import authenticated
 from api.calls.base import *
 import api.config
@@ -148,8 +148,10 @@ class TransactRequest(Request):
         if not client:
             raise ValidationException("user profile has no client attached")
 
-
-        transaction = Transaction.new(client, self.qty)
+        if self.qty:
+            transaction = Transaction.new(client, quantity=self.qty)
+        elif self.value:
+            transaction = Transaction.new(client, value=self.value)
         product = transaction.product
         data = {
             "quantity": transaction.quantity,

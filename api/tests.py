@@ -593,53 +593,9 @@ class TradeTest(ApiWithDataTestCase):
             "token": self._auth(),
         }
         data = self._api_call(call_data)
-        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('status'), "FAILED VALIDATION", data)
         self.assertEqual(data.get('call'), 'LISTPRODUCTS')
-        self.assertEqual(type(data.get('types')), type([]), data)
-        listtypes = data.get('types')
-        self.assertEqual(len(listtypes), 2, listtypes)
-        testlist = {
-                'G':'Gold',
-                'P':'Platinum',
-            }
-        for item in listtypes:
-            self.assertTrue(item.get('code'))
-            self.assertTrue(item.get('name'))
-            code = item.get('code')
-            if code in testlist.keys():
-                self.assertEquals(item.get('name'), testlist[code])
-                del testlist[code]
-            else:
-                self.fail("missing code '%s' in response [%s]" % (code, data))
-        self.assertEquals(len(testlist),0)
-        #test with blank option
-        call_data ={
-            "call": "LISTPRODUCTS",
-            "blank": "Any quality",
-            "token": self._auth(),
-        }
-        data = self._api_call(call_data)
-        self.assertEqual(data.get('status'), "OK", data)
-        self.assertEqual(data.get('call'), 'LISTPRODUCTS')
-        self.assertEqual(type(data.get('types')), type([]), data)
-        listtypes = data.get('types')
-        self.assertEqual(len(listtypes), 3, listtypes)
-        testlist = {
-                '':"Any quality",
-                'G':'Gold',
-                'P':'Platinum',
-            }
-        for item in listtypes:
-            # check for any code ''
-            self.assertTrue(item.get('code') or item.get('code') == '')
-            self.assertTrue(item.get('name'))
-            code = item.get('code')
-            if code in testlist.keys():
-                self.assertEquals(item.get('name'), testlist[code])
-                del testlist[code]
-            else:
-                self.fail("missing code '%s' in response [%s]" % (code, data))
-        self.assertEquals(len(testlist),0)
+        
 
 
     def test_transact(self):
@@ -697,6 +653,22 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data.get('quality'), 'Gold')
         self.assertEqual(data.get('currency'), 'EUR')
         self.assertEqual(data.get('total'), 44.25)
+        self.assertTrue(data.get('transID'))
+
+        call_data ={
+            "call": "TRANSACT",
+            "token": self._auth("uclient1a"),
+            "value": 100.0,
+        }
+        data = self._api_call(call_data)
+
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'TRANSACT')
+        self.assertEqual(data.get('quantity'), 10.0)
+        self.assertEqual(data.get('type'), 'HYDR')
+        self.assertEqual(data.get('quality'), 'Gold')
+        self.assertEqual(data.get('currency'), 'EUR')
+        self.assertEqual(data.get('total'), 100.0)
         self.assertTrue(data.get('transID'))
 
     def test_pay(self):
