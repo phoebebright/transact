@@ -86,12 +86,10 @@ class InvalidProductType(ModelException):
     '''
     txtMessage = 'Invalid Product Type'
     errorCode = 110
-
-class NoQuantiyorValueinPricecheck(ModelException):
-    '''
-    Pricecheck was called with a value or quantity
-    '''
-    txtMessage = 'Pricecheck needs a value or quantity'
-    errorCode = 111
     
 
+class TransactionNeedsQtyorVal(ModelException):
+    txtMessage = 'New Transaction needs a quantity or value'
+    errorCode = 111
+
+    

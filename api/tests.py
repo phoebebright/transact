@@ -331,6 +331,28 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data['currencies']['EUR']['total'], 44.25)
         self.assertEqual(data['currencies']['EUR']['unit'], 4.4)
 
+    def test_simple_qtycheck(self):
+        token = "1db6b44cafa0494a950d9ef531c02e69"
+        call = {
+            "call": "QTYCHECK",
+            "token": token,
+            "price": 4.4
+        }
+        data = self._api_call(call)
+        self.assertEqual(data.get('status'), "FAILED")
+        self.assertEqual(data.get('call'), 'QTYCHECK', data)
+        self.assertEqual(data.get('code'), 401, data)
+
+        call['token'] = self._auth()
+        data = self._api_call(call)
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'QTYCHECK')
+        self.assertEqual(data.get('quantity'), 2500.0)
+        self.assertEqual(data.get('type'), "HYDR")
+        self.assertEqual(data.get('quality'), 'G')
+        self.assertEqual(data['currencies']['EUR']['total'], 11000.25)
+        self.assertEqual(data['currencies']['EUR']['unit'], 4.4)
+
     def test_price_check_errors(self):
         auth_call = {
             "call": "LOGIN",
