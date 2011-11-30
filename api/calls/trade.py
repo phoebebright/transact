@@ -97,7 +97,7 @@ class TransactRequest(Request):
     @authenticated
     def run(self):
         from web.models import Transaction
-        client = self.user.get_profile().client
+        client = self.user.profile.client
         transaction = Transaction.new(client, self.qty)
         product = transaction.product
         data = {
@@ -108,5 +108,21 @@ class TransactRequest(Request):
             "total": transaction.total,
             "transID": transaction.uuid
         }
+        response = self.response(**data)
+        return response
+
+class TransactResponse(Response):
+    pass
+
+class TransactRequest(Request):
+    response = TransactResponse
+
+    def validate(self):
+        from web.models import Transaction
+        self.trans = Transaction.objects.get(uuid=self.require('transID'))
+
+    @authenticated
+    def run(self):
+        data = {}
         response = self.response(**data)
         return response
