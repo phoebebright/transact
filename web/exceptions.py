@@ -37,9 +37,9 @@ class AboveMaxQuantity(ModelException):
     
 class Unable2CancelTransaction(ModelException):
     '''
-    raised if transaction is still open and therefore cannot cancel it
+    raised if transaction is closed and therefore cannot cancel it
     '''
-    txtMessage = 'Open Transaction cannot be cancelled'
+    txtMessage = 'Closed Transaction cannot be cancelled'
     errorCode = 104       
     
 class Unable2RefundTransaction(ModelException):
@@ -86,12 +86,10 @@ class InvalidProductType(ModelException):
     '''
     txtMessage = 'Invalid Product Type'
     errorCode = 110
-
-class NoQuantiyorValueinPricecheck(ModelException):
-    '''
-    Pricecheck was called with a value or quantity
-    '''
-    txtMessage = 'Pricecheck needs a value or quantity'
-    errorCode = 111
     
 
+class TransactionNeedsQtyorVal(ModelException):
+    txtMessage = 'New Transaction needs a quantity or value'
+    errorCode = 111
+
+    

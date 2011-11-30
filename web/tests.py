@@ -229,6 +229,11 @@ class DownstreamTests(BaseTestMoreData):
     """
     check downstream tasks - price check, transaction, payment
     """
+    def test_qtycheck(self):
+        list_pool()
+        item = Pool.QTYCHECK(10)
+        
+        print item
                 
         
     def test_pricecheck(self):
@@ -284,7 +289,7 @@ class DownstreamTests(BaseTestMoreData):
         self.assertRaises(AboveMaxQuantity,  Pool.PRICECHECK, 10000)
 
         #quantity too low
-        self.assertRaises(BelowMinQuantity,  Pool.PRICECHECK, 0.1)
+        self.assertRaises(BelowMinQuantity,  Pool.PRICECHECK, 0.001)
 
         #no quality of type S
         self.assertRaises(NoMatchInPoolException,  Pool.PRICECHECK, 10, quality='S')
@@ -350,7 +355,7 @@ class DownstreamTests(BaseTestMoreData):
         item = Pool.PRICECHECK(10.55)
         before_qty = item.quantity
         
-        # create a transaction
+        # create a transaction by quantity
         trans = Transaction.new(self.client1, 10.55)
         
         self.assertEqual(item.product, trans.product)
@@ -372,6 +377,14 @@ class DownstreamTests(BaseTestMoreData):
         self.assertFalse(trans.is_open)
         self.assertTrue(trans.is_closed)
 
+        # create a transaction by quantity
+        trans = Transaction.new(self.client1, quantity=10.55)
+        list_transactions()
+
+        # create a transaction by value
+        trans = Transaction.new(self.client1, value=10.55)
+        list_transactions()
+        
         #DO NEXT
         #cancel, expire, refund, pay
         
@@ -518,7 +531,7 @@ class ListTests(BaseTestMoreData):
         self.assertEqual(qualities[0][0],'')
         self.assertEqual(qualities[0][1],'Any')
 
-  
+    """  
     def test_listproducts(self):
     
         products = Pool.LISTPRODUCTS()
@@ -531,4 +544,4 @@ class ListTests(BaseTestMoreData):
 
         products = Pool.LISTPRODUCTS()
         self.assertEqual(products.count(),2)
-        
+    """

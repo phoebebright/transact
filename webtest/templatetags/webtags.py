@@ -6,6 +6,7 @@ from django.contrib.auth import authenticate
 from django.core.cache import cache
 from livesettings import config_value
 import uuid
+from web.models import Transaction, Client
 
 register = Library()
 
@@ -26,3 +27,15 @@ def token():
     
     
 
+@register.simple_tag
+def transid():
+    """
+    return login token
+    """
+    
+    testclient = Client.objects.get(name='test')
+    trans = Transaction.new(testclient, 1)
+    return trans.uuid
+
+
+    

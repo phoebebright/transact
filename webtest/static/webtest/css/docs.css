@@ -1,0 +1,17 @@
+#flow{
+    list-style-image: url(/static/webtest/images/arrow.png);
+}
+
+#flow li{
+    float: left;
+    border: 1px solid black;
+    margin-left: 30px;
+    padding: 15px 6px;
+    margin-bottom: 20px;
+}
+
+.sidebar{
+    width: 250px;
+    float:right;
+    border-left: 1px solid black;
+}
