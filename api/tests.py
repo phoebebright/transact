@@ -801,11 +801,11 @@ class TradeTest(ApiWithDataTestCase):
         }
         data = self._api_call(call_data)
         self.assertTrue(data.get('transID'), data)
-
+        transact_id = data.get('transID')
         call_data ={
             "call": "TRANSACTINFO",
             "token": self.token,
-            "transID": data.get('transID'),
+            "transID": transact_id,
         }
         data = self._api_call(call_data)
 
@@ -823,7 +823,7 @@ class TradeTest(ApiWithDataTestCase):
         call_data ={
             "call": "TRANSACTCANCEL",
             "token": self.token,
-            "transID": data.get('transID'),
+            "transID": transact_id,
         }
         data = self._api_call(call_data)
         self.assertEqual(data.get('status'), "OK", data)
@@ -832,7 +832,7 @@ class TradeTest(ApiWithDataTestCase):
         call_data ={
             "call": "TRANSACTINFO",
             "token": self.token,
-            "transID": data.get('transID'),
+            "transID": transact_id,
         }
         data = self._api_call(call_data)
 
@@ -843,9 +843,10 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data.get('quality'), 'Gold')
         self.assertEqual(data.get('currency'), 'EUR')
         self.assertEqual(data.get('total'), 44.25)
-        self.assertEqual(data.get('state'), 'CANCELED')
+        self.assertEqual(data.get('state'), 'CANCELLED')
         self.assertEqual(data.get('name'), 'Carbon Credit 1')
         self.assertTrue(data.get('productID'))
+
 class UnitTests(TestCase):
 
     def setUp(self):
