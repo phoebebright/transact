@@ -41,11 +41,11 @@ class ApiTestCase(TestCase):
         for obj in self.cleanup_objects:
             obj.delete()
 
-    def _auth(self):
+    def _auth(self, name="system", password="pass"):
         auth_call = {
             "call": "LOGIN",
-            "username": "system",
-            "password": "pass"
+            "username": name,
+            "password": password
         }
         data = self._api_call(auth_call)
         self.token = data.get('token')
@@ -66,25 +66,9 @@ class ApiWithDataTestCase(ApiTestCase):
         cleanup_objects.append(o)
         # create users
 
-        '''
-        # client 1 has two users
-        u= User.objects.create_user('uclient1a','ucient1a@trialflight.com','pass')
-        profile = u.get_profile()
-        profile.client = self.client1
-        profile.save()
 
-        u= User.objects.create_user('uclient1b','ucient1b@trialflight.com','pass')
-        profile = self.u.get_profile()
-        profile.client = self.client1
-        profile.save()
 
-        # client 2 has two users
-        u= User.objects.create_user('uclient2a','ucient2a@trialflight.com','pass')
-        profile = self.u.get_profile()
-        profile.client = self.client2
-        profile.save()
-
-        '''
+        
 
         #  add product types
         o=ProductType.objects.create(code='WIND', name='Wind')
@@ -132,6 +116,28 @@ class ApiWithDataTestCase(ApiTestCase):
         cleanup_objects.append(product)
         self.cleanup_objects = cleanup_objects
 
+    def _add_users_clients(self):
+# client 1 has two users
+        from web.models import User
+        u= User.objects.create_user('uclient1a','ucient1a@trialflight.com','pass')
+        u.save()
+        profile = u.profile
+        profile.client = self.client1
+        profile.save()
+        self.cleanup_objects.append(u)
+        u= User.objects.create_user('uclient1b','ucient1b@trialflight.com','pass')
+        u.save()
+        profile = u.profile
+        profile.client = self.client1
+        profile.save()
+        self.cleanup_objects.append(u)
+        # client 2 has two users
+        u= User.objects.create_user('uclient2a','ucient2a@trialflight.com','pass')
+        u.save()
+        profile = u.profile
+        profile.client = self.client2
+        profile.save()
+        self.cleanup_objects.append(u)
 
 class UtilsTest(ApiTestCase):
     def test_ping(self):
@@ -521,6 +527,123 @@ class TradeTest(ApiWithDataTestCase):
                 self.fail("missing code '%s' in response [%s]" % (code, data))
         self.assertEquals(len(testlist),0)
 
+
+    def test_transact(self):
+        """api.TradeTest.test_transact
+            /////////////////////////////////////////////////////////////////////
+            // TRANSACT REQUEST
+            // Create pending transaction request
+            {
+            "call": "TRANSACT", // required
+            "token": "1db6b44cafa0494a950d9ef531c02e69", // required
+            "quantity": 100, // required
+            "type": "TNWP", // optional
+            "quality": "BRONZE", // optional
+            "currency": "EUR", // optional(?), default EUR?
+            "customer": // optional
+            { // details TBD
+            "customerID": "123123" // the way Client identifies the customer -
+            TransAct may link this Client+CustomerID information to its internal user
+            database. customerID must be unique for that Client.
+            }
+            }
+            // TRANSACT RESPONSE
+            Updated 24 Nov 2011!
+            Page 32
+            {
+            }
+            "call": "TRANSACT",
+            "status": "OK",
+            "transID": "9d664a382e6f4dbd8cfd9cf2bf96040b",
+            "timestamp": 1321267155000,
+            "quantity": 100,
+            "type": "TNWP",
+            "quality": "BRONZE",
+            "currency": "EUR",
+            "total": 245.67,
+            "customer":
+            {
+            "customerID": "123123"
+            }
+        """
+#        item = Pool.PRICECHECK(10.55)
+#        before_qty = item.quantity
+        self._add_users_clients()
+        call_data ={
+            "call": "TRANSACT",
+            "token": self._auth("uclient1a"),
+            "quantity": 10.0,
+        }
+        data = self._api_call(call_data)
+
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'TRANSACT')
+        self.assertEqual(data.get('quantity'), 10.0)
+        self.assertEqual(data.get('type'), 'HYDR')
+        self.assertEqual(data.get('quality'), 'Gold')
+        self.assertEqual(data.get('currency'), 'EUR')
+        self.assertEqual(data.get('total'), 44.25)
+        self.assertTrue(data.get('transID'))
+
+    def test_pay(self):
+        """api.TradeTest.test_pay
+        /////////////////////////////////////////////////////////////////////
+        // PAY REQUEST
+        // Note: PAY moves the status of a Transaction from PENDING to PAID
+        {
+        "call": "PAY",
+        "transID": "9d664a382e6f4dbd8cfd9cf2bf96040b", // required
+        "token": "1db6b44cafa0494a950d9ef531c02e69" // required
+        }
+        // PAY RESPONSE - SUCCESS
+        {
+        "call": "PAY",
+        "status": "OK",
+        "transID": "9d664a382e6f4dbd8cfd9cf2bf96040b",
+        "timestamp": 1321267155000,
+        "quantity": 100,
+        "type": "TNWP",
+        "quality": "BRONZE",
+        "currency": "EUR",
+        "total": 245.67,
+        "customer": // optional
+        {
+        "customerID": "123123"
+        }
+        }
+        // PAY RESPONSE - FAILURE
+        {
+        "call": "PAY",
+        "status": "FAILED",
+        "reason": "description here",
+        "code": 100234
+        }
+
+        """
+        self._add_users_clients()
+        call_data ={
+            "call": "TRANSACT",
+            "token": self._auth("uclient1a"),
+            "quantity": 10.0,
+        }
+        data = self._api_call(call_data)
+        self.assertTrue(data.get('transID'))
+
+        call_data ={
+            "call": "PAY",
+            "token": self._auth("uclient1a"),
+            "transID": data.get('transID'),
+        }
+        data = self._api_call(call_data)
+
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'PAY')
+        self.assertEqual(data.get('quantity'), 10.0)
+        self.assertEqual(data.get('type'), 'HYDR')
+        self.assertEqual(data.get('quality'), 'Gold')
+        self.assertEqual(data.get('currency'), 'EUR')
+        self.assertEqual(data.get('total'), 44.25)
+
 class UnitTests(TestCase):
 
     def setUp(self):
@@ -598,18 +721,17 @@ class UnitTests(TestCase):
         self.assertEquals(content['call'],'PRICECHECK')
         self.assertEquals(content['status'],'OK')
         self.assertTrue(int(content['timestamp']) > 0)           
-     
+
     def test_transact(self):
-        call_data = {
-            "call": 'TRANSACT'
+        call_data ={
+            "call": "TRANSACT",
+            "token": self.token,
+            "quantity": 10.0,
         }
         request = base.dispatch(call_data)
-        response = request.run()
-        content = response.data
-        self.assertEquals(content['call'],'TRANSACT')
-        self.assertEquals(content['status'],'OK')
-        self.assertTrue(int(content['timestamp']) > 0)                   
-        
+
+        self.assertRaises(NoMatchInPoolException, request.run)
+    """
     def test_pay(self):
         call_data = {
             "call": 'PAY'

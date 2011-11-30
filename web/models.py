@@ -260,6 +260,13 @@ class Product(models.Model):
                  
         return True
 
+    @property
+    def quality_name(self):
+        """return quality name from quaility field"""
+        for (code,name) in QUALITIES:
+            if code == self.quality:
+                return name
+
 class Pool(models.Model):
     """
     Products currently available for sale
@@ -718,3 +725,4 @@ class PoolLevel(models.Model):
             return True
                 
         
+User.profile = property(lambda u: UserProfile.objects.get_or_create(user=u)[0])

@@ -146,7 +146,7 @@ class ErrorResponse(Response):
             call = request.response()._call()
         if isinstance(exception, (ModelException, ApiException, ValidationException)):
             code = exception.errorCode
-            description = safe_str(exception.txtMessage)
+            description = exception.txtMessage
         self.data["call"] = call
         self.data["status"] = status
         self.data["code"] = code
