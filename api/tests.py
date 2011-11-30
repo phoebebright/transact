@@ -740,6 +740,90 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data.get('name'), 'Carbon Credit 1')
         self.assertTrue(data.get('productID'))
 
+    def test_transact_cancel(self):
+        """api.TradeTest.test_transact_cancel
+            /////////////////////////////////////////////////////////////////////
+            // TRANSACTCANCEL REQUEST
+            {
+            "call": "TRANSACTCANCEL",
+            "token": "1db6b44cafa0494a950d9ef531c02e69", // required
+            "transID": "9d664a382e6f4dbd8cfd9cf2bf96040b" // required
+            }
+            // TRANSACTCANCEL RESPONSE
+            {
+            "call": "TRANSACTCANCEL",
+            "status": "OK",
+            "timestamp": 1321267155000
+            }
+
+        """
+        self._add_users_clients()
+        self._auth("uclient1a")
+        call_data ={
+            "call": "TRANSACTCANCEL",
+            "token": self.token,
+            "transID": 123,
+        }
+        data = self._api_call(call_data)
+
+        self.assertEqual(data.get('status'), "FAILED VALIDATION", data)
+        self.assertEqual(data.get('call'), 'TRANSACTCANCEL')
+        self.assertEqual(data.get('code'), 304, data)
+        self.assertEqual(data.get('description'), 'Transaction does not exist', data)
+
+
+        call_data ={
+            "call": "TRANSACT",
+            "token": self.token,
+            "quantity": 10.0,
+        }
+        data = self._api_call(call_data)
+        self.assertTrue(data.get('transID'), data)
+
+        call_data ={
+            "call": "TRANSACTINFO",
+            "token": self.token,
+            "transID": data.get('transID'),
+        }
+        data = self._api_call(call_data)
+
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'TRANSACTINFO')
+        self.assertEqual(data.get('quantity'), 10.0)
+        self.assertEqual(data.get('type'), 'HYDR')
+        self.assertEqual(data.get('quality'), 'Gold')
+        self.assertEqual(data.get('currency'), 'EUR')
+        self.assertEqual(data.get('total'), 44.25)
+        self.assertEqual(data.get('state'), 'PENDING')
+        self.assertEqual(data.get('name'), 'Carbon Credit 1')
+        self.assertTrue(data.get('productID'))
+
+        call_data ={
+            "call": "TRANSACTCANCEL",
+            "token": self.token,
+            "transID": data.get('transID'),
+        }
+        data = self._api_call(call_data)
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'TRANSACTCANCEL')
+
+        call_data ={
+            "call": "TRANSACTINFO",
+            "token": self.token,
+            "transID": data.get('transID'),
+        }
+        data = self._api_call(call_data)
+
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'TRANSACTINFO')
+        self.assertEqual(data.get('quantity'), 10.0)
+        self.assertEqual(data.get('type'), 'HYDR')
+        self.assertEqual(data.get('quality'), 'Gold')
+        self.assertEqual(data.get('currency'), 'EUR')
+        self.assertEqual(data.get('total'), 44.25)
+        self.assertEqual(data.get('state'), 'CANCELED')
+        self.assertEqual(data.get('name'), 'Carbon Credit 1')
+        self.assertTrue(data.get('productID'))
 class UnitTests(TestCase):
 
     def setUp(self):

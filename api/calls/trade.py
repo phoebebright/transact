@@ -62,6 +62,7 @@ class ListTypesResponse(Response):
 class ListTypesRequest(Request):
     response = ListTypesResponse
 
+    @authenticated
     def run(self):
         from web.models import Pool
         qs = Pool.LISTTYPES(self.get('blank'))
@@ -78,6 +79,7 @@ class ListQualitiesResponse(Response):
 class ListQualitiesRequest(Request):
     response = ListQualitiesResponse
 
+    @authenticated
     def run(self):
         from web.models import Pool
         qs = Pool.LISTQUALITIES(self.get('blank'))
@@ -176,4 +178,24 @@ class TransactInfoRequest(Request):
             "productID": product.uuid,
         }
         response = self.response(**data)
+        return response
+
+class TransactCancelResponse(Response):
+    pass
+
+class TransactCancelRequest(Request):
+    response = TransactCancelResponse
+
+    def validate(self):
+        from web.models import Transaction
+        try:
+            self.trans = Transaction.objects.get(uuid=self.require('transID'))
+        except:
+            raise TransactionNotExistException()
+
+
+    @authenticated
+    def run(self):
+        self.trans.cancel()
+        response = self.response()
         return response

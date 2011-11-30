@@ -6,5 +6,6 @@ calls = {
     "LISTTYPES": ('trade', 'ListTypesRequest'),
     "TRANSACT": ('trade', 'TransactRequest'),
     "TRANSACTINFO": ('trade', 'TransactInfoRequest'),
+    "TRANSACTCANCEL": ('trade', 'TransactCancelRequest'),
     "PAY": ('trade', 'PayRequest'),
 }
