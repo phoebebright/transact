@@ -7,6 +7,8 @@ from logger import log
 import uuid
 import json
 
+
+
 @csrf_exempt
 def call(request):
     jsondata = request.raw_post_data
