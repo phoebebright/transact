@@ -3,6 +3,10 @@
 {% block heading %}LISTPRODUCTS{% endblock heading %}</h1>
 
 {% block doc %}<p>Get a list of all Products currently available to purchase {% endblock doc %}
+
+
+{% block flow %}<li class="required"><a href="/docs/LOGIN.html">LOGIN</a></li><li>LISTPRODUCTS</li>{% endblock %}
+
 {% block examplejson %}{"call":"LISTPRODUCTS"}{% endblock examplejson %}
 
 /////////////////////////////////////////////////////////////////////

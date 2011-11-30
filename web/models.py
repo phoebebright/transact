@@ -609,7 +609,7 @@ class Transaction(models.Model):
             client = client,
             pool = item,
             product = item.product,
-            price = (item.price*qty),
+            price = Decimal(item.price*qty),
             fee = client.transaction_fee(),
             currency = item.currency,
             quantity = qty,
@@ -690,13 +690,7 @@ class Transaction(models.Model):
             self.cancel()
             #NOW UNDO PAYMENT
             
-    @property
-    def status_name(self):
-        """return status name from status field"""
-        for (code,name) in STATUS:
-            if code == self.status:
-                return name
-
+        
 class Payment(models.Model):
     """
     Attempted and successful payments of a transaction.
@@ -786,7 +780,7 @@ class PoolLevel(models.Model):
         if level < item.minlevel:
             #TODO send notification
             return False
-        else: 
+        else:
             return True
                 
         

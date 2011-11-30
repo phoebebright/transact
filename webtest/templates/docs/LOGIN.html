@@ -1,0 +1,23 @@
+{% extends "test.html" %}
+{% load webtags %}
+
+{% block heading %}LOGIN{% endblock heading %}</h1>
+
+{% block flow %}<li>LOGIN</li>{% endblock %}
+
+{% block doc %}<p>Logs the user in, returning TOKEN allowing user to make other calls</p>
+<p>username and password are required parameters</p>
+
+<pre>
+{"call":"LOGIN",
+ "username": "test",
+ "password": "silicon"}
+</pre>
+
+
+{% endblock doc %}
+{% block examplejson %}
+{% autoescape off %}
+{"call":"LOGIN","username": "test", "password":"silicon"}{% endautoescape %}
+{% endblock examplejson %}
+
