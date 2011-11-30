@@ -622,9 +622,17 @@ class TradeTest(ApiWithDataTestCase):
         """
         self._add_users_clients()
         call_data ={
+            "call": "TRANSACT",
+            "token": self._auth("uclient1a"),
+            "quantity": 10.0,
+        }
+        data = self._api_call(call_data)
+        self.assertTrue(data.get('transID'))
+
+        call_data ={
             "call": "PAY",
             "token": self._auth("uclient1a"),
-            "transID": "",
+            "transID": data.get('transID'),
         }
         data = self._api_call(call_data)
 
