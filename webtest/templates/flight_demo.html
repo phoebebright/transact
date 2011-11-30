@@ -48,10 +48,14 @@ function transact(){
 }
 
 function fillCarbon(response){
-    total_carbon = response["total"];
-
-    jQuery.cookie("TA_TRANS_ID", response["transID"]);
-    jQuery("#carbon").append(total_carbon.toFixed(2));
+    if(response["status"]=="OK"){
+        total_carbon = response["total"];
+        jQuery.cookie("TA_TRANS_ID", response["transID"]);
+        jQuery("#carbon").append(total_carbon.toFixed(2));
+    }else{
+        var box_content = "<p>Your transaction could not be initiated</p>";
+        showModal(box_content);
+    }
 }
 
 
