@@ -1,4 +1,3 @@
-from django.utils.translation import ugettext_lazy as _
 
 class ApiException(Exception):
     errorCode = 400
@@ -12,14 +11,14 @@ class NotAuthenticatedException(ApiException):
     '''
     raised if invalid Token passed
     '''
-    txtMessage = _('Not authenticated')
+    txtMessage = 'Not authenticated'
     errorCode = 401
 
 class LoginFailedException(ApiException):
     '''
     raised if failed login conditionals
     '''
-    txtMessage = _('username/password not valid')
+    txtMessage = 'username/password not valid'
     errorCode = 402
 
 
@@ -40,11 +39,20 @@ class ValidationException(Exception):
 class ValidationDecimalException(ValidationException):
     errorCode = 301
     txtMessage = "not valid decimal format"
-    def __init__(self, message=None, *args, **kwargs):
-        if message:
-            self.txtMessage = message
 
 class DispatcherException(ValidationException):
     """raises if dispacher fails to find api call"""
-    txtMessage = _('API Call not supported')
+    txtMessage = 'API Call not supported'
     errorCode = 302
+
+class TransactionClosedException(ValidationException):
+    txtMessage = 'Transaction Closed'
+    errorCode = 303
+
+class TransactionNotExistException(ValidationException):
+    txtMessage = 'Transaction does not exist'
+    errorCode = 304
+
+class TransactionNeedsQtyorValException(ValidationException):
+    txtMessage = 'Transaction needs a quantity or value'
+    errorCode = 305

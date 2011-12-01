@@ -25,3 +25,13 @@ def transact(request):
     form = webtest_forms.TransAct(initial={"call":"TRANSACT", "token":"dummy_token", "testmode":"false"})
 
     return render_to_response("transact.html", {"form": form})
+
+
+def flight_demo(request):
+
+    return render_to_response("flight_demo.html")
+
+
+def voucher_demo(request):
+
+    return render_to_response("voucher_demo.html")

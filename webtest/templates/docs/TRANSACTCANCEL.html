@@ -1,0 +1,20 @@
+{% extends "test.html" %}
+{% load webtags %}
+
+{% block heading %}TRANSACTCANCEL{% endblock heading %}</h1>
+
+{% block doc %}<p>Cancel a pending transaction.  Once a transaction is paid it cannot be cancelled.</p>
+
+<p><b>Cancel transaction</p></p>
+<pre>
+{"call":"TRANSACTCANCEL",<br />
+"token": "{% token %}",
+"transID": "{% transid %}" }
+</pre>
+
+
+
+
+{% endblock doc %}
+{% block examplejson %}{"call":"TRANSACTCANCEL","token": "{% token %}", "transID": "{% transid %}"}{% endblock examplejson %}
+

@@ -1,0 +1,22 @@
+{% extends "test.html" %}
+{% load webtags %}
+
+{% block heading %}PAY{% endblock heading %}
+{% block flow %}<li class="required"><a href="/docs/LOGIN.html">LOGIN</a></li><li><a href="/docs/TRANSACT.html">TRANSACT</a></li><li>PAY</li>{% endblock %}
+
+
+{% block doc %}<p>Confirm and close a transaction by marking it paid.</p>
+
+<p><b>Pay Transaction</b></p>
+
+<pre>
+{"call":"PAY",
+"token": "{% token %}",
+"transID": "{% transid %}" }
+</pre>
+
+
+
+
+{% endblock doc %}
+{% block examplejson %}{"call":"PAY","token": "{% token %}", "transID": "{% transid %}"}{% endblock examplejson %}

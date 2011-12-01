@@ -1,0 +1,48 @@
+{% extends "test.html" %}
+{% load webtags %}
+
+{% block heading %}PRICECHECK{% endblock heading %}</h1>
+
+{% block flow %}<li class="required"><a href="/docs/LOGIN.html">LOGIN</a></li><li>PRICECHECK</li>{% endblock %}
+
+{% block doc %}<p>Get the current price of a product for a given quantity, optionally speicify the Quality and Product Type.</p>  
+<p>If no parameters are passed, return first available product</p>
+
+<pre>
+{"call":"PRICECHECK",
+   "quantity": 100}
+</pre>
+
+<p>Can optionally specify what Quality and/or Product Type, for example</p>
+
+<pre>
+{"call":"PRICECHECK",
+"token": "{% token %}",
+"quantity": 100,
+"quality": "P"}
+</pre>
+<p> OR </p>
+<pre>
+{"call":"PRICECHECK",
+"token": "{% token %}",
+"quantity": 0.15,
+"type": "WIND"}
+</pre>
+<p> OR </p>
+<pre>
+{"call":"PRICECHECK",
+"token": "{% token %}",
+"quantity": 1.25,
+"quality": "P",
+"type": "WIND"}
+</pre>
+
+
+
+
+{% endblock doc %}
+{% block examplejson %}
+{% autoescape off %}
+{"call":"PRICECHECK","token": "{% token %}", "quantity": 100}{% endautoescape %}
+{% endblock examplejson %}
+

@@ -1,0 +1,54 @@
+{% extends "test.html" %}
+{% load webtags %}
+
+{% block heading %}TRANSACT{% endblock heading %}</h1>
+
+{% block flow %}<li class="required"><a href="/docs/LOGIN.html">LOGIN</a></li><li>TRANSACT</li>{% endblock %}
+
+{% block doc %}<p>Create a pending transaction to purchase a given quantity or value of units. Optionally specify the Quality and Product Type.</p>  
+<p>If no parameters are passed, return first available product</p>
+
+<p><b>Purchase 100 units</b></p>
+<pre>
+{"call":"TRANSACT",
+"token": "{% token %}",
+ "quantity": 100}
+</pre>
+
+<p><b>Purchase 100 Euros worth</b></p>
+<pre>
+{"call":"TRANSACT",
+"token": "{% token %}",
+ "value": 100}
+</pre>
+
+<p>Can optionally specify what Quality and/or Product Type, for example</p>
+
+<pre>
+{"call":"TRANSACT",
+"token": "{% token %}",
+"value": 10,
+"quality": "P"}
+</pre>
+<p> OR </p>
+
+<pre>
+{"call":"TRANSACT",
+"token": "{% token %}",
+"quantity": 0.15,
+"type": "WIND"}
+</pre>
+<p> OR </p>
+
+<pre>
+{"call":"TRANSACT",
+"token": "{% token %}",
+"quantity": 1.25,
+"quality": "P",
+"type": "WIND"}
+</pre>
+
+
+{% endblock doc %}
+{% block examplejson %}{"call":"TRANSACT","token": "{% token %}", "quantity": 100}{% endblock examplejson %}
+
