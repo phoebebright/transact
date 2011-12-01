@@ -49,6 +49,8 @@ class BaseTest(TestCase):
     setup data
     """
 
+
+
     def setUp(self):
         """ running setup """
       
@@ -61,8 +63,7 @@ class BaseTest(TestCase):
         
         # create users
         self.system_user = User.objects.create_user('system','system@trialflight.com','pass')
-        
-        '''
+
         # client 1 has two users
         u= User.objects.create_user('uclient1a','ucient1a@trialflight.com','pass')
         profile = u.get_profile()
@@ -80,8 +81,6 @@ class BaseTest(TestCase):
         profile = self.u.get_profile()
         profile.client = self.client2
         profile.save()
-
-        '''
         
         #  add product types
         p=ProductType.objects.create(code='WIND', name='Wind')
