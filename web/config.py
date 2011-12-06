@@ -56,7 +56,7 @@ config_register(DecimalValue(
         'MAX_QUANTITY',
         description = _('Maximum Quantity that can be purchased'),
         help_text = _("Set quantity"),
-        default = '1000',
+        default = '100',
 ))
 
 config_register(DecimalValue(

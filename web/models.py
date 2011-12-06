@@ -95,6 +95,11 @@ class Client(models.Model):
     """
     Clients purchase Products
     Only Clients can use the API
+    
+    Topup Values:
+    topup_at_level - when the account falls below this value, automatically topup
+        defaults to the maximum quantity that can be bought
+    top_amount - amount to topup by  - default is maximum quantity again.
     """
     
     uuid = UUIDField(auto=True)
@@ -102,6 +107,8 @@ class Client(models.Model):
     currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default='EUR')
     quality = models.CharField(_('Default Quality'),  max_length=1, choices=QUALITIES, blank=True, null=True)
     type =  models.ForeignKey(ProductType, verbose_name = _('Default Product Type'), blank=True, null=True)
+    topup_at_level =  models.DecimalField(_('Topup at this level'), max_digits=9, decimal_places=2, default =config_value('web','MAX_QUANTITY'))
+    topup_by =  models.DecimalField(_('Topup by this amount'), max_digits=9, decimal_places=2, default =config_value('web','MAX_QUANTITY'))
     active = models.BooleanField(_('Active'), default=True)
     joined = models.DateTimeField(_('Created Date/Time'), auto_now_add=True)
     customers = models.ManyToManyField(Customer, through='Relationship')
@@ -130,13 +137,27 @@ class Client(models.Model):
                 
      
     def transaction_fee(self):
-        """
-        in future fee can be varied by Client.
+        """in future fee can be varied by Client.
         for the moment return the default
         """
         
         return Decimal(config_value('web','DEFAULT_FEE'))
         
+    def recharge(self, amount=0):
+        """ Topup the client's account when it runs low
+        """
+        
+        #TODO: check needs topping up then get payment and update Payment entity
+        
+        if amount == 0:
+            # calculate dfault amount
+            pass
+        else:
+            Payment.objects.create(
+                payment_type = 'R',
+                amount = Decimal(str(amount)),
+                )
+       
 class Relationship(models.Model):
     """
     Links customers to client
@@ -184,7 +205,7 @@ class Trade(models.Model):
     purchwhen = models.DateTimeField(_('Purchase Date/Time'), auto_now_add=True, editable=True)
     total = models.DecimalField(_('Total Paid'), max_digits=9, decimal_places=2,default =0)
     currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default='EUR')
-    tonnes =  models.DecimalField(_('Tonnes'), max_digits=9, decimal_places=2)
+    tonnes =  models.DecimalField(_('Tonnes'), max_digits=9, decimal_places=3)
     ref =  models.CharField(_('Purchase Ref'), max_length=50, blank=True, null=True)
     
     def __unicode__(self):
@@ -218,8 +239,8 @@ class Product(models.Model):
     type =  models.ForeignKey(ProductType, verbose_name = _('Default Product Type'), blank=True, null=True)
     price = models.DecimalField(_('Price'), max_digits=9, decimal_places=2,default =0)
     currency = models.CharField(_('Currency'),  max_length=3, choices=CURRENCIES, default='EUR')
-    quantity_purchased =  models.DecimalField(_('Quantity Purchased'), max_digits=9, decimal_places=2)
-    quantity2pool =  models.DecimalField(_('Quantity Moved to Pool'), max_digits=9, decimal_places=2, default=0)
+    quantity_purchased =  models.DecimalField(_('Quantity Purchased'), max_digits=9, decimal_places=3)
+    quantity2pool =  models.DecimalField(_('Quantity Moved to Pool'), max_digits=9, decimal_places=3, default=0)
     
     def __unicode__(self):
         return self.name 
@@ -280,7 +301,7 @@ class Pool(models.Model):
     
     uuid = UUIDField(auto=True)
     product = models.ForeignKey(Product)
-    quantity =  models.DecimalField(_('Quantity Available'), max_digits=9, decimal_places=2)
+    quantity =  models.DecimalField(_('Quantity Available'), max_digits=9, decimal_places=3)
     quality = models.CharField(_('Default Quality'),  max_length=1, choices=QUALITIES, blank=True, null=True)
     type =  models.ForeignKey(ProductType, verbose_name = _('Default Product Type'), blank=True, null=True)
     price = models.DecimalField(_('Price'), max_digits=9, decimal_places=2,default =0)
@@ -537,7 +558,7 @@ class Transaction(models.Model):
     price =  models.DecimalField(_('Price'), max_digits=9, decimal_places=2, default=0)
     fee =  models.DecimalField(_('Fee'), max_digits=9, decimal_places=2, default=0)
     currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
-    quantity =  models.DecimalField(_('Quantity'), max_digits=9, decimal_places=2)
+    quantity =  models.DecimalField(_('Quantity'), max_digits=9, decimal_places=3)
     created = models.DateTimeField(_('Created Date/Time'), auto_now_add=True, editable=False)
     closed = models.DateTimeField(_('Closed Date/Time'), null=True, blank=True)
     expire_at = models.DateTimeField(_('Expire ated Date/Time'), null=True)
@@ -600,7 +621,7 @@ class Transaction(models.Model):
             v = Decimal(str(value))
             item = Pool.QTYCHECK(v, quality=quality, type=type)
             
-            qty = Decimal(str(round((v - client.transaction_fee() ) / item.price,2)))
+            qty = Decimal(str(round((v - client.transaction_fee() ) / item.price,3)))
             
         # TODO in future need to do a lock between doing a price check and
         # creating a transaction
@@ -705,13 +726,14 @@ class Payment(models.Model):
     Initially one payment to one complete transaction.
     """
     
-    trans = models.ForeignKey(Transaction)
+    trans = models.ForeignKey(Transaction, blank=True, null=True)
     status = models.CharField(_('Status'),  max_length=1, choices=PAYMENT_STATUS, default='F')
     payment_type = models.CharField(_('Type'),  max_length=1, default='A')
     ref = models.CharField(_('Payment Ref'), max_length=20, blank=True, null=True)
     payment_date = models.DateTimeField(_('Payment Date/Time'), auto_now_add=True)
     amount =  models.DecimalField(_('Payment Amount'), max_digits=9, decimal_places=2, default=0)
     currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
+    payment_details = models.TextField(_("Payment details"), blank=True, null=True)
     
     def __unicode__(self):
         return self.id 
@@ -719,13 +741,30 @@ class Payment(models.Model):
     class Meta:
         ordering = ['-id', ]
 
+    def save(self, *args, **kwargs):
+        
+        #  All payment types except 'R'echarge are negative (ie. reduce balance)
+        # so make them negative
+       
+        if self.payment_type != 'R':
+            self.amount = self.amount * Decimal('-1')
+        
+                    
+        super(Payment, self).save(*args, **kwargs)
+
+        
     @property
     def is_paid(self):
     
         return (self.status=='S')
         
         
-
+    @classmethod
+    def client_balance(self, client):
+    
+        #TODO return sum of all payments
+        
+        return 1
 
 class UserProfile(models.Model):
 
@@ -752,7 +791,7 @@ class PoolLevel(models.Model):
     
     quality = models.CharField(_('Default Quality'),  max_length=1, choices=QUALITIES, blank=True, null=True)
     type =  models.ForeignKey(ProductType, verbose_name = _('Default Product Type'), blank=True, null=True)
-    minlevel =  models.DecimalField(_('Minimum Units'), max_digits=9, decimal_places=2)
+    minlevel =  models.DecimalField(_('Minimum Units'), max_digits=9, decimal_places=3)
     
     
     def __unicode__(self):
