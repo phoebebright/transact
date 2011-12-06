@@ -1,4 +1,12 @@
 {% extends "base.html" %}
+
+ {% block extra_head %}
+<style type="text/css" title="text/css">
+ #content {width:820px;}
+
+</style>   
+ {% endblock extra_head %}   
+   
 {% block main %}
 		{% if user.is_authenticated %}
              Logged in as {{ user.first_name }} {{ user.last_name }} &nbsp;<a href="/logout/?next=/">Logout</a>
@@ -16,7 +24,7 @@
 
                 {% endif %}
     <h2>Recent Transactions</h2>
-   <table>
+   <table width="100%">
     <tr>
         <td>Created</td><td>Status</td><td>Product</td><td>Type</td><td>Quality</td><td>Qty</td><td>Price</td><td>Fee</td><td>Total</td><td>Payment</td>
     </tr>
@@ -31,7 +39,7 @@
             <td>{{item.price}}</td>
             <td>{{item.fee}}</td>
             <td>{{item.total}}</td>
-            <td>{{item.payment}}</td>
+            <td>{{item.payment.payment_date}}</td>
             </tr>
     {% endfor %}
     </table>

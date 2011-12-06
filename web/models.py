@@ -714,7 +714,7 @@ class Payment(models.Model):
     currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
     
     def __unicode__(self):
-        return self.payment_date 
+        return self.id 
 
     class Meta:
         ordering = ['-id', ]
