@@ -3,42 +3,47 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head profile="http://selenium-ide.openqa.org/profiles/test-case">
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<link rel="selenium.base" href="http://transact.trialflight.com/" />
-<title>PRICECHECK</title>
+<link rel="selenium.base" href="http://transactcarbon.com/" />
+<title>egzample purchase Flight</title>
 </head>
 <body>
 <table cellpadding="1" cellspacing="1" border="1">
 <thead>
-<tr><td rowspan="1" colspan="3">PRICECHECK</td></tr>
+<tr><td rowspan="1" colspan="3">egzample purchase Flight</td></tr>
 </thead><tbody>
 <tr>
 	<td>open</td>
-	<td>http://transact.trialflight.com</td>
+	<td>/</td>
 	<td></td>
 </tr>
 <tr>
 	<td>clickAndWait</td>
-	<td>link=Try the Examples</td>
+	<td>link=Examples</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyTextPresent</td>
+	<td>Purchase Flight (buy by weight)</td>
 	<td></td>
 </tr>
 <tr>
 	<td>clickAndWait</td>
-	<td>link=PriceCheck demo</td>
+	<td>link=Purchase Flight (buy by weight)</td>
 	<td></td>
 </tr>
 <tr>
-	<td>type</td>
-	<td>id=id_quantity</td>
-	<td>4</td>
+	<td>waitForElementPresent</td>
+	<td>//tr[td&gt;0]/td[@id=&quot;carbon&quot;]</td>
+	<td></td>
 </tr>
 <tr>
 	<td>click</td>
-	<td>id=call_api</td>
+	<td>//span[@id='approvePay']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>waitForTextPresent</td>
-	<td>total in EUR</td>
+	<td>Successfully paid</td>
 	<td></td>
 </tr>
 <tr>
@@ -46,12 +51,6 @@
 	<td>//button[@type='button']</td>
 	<td></td>
 </tr>
-<tr>
-	<td>waitForTextPresent</td>
-	<td>&quot;call&quot;:&quot;PRICECHECK&quot;,</td>
-	<td></td>
-</tr>
-
 </tbody></table>
 </body>
 </html>
