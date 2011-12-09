@@ -159,7 +159,8 @@ class BasicTests(TestCase):
         # has the anonymous customer for this client been added
         self.assertEqual(Customer.objects.count(), 1)
 
-         
+        self.assertEqual(Client.balance,0)
+        
         cust = Customer.objects.get(id=1)
         self.assertTrue(cust.anonymous)
         self.assertEqual(cust.clients.all().count(), 1)
@@ -235,11 +236,8 @@ class DownstreamTests(BaseTestMoreData):
     check downstream tasks - price check, transaction, payment
     """
     def test_qtycheck(self):
-        list_pool()
         item = Pool.QTYCHECK(10)
-        
-        print item
-                
+                        
         
     def test_pricecheck(self):
 
@@ -384,11 +382,9 @@ class DownstreamTests(BaseTestMoreData):
 
         # create a transaction by quantity
         trans = Transaction.new(self.client1, quantity=10.55)
-        list_transactions()
 
         # create a transaction by value
         trans = Transaction.new(self.client1, value=10.55)
-        list_transactions()
         
         #DO NEXT
         #cancel, expire, refund, pay

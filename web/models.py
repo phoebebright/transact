@@ -157,7 +157,15 @@ class Client(models.Model):
                 payment_type = 'R',
                 amount = Decimal(str(amount)),
                 )
-       
+    @property
+    def balance(self):
+    
+        try:
+            return Payment.objects.filter(client=self).aggregate(Sum('amount'))
+        except Payment.DoesNotExist:
+            return 0
+            
+            
 class Relationship(models.Model):
     """
     Links customers to client
