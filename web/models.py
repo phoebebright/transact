@@ -100,10 +100,13 @@ class Client(models.Model):
     topup_at_level - when the account falls below this value, automatically topup
         defaults to the maximum quantity that can be bought
     top_amount - amount to topup by  - default is maximum quantity again.
+    balance is recalculated each time a payment occurs.  This avoids hitting the payment
+       table each time the balance is checked.
     """
     
     uuid = UUIDField(auto=True)
     name = models.CharField(_('Client Name'), max_length=50, unique=True)
+    balance = models.DecimalField(_('Balance'), max_digits=9, decimal_places=2,default =0)
     currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default='EUR')
     quality = models.CharField(_('Default Quality'),  max_length=1, choices=QUALITIES, blank=True, null=True)
     type =  models.ForeignKey(ProductType, verbose_name = _('Default Product Type'), blank=True, null=True)
@@ -155,16 +158,16 @@ class Client(models.Model):
         else:
             Payment.objects.create(
                 payment_type = 'R',
-                amount = Decimal(str(amount)),
-                )
-    @property
-    def balance(self):
-    
-        try:
-            return Payment.objects.filter(client=self).aggregate(Sum('amount'))
-        except Payment.DoesNotExist:
-            return 0
-            
+                amount = amount)
+            self.balance = self.balance + amount
+            self.save()
+
+    def can_pay(self, amount):
+        """Check there are enough funds to pay this amount
+        """
+
+        return (Decimal(str(amount)) <= self.balance)
+        
             
 class Relationship(models.Model):
     """
@@ -650,24 +653,41 @@ class Transaction(models.Model):
         
         return t
         
+    def can_pay(self, ref=None):
+        ''' Check enough to pay
+        '''
+        return self.client.can_pay(self.total)
         
     def pay(self, ref=None):
         """
         create a payment entity and mark status of this transaction to paid
         """
         
-        p = Payment.objects.create(
-            trans=self, 
-            ref=ref,
-            status='S', 
-            amount=self.total, 
-            currency=self.currency)
+        # check client has enough in account
+        
+        if self.client.can_pay(self.total):
+            p = Payment.objects.create(
+                trans=self, 
+                ref=ref,
+                status='S', 
+                amount=self.total, 
+                currency=self.currency)
+                
+            self.status = 'P'
+            self.pool = None
+            self.save()
             
-        self.status = 'P'
-        self.pool = None
-        self.save()
-        return p
-
+            # update clients balance
+            self.client.balance = self.client.balance - self.total
+            self.client.save()
+            
+            return p
+            
+        else:
+            raise NotEnoughFunds
+            
+            
+        
     @classmethod
     def expire_all(self):
         """

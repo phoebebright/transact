@@ -58,6 +58,7 @@ class BaseTest(TestCase):
       
         self.client1=Client.objects.create(name='Client 1')
         self.client2=Client.objects.create(name='Client 2')
+        self.client3=Client.objects.create(name='Client 3')
         
         self.client1.recharge(100)
         self.client2.recharge(1000)
@@ -158,8 +159,7 @@ class BasicTests(TestCase):
         client=Client.objects.create(name='Client 1')
         # has the anonymous customer for this client been added
         self.assertEqual(Customer.objects.count(), 1)
-
-        self.assertEqual(Client.balance,0)
+        self.assertEqual(client.balance,0)
         
         cust = Customer.objects.get(id=1)
         self.assertTrue(cust.anonymous)
@@ -412,7 +412,47 @@ class DownstreamTests(BaseTestMoreData):
         # one item expired
         self.assertEqual(Transaction.objects.open().count(),3)
         
+    def test_client_balance(self):
 
+        # client1 has balance of 11, client3 has 0
+        self.assertTrue(self.client1.can_pay(1.0))
+        self.assertFalse(self.client3.can_pay(101.0))
+
+        # nothing in account so can't pay
+        self.assertFalse(self.client3.can_pay(1.0))
+        
+        # Client can pay
+        trans = Transaction.new(self.client1, value=90)
+        self.assertTrue(trans.can_pay())
+        trans.pay('REF')
+        self.assertEqual(self.client1.balance,10)
+
+        # now can't pay
+        self.assertFalse(self.client1.can_pay(10.02))
+        
+        
+        # client3 can't pay
+        trans = Transaction.new(self.client3, 10)
+        self.assertFalse(trans.can_pay())
+
+
+
+        # Client can pay
+        transa = Transaction.new(self.client2, value=900)
+        self.assertTrue(transa.can_pay())
+        
+        transb = Transaction.new(self.client2, value=500)
+        self.assertTrue(transa.can_pay())
+        transa.pay('REF')
+        
+        # now try to pay for first transaction
+        self.assertRaises(NotEnoughFunds, transb.pay, 'Ref'  )
+        
+        # recharge account and try again
+        self.client2.recharge(450)
+        transb.pay('REF')
+        
+        
     def test_pool(self):
         """
         misc tests on pool

@@ -89,7 +89,15 @@ class InvalidProductType(ModelException):
     
 
 class TransactionNeedsQtyorVal(ModelException):
+    ''' Tried to create a new transaction without specify quantity or value
+    '''
     txtMessage = 'New Transaction needs a quantity or value'
     errorCode = 111
 
+
+class NotEnoughFunds(ModelException):
+    ''' Tried to pay for a transaction without enough funds
+    '''
+    txtMessage = 'Not enough Funds'
+    errorCode = 112
     
