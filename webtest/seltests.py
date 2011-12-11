@@ -1,4 +1,5 @@
 from selenium.common.exceptions import NoSuchElementException
+from django.conf import settings
 from django_selenium.testcases import SeleniumTestCase
 
 from selenium.webdriver.common.by import By
@@ -8,9 +9,13 @@ class BaseSeleniumTextCase(SeleniumTestCase):
 
     def setUp(self):
         super(BaseSeleniumTextCase, self).setUp()
-        self.auth_url = "http://testuser:silicon@transactcarbon.com/"
-        self.base_url = "http://transactcarbon.com"
-        self.driver.get(self.auth_url)
+        if settings.TEST_PRODUCTION:
+            self.base_url = "http://transactcarbon.com"
+            self.auth_url = "http://testuser:silicon@transactcarbon.com/"
+            self.driver.get(self.auth_url)
+        else:
+            self.base_url = "http://localhost:8000"
+            
     def is_element_present(self, how, what):
         try:
             self.driver.find_element(by=how, value=what)
