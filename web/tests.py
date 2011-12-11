@@ -71,14 +71,14 @@ class BaseTest(TestCase):
         profile.save()
         
         u= User.objects.create_user('uclient1b','ucient1b@trialflight.com','pass')
-        profile = self.u.get_profile()
+        profile = u.get_profile()
         profile.client = self.client1
         profile.save()
         
         
         # client 2 has two users
         u= User.objects.create_user('uclient2a','ucient2a@trialflight.com','pass')
-        profile = self.u.get_profile()
+        profile = u.get_profile()
         profile.client = self.client2
         profile.save()
         
