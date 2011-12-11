@@ -6,6 +6,12 @@ import time
 
 class BaseSeleniumTextCase(SeleniumTestCase):
 
+    def setUp(self):
+        super(BaseSeleniumTextCase, self).setUp()
+        self.auth_url = "http://testuser:silicon@transactcarbon.com/"
+        self.base_url = "http://transactcarbon.com"
+        self.driver.get(self.auth_url)
+
     def is_element_present(self, how, what):
         try: self.driver.find_element(by=how, value=what)
         except NoSuchElementException, e: return False
@@ -17,11 +23,14 @@ class BaseSeleniumTextCase(SeleniumTestCase):
         else:
             return False
 
+    def get_relative(self, url):
+        self.driver.get(self.base_url + url)
+
 class Examples(BaseSeleniumTextCase):
 
     def test_pricecheck(self):
         driver = self.driver
-        driver.get('/')
+        self.get_relative('/')
         driver.find_element_by_link_text("Try the Examples").click()
         driver.find_element_by_link_text("PriceCheck demo").click()
         driver.find_element_by_id("id_quantity").clear()
@@ -33,7 +42,7 @@ class Examples(BaseSeleniumTextCase):
 
     def test_purchase_flight(self):
         driver = self.driver
-        driver.get('/')
+        self.get_relative('/')
         driver.find_element_by_link_text("Examples").click()
         self.is_text_present('Purchase Flight (buy by weight)')
         driver.find_element_by_link_text("Purchase Flight (buy by weight)").click()
