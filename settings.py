@@ -185,3 +185,6 @@ try:
     print "local settings imported successfully"
 except ImportError:
     print "no local settings"
+
+#TEST_RUNNER = 'django_selenium.selenium_runner.SeleniumTestRunner'
+#SELENIUM_DRIVER = 'Firefox'
