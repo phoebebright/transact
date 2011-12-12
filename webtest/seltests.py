@@ -15,6 +15,7 @@ class BaseSeleniumTextCase(SeleniumTestCase):
             self.driver.get(self.auth_url)
         else:
             self.base_url = "http://localhost:8000"
+        self.get_relative('/')
             
     def is_element_present(self, how, what):
         try:
@@ -29,7 +30,6 @@ class Examples(BaseSeleniumTextCase):
 
     def test_pricecheck(self):
         driver = self.driver
-        self.get_relative('/')
         driver.find_element_by_link_text("Try the Examples").click()
         driver.find_element_by_link_text("PriceCheck demo").click()
         driver.find_element_by_id("id_quantity").clear()
@@ -41,7 +41,6 @@ class Examples(BaseSeleniumTextCase):
 
     def test_purchase_flight(self):
         driver = self.driver
-        self.get_relative('/')
         driver.find_element_by_link_text("Examples").click()
         driver.is_text_present('Purchase Flight (buy by weight)')
         driver.find_element_by_link_text("Purchase Flight (buy by weight)").click()
@@ -57,7 +56,6 @@ class Examples(BaseSeleniumTextCase):
 
     def test_goldz(self):
         driver = self.driver
-        self.get_relative('/')
         driver.find_element_by_link_text("Examples").click()
         driver.find_element_by_link_text("Purchase in Game Voucher (buy by value)").click()
         goldz = driver.driver.find_element_by_id("goldzAmount")
@@ -70,3 +68,15 @@ class Examples(BaseSeleniumTextCase):
         driver.is_text_present("Transaction successful")
         driver.find_element_by_id("TA_close").click()
         self.assertTrue(int(goldz.text) > 0)
+
+    def test_transact(self):
+        driver = self.driver
+        driver.find_element_by_link_text("Examples").click()
+        driver.find_element_by_link_text("Basic Transaction demo - TEST ONLY").click()
+        driver.is_text_present("Recent Transactions")
+        driver.is_text_present("Pool")
+        driver.find_element_by_id("id_qty").clear()
+        driver.find_element_by_id("id_qty").send_keys("6")
+        driver.find_element_by_id("save").click()
+        firstqtycell=driver.find_element_by_xpath("//div[@id='content']/div/table/tbody/tr[2]/td[5]")
+        self.assertEqual("6.00", firstqtycell.text)
