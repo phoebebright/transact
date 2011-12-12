@@ -3,7 +3,7 @@ var TransactAPI = null;
 Requiremnts:
   jQuery (http://jquery.com/)
   JSON (http://www.JSON.org/json2.js)
-
+  jQuery cookie plugin modified to accept seconds (http://transactcarbon.com/static/webtest/js/jquery.cookie.min.js)
 Basic usage
   TransactAPI.version - gives json api version
   TransactAPI.ping() - performs ping and logs to console results
