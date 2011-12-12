@@ -42,15 +42,25 @@ class Command(NoArgsCommand):
         clienta.recharge(100)
         
         try:
-            user = User.objects.get(username='user1')
+            user = User.objects.get(username='test')
+            user.delete()
+            user = User.objects.get(username='testb')
             user.delete()
         except:
             pass
 
-        user1= User.objects.create_user('user1','user1@transactcarbon.com','pass')
+        user1= User.objects.create_user('test','test@transactcarbon.com','silicon')
         profile = user1.get_profile()
         profile.client = clienta
         profile.save()
+
+        clientb =Client.objects.create(name='Client B')        
+        userb= User.objects.create_user('testb','testb@transactcarbon.com','silicon')
+        profile = userb.get_profile()
+        profile.client = clientb
+        profile.save()
+
+        clientb.recharge(100)
                 
         """
         Should already be added as fixtures
@@ -61,6 +71,8 @@ class Command(NoArgsCommand):
         """
         
         # add products to the pool
+        
+        
         trade = Trade.objects.create(name = 'Water Waves', 
             purchfrom = 'EXCH',
             total = '10000.00',
@@ -101,3 +113,21 @@ class Command(NoArgsCommand):
         product.type=ProductType.objects.get(code='WIND')
         product.save()
         product.move2pool()          
+        
+        
+        # CREATE SOME TRANSACTIONS
+        
+        trans = Transaction.new(clienta, 2.55)
+        trans.pay('PAYREF 1')
+        
+        trans = Transaction.new(clienta, 1.2)
+        trans.pay('PAYREF 2')        
+        
+        trans = Transaction.new(clienta, 2)
+        trans.pay('PAYREF 3')        
+        
+        trans = Transaction.new(clientb, 5)
+        trans.pay('PAYREF 1')        
+        
+        trans = Transaction.new(clientb, 1)
+        trans.pay('PAYREF 2')                

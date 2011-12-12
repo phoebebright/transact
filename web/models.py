@@ -182,7 +182,8 @@ class Relationship(models.Model):
     customer = models.ForeignKey(Customer)
     client = models.ForeignKey(Client)
     
-
+'''
+Not implemented yet
 class Auth(models.Model):
     """
     Authority given by a User to access the system
@@ -207,7 +208,7 @@ class Auth(models.Model):
             self.alias = self.uuid
             
         super(Auth, self).save(*args, **kwargs)
-   
+'''   
 
 class Trade(models.Model):
     """
