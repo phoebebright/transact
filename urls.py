@@ -28,12 +28,6 @@ urlpatterns += patterns('web.views',
     url(r'^client_portal/', 'client_portal'),
     )
 
-# for development only
-if settings.DEBUG:
-    urlpatterns += patterns('web.views',
-    url(r'^transact/', 'transaction'),
-    )
-    
 urlpatterns += patterns('',
     url(r'(.+\.html)$', 'django.views.generic.simple.direct_to_template'),
     url(r'^$',  'django.views.generic.simple.direct_to_template',{'template': 'index.html'}),
