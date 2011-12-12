@@ -56,3 +56,7 @@ class TransactionNotExistException(ValidationException):
 class TransactionNeedsQtyorValException(ValidationException):
     txtMessage = 'Transaction needs a quantity or value'
     errorCode = 305
+
+class TransactionUserNotAuthorized(ValidationException):
+    txtMessage = "Transaction Belongs to different User"
+    errorCode = 306

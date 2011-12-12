@@ -713,12 +713,25 @@ class TradeTest(ApiWithDataTestCase):
             "quantity": 10.0,
         }
         data = self._api_call(call_data)
-        self.assertTrue(data.get('transID'))
+        transId=data.get('transID')
+        self.assertTrue(transId)
+        ## try to pay with other user
+        call_data ={
+            "call": "PAY",
+            "token": self._auth("uclient2a"),
+            "transID": transId,
+        }
+        data = self._api_call(call_data)
+
+        self.assertEqual(data.get('status'), "FAILED VALIDATION", data)
+        self.assertEqual(data.get('call'), 'PAY')
+        self.assertEqual(data.get('code'), 306, data)
+        self.assertEqual(data.get('description'), 'Transaction Belongs to different User')
 
         call_data ={
             "call": "PAY",
             "token": self._auth("uclient1a"),
-            "transID": data.get('transID'),
+            "transID": transId,
         }
         data = self._api_call(call_data)
 
@@ -730,6 +743,10 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data.get('currency'), 'EUR')
         self.assertEqual(data.get('total'), 44.25)
         data = self._api_call(call_data)
+        self.assertEqual(data.get('status'), "FAILED VALIDATION", data)
+        self.assertEqual(data.get('call'), 'PAY')
+        self.assertEqual(data.get('code'), 303)
+        self.assertEqual(data.get('description'), 'Transaction Closed')
 
     def test_transact_info(self):
         """api.TradeTest.test_transact_info
@@ -781,12 +798,26 @@ class TradeTest(ApiWithDataTestCase):
             "quantity": 10.0,
         }
         data = self._api_call(call_data)
-        self.assertTrue(data.get('transID'), data)
+        transId=data.get('transID')
+        self.assertTrue(transId, data)
+
+        ## try to pay with other user
+        call_data ={
+            "call": "TRANSACTINFO",
+            "token": self._auth("uclient2a"),
+            "transID": transId,
+        }
+        data = self._api_call(call_data)
+
+        self.assertEqual(data.get('status'), "FAILED VALIDATION", data)
+        self.assertEqual(data.get('call'), 'PAY')
+        self.assertEqual(data.get('code'), 306, data)
+        self.assertEqual(data.get('description'), 'Transaction Belongs to different User')
 
         call_data ={
             "call": "TRANSACTINFO",
-            "token": self.token,
-            "transID": data.get('transID'),
+            "token": self._auth("uclient1a"),
+            "transID": transId,
         }
         data = self._api_call(call_data)
 
