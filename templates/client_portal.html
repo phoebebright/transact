@@ -1,42 +1,148 @@
 {% extends "base.html" %}
-{% block main %}
-		{% if user.is_authenticated %}
-             Logged in as {{ user.first_name }} {{ user.last_name }} &nbsp;<a href="/logout/?next=/">Logout</a>
 
-                {% else %}
+ {% block extra_head %}
+<script type="text/javascript" src="/static/js/JSON.js"></script>
+<script type="text/javascript" src="/static/webtest/js/jquery.cookie.min.js"></script>
+
+<style type="text/css" title="text/css">
+ #content {width:820px;}
+
+</style>  
+
+   <script type="text/javascript">
+
+    jQuery(document).ready(function() {
+
+
+            function send_call(post_data, callback) {
+                /* general method handling call */
+                jQuery.ajax({
+                    url:"/api/",
+                    type: "POST",
+                    data: JSON.stringify(post_data),
+                    contentType: "application/json; charset=UTF-8",
+                    success: function(data){
+                        callback(data);
+                    },
+                    accept: 'json'
+                });
                 
-                    <font face="tahoma" size="1" color="#486270">
-		    <form action="/accounts/login/?next=/" method="post" accept-charset="utf-8">{% csrf_token %}
-                    <label for="username">USERNAME </label><input style="width: 160px; border: 1px solid gray" type="text" name="username" value="" id="username" /><br />
-                    <label for="password">PASSWORD </label><input style="width: 160px; border: 1px solid gray" type="password" name="password" value="" id="password" /><br />
-                    <button type="submit">Login</button><br />
-		    <a class="a2" href="{% url password_reset %}">Forgotten Password?</a>
-                    </form>
-		    </font>
+            }
 
-                {% endif %}
-    <h2>Recent Transactions</h2>
-   <table>
-    <tr>
-        <td>Created</td><td>Status</td><td>Product</td><td>Type</td><td>Quality</td><td>Qty</td><td>Price</td><td>Fee</td><td>Total</td><td>Payment</td>
-    </tr>
-    {% for item in transactions %}
-        <tr>
-            <td>{{item.created}}</td>
-            <td>{{item.get_status_display}}</td>
-            <td>{{item.product}}</td>
-            <td>{{item.product.type}}</td>
-            <td>{{item.product.quality}}</td>
-            <td>{{item.quantity}}</td>
-            <td>{{item.price}}</td>
-            <td>{{item.fee}}</td>
-            <td>{{item.total}}</td>
-            <td>{{item.payment}}</td>
-            </tr>
-    {% endfor %}
-    </table>
+            var data = {
+                "call": "LOGIN",
+                "username": "test",
+                "password": "silicon"
+            }
+            send_call(data, function(response){
+                x=response["status"]
+                if(response["status"]=="OK"){
+                    jQuery.cookie("TA_TOKEN", response["token"], {"expires": response['expires']}); //modified version of jQuery.cookie to accept seconds
+                
+                    get_balance();
+                }else{
+                    var box_content = "<p>Sorry, authentication was not possible at this moment. Try refreshing the page.";
+                    showModal(box_content);
+                }
+            });
+        
+
+        
+        
+        
+        function get_balance(){
+            /*  get and display client balance */   
+        
+             var data = {
+                "call": "BALANCE",
+                "token": jQuery.cookie("TA_TOKEN")
+            }
+            send_call(data, function(response){
+                if(response["status"]=="OK"){
+                
+                    jQuery("#balance").html(response["balance"]);
+                }
+            });
+
+        };   
+
+        function topup(){
+            /*  get and display client balance */   
+        
+             var data = {
+                "call": "TOPUP",
+                "token": jQuery.cookie("TA_TOKEN")
+            }
+            send_call(data, function(response){
+                if(response["status"]=="OK"){
+                
+                    get_balance();
+                }
+            });
+
+        };   
+        
+       jQuery('#topup').click(function(){
+            topup();
+            return false;
+        });
+
+        
+    });
+    </script>
+
+ {% endblock extra_head %}   
+   
+{% block main %}
+
+
+    {% if user.is_authenticated %}
+         Logged in as {{ user.first_name }} {{ user.last_name }} &nbsp;<a href="/logout/?next=/">Logout</a>
+
+            {% else %}
+            
+                <font face="tahoma" size="1" color="#486270">
+        <form action="/accounts/login/?next=/" method="post" accept-charset="utf-8">{% csrf_token %}
+                <label for="username">USERNAME </label><input style="width: 160px; border: 1px solid gray" type="text" name="username" value="" id="username" /><br />
+                <label for="password">PASSWORD </label><input style="width: 160px; border: 1px solid gray" type="password" name="password" value="" id="password" /><br />
+                <button type="submit">Login</button><br />
+        <a class="a2" href="{% url password_reset %}">Forgotten Password?</a>
+                </form>
+        </font>
+
+            {% endif %}
+                
+    <br />
     
+    {% if user.is_authenticated %}
+            
+        <p><b>Current Balance:</b> <span id="balance">0</span></p>  
+        
+        <p><button type="button" id="topup">Topup Account</button></p>
+        
+        <h2>Recent Transactions</h2>
 
+       <table width="100%">
+        <tr>
+            <td>Created</td><td>Status</td><td>Product</td><td>Type</td><td>Quality</td><td>Qty</td><td>Price</td><td>Fee</td><td>Total</td><td>Payment</td>
+        </tr>
+        {% for item in transactions %}
+            <tr>
+                <td>{{item.created}}</td>
+                <td>{{item.get_status_display}}</td>
+                <td>{{item.product}}</td>
+                <td>{{item.product.type}}</td>
+                <td>{{item.product.quality}}</td>
+                <td>{{item.quantity}}</td>
+                <td>{{item.price}}</td>
+                <td>{{item.fee}}</td>
+                <td>{{item.total}}</td>
+                <td>{{item.payment.payment_date}}</td>
+                </tr>
+        {% endfor %}
+        </table>
+    
+    {% endif %}
 
 {% endblock main %}
 

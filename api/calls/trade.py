@@ -258,3 +258,56 @@ class TransactCancelRequest(TransactionRequest):
         self.trans.cancel()
         response = self.response()
         return response
+
+class ClientBalanceResponse(Response):
+    pass
+
+class ClientBalanceRequest(Request):
+    """ Get the current balance for the client from the client entity
+    """
+    
+    # TODO:  Add pending transactions as well
+    
+    response = ClientBalanceResponse
+
+    @authenticated
+    def run(self):
+        from web.models import Client
+        profile = self.user.get_profile()
+
+        client = Client.objects.get(id = profile.client.id)
+        data = {
+            "balance": client.balance
+                }
+        response = self.response(**data)
+        return response
+
+class ClientRechargeResponse(Response):
+    pass
+
+class ClientRechargeRequest(Request):
+    """ recharge the clients account
+    """
+    
+    response = ClientRechargeResponse
+
+    @authenticated
+    def run(self):
+        # TODO: Does not handle amount = .01 (0.01 is ok)
+        from web.models import Client
+        profile = self.user.get_profile()
+        
+        client = Client.objects.get(id = profile.client.id)
+
+        # if amount not specified, use the default in the Client
+        if self.get('amount'):
+            amount = client.recharge(Decimal(str(self.get('amount'))))
+        else:
+            amount = client.recharge()
+    
+        data = {
+            "amount" : amount,
+            "balance": client.balance
+                }
+        response = self.response(**data)
+        return response

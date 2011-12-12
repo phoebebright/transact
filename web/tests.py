@@ -1,5 +1,7 @@
 #python
 from datetime import date, datetime, timedelta
+import config
+from livesettings import config_value
 
 #django
 from django import template
@@ -56,6 +58,11 @@ class BaseTest(TestCase):
       
         self.client1=Client.objects.create(name='Client 1')
         self.client2=Client.objects.create(name='Client 2')
+        self.client3=Client.objects.create(name='Client 3')
+        
+        self.client1.recharge(100)
+        self.client2.recharge(1000)
+                
 
         self.custA=Customer.objects.create(name='Customer A of Client 1')
         Relationship.objects.create(client=self.client1, customer=self.custA)
@@ -65,20 +72,21 @@ class BaseTest(TestCase):
         self.system_user = User.objects.create_user('system','system@trialflight.com','pass')
 
         # client 1 has two users
-        u= User.objects.create_user('uclient1a','ucient1a@trialflight.com','pass')
-        profile = u.get_profile()
+        self.u1= User.objects.create_user('uclient1a','ucient1a@trialflight.com','pass')
+        profile = self.u1.get_profile()
         profile.client = self.client1
         profile.save()
         
-        u= User.objects.create_user('uclient1b','ucient1b@trialflight.com','pass')
-        profile = u.get_profile()
+        self.u2= User.objects.create_user('uclient1b','ucient1b@trialflight.com','pass')
+        profile = self.u2.get_profile()
         profile.client = self.client1
         profile.save()
         
         
         # client 2 has two users
-        u= User.objects.create_user('uclient2a','ucient2a@trialflight.com','pass')
-        profile = u.get_profile()
+        self.u3= User.objects.create_user('uclient2a','ucient2a@trialflight.com','pass')
+        profile = self.u3.get_profile()
+
         profile.client = self.client2
         profile.save()
         
@@ -152,8 +160,8 @@ class BasicTests(TestCase):
         client=Client.objects.create(name='Client 1')
         # has the anonymous customer for this client been added
         self.assertEqual(Customer.objects.count(), 1)
-
-         
+        self.assertEqual(client.balance,0)
+        
         cust = Customer.objects.get(id=1)
         self.assertTrue(cust.anonymous)
         self.assertEqual(cust.clients.all().count(), 1)
@@ -229,11 +237,8 @@ class DownstreamTests(BaseTestMoreData):
     check downstream tasks - price check, transaction, payment
     """
     def test_qtycheck(self):
-        list_pool()
         item = Pool.QTYCHECK(10)
-        
-        print item
-                
+                        
         
     def test_pricecheck(self):
 
@@ -258,7 +263,7 @@ class DownstreamTests(BaseTestMoreData):
             purchfrom = 'EXCH',
             total = '10000.00',
             currency = 'EUR',
-            tonnes = '101',
+            tonnes = config_value('web','MAX_QUANTITY')+1,
             ref='yesterday',
             )        
         product = Product.objects.get(trade=trade)
@@ -302,13 +307,13 @@ class DownstreamTests(BaseTestMoreData):
         
         #test for matches
         #quantity = available
-        item = Pool.PRICECHECK(101)
+        item = Pool.PRICECHECK(11)
         self.assertEqual(item, earliestpoolitem)
-        item = Pool.PRICECHECK(101, quality='G')
+        item = Pool.PRICECHECK(11, quality='G')
         self.assertEqual(item, earliestpoolitem)
-        item = Pool.PRICECHECK(101, type='HYDR' )
+        item = Pool.PRICECHECK(11, type='HYDR' )
         self.assertEqual(item, earliestpoolitem)
-        item = Pool.PRICECHECK(101, type='HYDR' , quality='G')
+        item = Pool.PRICECHECK(11, type='HYDR' , quality='G')
         self.assertEqual(item, earliestpoolitem)
 
         # set default for client 1 only
@@ -326,14 +331,14 @@ class DownstreamTests(BaseTestMoreData):
         self.client1.type = ProductType.objects.get(code='HYDR')
         self.client1.save()
 
-        item = Pool.PRICECHECK(101, client=self.client1)
+        item = Pool.PRICECHECK(11, client=self.client1)
         self.assertEqual(item.product.name, 'Carbon Credit 2')
 
         # Any Hydro
         self.client1.quality=None  
         self.client1.save()
 
-        item = Pool.PRICECHECK(101, client=self.client1)
+        item = Pool.PRICECHECK(11, client=self.client1)
         self.assertEqual(item.product.name, 'Yesterday')
 
         # Any Platinum - change a date to yesterday to be able to ensure this one is picked
@@ -344,7 +349,7 @@ class DownstreamTests(BaseTestMoreData):
         item.added=YESTERDAY
         item.save()
 
-        item = Pool.PRICECHECK(101, client=self.client1)
+        item = Pool.PRICECHECK(11, client=self.client1)
         self.assertEqual(item.product.name, 'Carbon Credit 3')
         
         
@@ -378,11 +383,9 @@ class DownstreamTests(BaseTestMoreData):
 
         # create a transaction by quantity
         trans = Transaction.new(self.client1, quantity=10.55)
-        list_transactions()
 
         # create a transaction by value
         trans = Transaction.new(self.client1, value=10.55)
-        list_transactions()
         
         #DO NEXT
         #cancel, expire, refund, pay
@@ -410,7 +413,47 @@ class DownstreamTests(BaseTestMoreData):
         # one item expired
         self.assertEqual(Transaction.objects.open().count(),3)
         
+    def test_client_balance(self):
 
+        # client1 has balance of 11, client3 has 0
+        self.assertTrue(self.client1.can_pay(1.0))
+        self.assertFalse(self.client3.can_pay(101.0))
+
+        # nothing in account so can't pay
+        self.assertFalse(self.client3.can_pay(1.0))
+        
+        # Client can pay
+        trans = Transaction.new(self.client1, value=90)
+        self.assertTrue(trans.can_pay())
+        trans.pay('REF')
+        self.assertEqual(self.client1.balance,10)
+
+        # now can't pay
+        self.assertFalse(self.client1.can_pay(10.02))
+        
+        
+        # client3 can't pay
+        trans = Transaction.new(self.client3, 10)
+        self.assertFalse(trans.can_pay())
+
+
+
+        # Client can pay
+        transa = Transaction.new(self.client2, value=900)
+        self.assertTrue(transa.can_pay())
+        
+        transb = Transaction.new(self.client2, value=500)
+        self.assertTrue(transa.can_pay())
+        transa.pay('REF')
+        
+        # now try to pay for first transaction
+        self.assertRaises(NotEnoughFunds, transb.pay, 'Ref'  )
+        
+        # recharge account and try again
+        self.client2.recharge(450)
+        transb.pay('REF')
+        
+        
     def test_pool(self):
         """
         misc tests on pool

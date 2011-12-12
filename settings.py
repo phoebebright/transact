@@ -27,6 +27,8 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
+DEFAULT_FROM_EMAIL = "info@transactcarbon.com"
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
