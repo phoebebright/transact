@@ -7,7 +7,9 @@ Requiremnts:
 Basic usage
   TransactAPI.version - gives json api version
   TransactAPI.ping() - performs ping and logs to console results
-  TransactAPI.login(username,pass) - performs login and sets TransactAPI.token for every next request
+  TransactAPI.login(username,pass,callback) - performs login and sets TransactAPI.token for every next request
+               callback - optional callback for login. if callback is used make sure to add token:
+               TransactAPI.add_token(token, expires)
   TransactAPI.token - used with every TransactAPI.call request
   TransactAPI.call(callname, options, callback) - perform api call
     callname - string name of api call
@@ -16,7 +18,6 @@ Basic usage
             function (status, data) {}
               -status string
               -data object
-
 
 
   example:
@@ -41,7 +42,7 @@ Limitations:
   transactcarbon.com currently using http authorization to be done before using this api
 TODO: imput validation type checking for call, options, and callback
 TODO: initialization of TransactAPI with token, connection string?
-
+ TransactAPI.add_token
  */
 (function(){
     
@@ -53,7 +54,7 @@ TODO: initialization of TransactAPI with token, connection string?
     function send_call(post_data, callback) {
 
         jQuery.ajax({
-        url:"/api/",
+        url:TransactAPI.gate,
         type: "POST",
         data: JSON.stringify(post_data),
         contentType: "application/json; charset=UTF-8",
@@ -68,6 +69,7 @@ TODO: initialization of TransactAPI with token, connection string?
     function add_token(status ,data) {
          if(status=="OK"){
              TransactAPI.token = data["token"];
+             set_token(data["token"], data["expires"]);
              log('loggin successful');
          }
          else {
@@ -80,14 +82,22 @@ TODO: initialization of TransactAPI with token, connection string?
         log('data :');
         log(data);
     }
-    TransactAPI = {
-        "login": function(username, password){
+    function get_token(){
+        return jQuery.cookie("TA_TOKEN");
+    }
+    function set_token(token, expires){
+        var expires = expires || 300;
+        jQuery.cookie("TA_TOKEN", token, {"expires": expires});
+    }
 
+    TransactAPI = {
+        "login": function(username, password, callback){
+            var callback = callback || add_token;
             var options = {
                 "username": username,
                 "password": password
-            }
-            TransactAPI.call("LOGIN", options, add_token);
+            };
+            TransactAPI.call("LOGIN", options, callback);
         },
         "ping": function(callback) {
           var callback = callback || log_callback;
@@ -97,15 +107,15 @@ TODO: initialization of TransactAPI with token, connection string?
         "call": function(callname, options, callback){
             var callback = callback || TransactAPI.default_callback;
             var options = options || {};
-            var data = jQuery.extend({
-                "call": callname,
-                "token": TransactAPI.token
-            }, options);
-            
+            var token = TransactAPI.token || get_token() || "";
+            var data = jQuery.extend({}, options);
+            data.token = token;
+            data.call = callname;
             send_call(data, callback);
         },
         "default_callback": log_callback,
-        "version": "0.4",
-        "gate": "http://transactcarbon.com"
+        "version": "0.5",
+        "gate": "http://transactcarbon.com/api/",
+        "add_token": set_token
     }
 })();
