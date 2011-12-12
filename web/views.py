@@ -21,9 +21,11 @@ def transaction(request):
     if request.user.is_authenticated():
         profile = request.user.profile
         client = profile.client
+        if not client:
+            client, created = Client.objects.get_or_create(name='test')
     else:
         client, created = Client.objects.get_or_create(name='test')
-    
+
     if request.method == "POST":
         form = TransactForm(data = request.POST)
         if form.is_valid():
