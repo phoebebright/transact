@@ -5,6 +5,7 @@
     <script type="text/javascript" src="/static/js/crsf.js"></script>
     <script type="text/javascript" src="/static/js/JSON.js"></script>
     <script type="text/javascript" src="/static/webtest/js/main.js"></script>
+    <script type="text/javascript" src="/static/webtest/js/transactAPI.js"></script>
     <link href="/static/webtest/css/docs.css" rel="stylesheet" type="text/css" media="screen" />
     <script type="text/javascript">
 
@@ -43,26 +44,28 @@
 
 
 <h1>{% block heading %}Web test of TransAct api{% endblock heading %}</h1>
-
+{% block flowchart %}
 <h4>Flow:</h4>
 <ul id="flow">
 {% block flow %}{% endblock %}
 </ul>
 <br style="clear:both"/>
+{% endblock flowchart %}
 {% block doc %}{% endblock doc %}
 <hr />
-
+{% block testapi %}
 <form id="call_form" target="." >
     <label class="fullwidth">Paste your JSON into content area</label><textarea id="call_content">{% block examplejson %}{% endblock examplejson %}</textarea><br/>
     <p class="align-right"><input id="call_api" type="button" class="button" value="Send"></p>
 </form>
 <h4>Call response below:</h4>
 <div id="call_response"></div>
-
+{% endblock testapi %}
 {% endblock main %}
 
 {% block sidebar %}
 <ul class="sidebar">
+<li><a href="/docs/API.html">Overview</a></li>
 <li><a href="/docs/PING.html">PING</a></li>
 <li><a href="/docs/LOGIN.html">LOGIN</a></li>
 <li><a href="/docs/LISTPRODUCTS.html">LISTTYPES</a></li>

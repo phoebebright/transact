@@ -1,0 +1,64 @@
+{% extends "test.html" %}
+
+{% block heading %}API{% endblock heading %}
+
+{% block flowchart %}{% endblock %}
+
+{% block doc %}
+    <h4>Introduction</h4>
+    <p>Transact API features:</p>
+    <ul>
+        <li>RESTful</li>
+        <li>uses json to carry data</li>
+        <li>uses Http as transport protocol only (some devices ie. blackberry )</li>
+        <li>all calls except PING and LOGIN require valid token</li>
+        <li>unauthorised requests (not valid token) will not hit database</li>
+        <li>More to come...</li>
+    </ul>
+
+    <h4>ASSUMPTIONS</h4>
+    <ol>
+        <li>Units are held to three decimal places.
+        if 1 unit = 1 tonne and units are priced at €5 per unit, 0.01 of a unit will cost 5c and
+        0.001 until will cost .5c.</li>
+        <li> Prices calculations are rounded to the nearest whole cent</li>
+        <li> The minimum purchase is 1 EUR or 0.1000 units whichever is smaller</li>
+        <li> The maximum purchase is 1000 EUR or 100 units whichever is larger</li>
+        <li> If the Client does not specify a Type or Quality they will be allocated the oldest
+        product with sufficient quantity regardless of price.</li>
+        <li>wherever there's pagination limit can only be set up to 1000</li>
+    </ol>
+
+    <h4>Json Structure</h4>
+    <h5>Generic elements of a call</h5>
+    <pre>
+    {
+    "call": "API function name",
+    "token": "session token, see LOGIN and AUTH",
+    // other values
+    }
+    </pre>
+    <h5>Error message schema</h5>
+    <pre>
+    {
+    "call": "API function name",
+    "status": "FAILED", // FAILED (ERROR?) if it's not OK it's an error
+    "code": 12345, // unique error code
+    "description": "Human readable description of the problem"
+    }
+    </pre>
+    <p>if request json cannot be read "call" value will be null</p>
+    <p>error status can be "FAILED" if operation was unsucessfull or "VALIDATION FAILED" when imput parameters were not valid</p>
+
+    <h5>Typical response schema</h5>
+    <pre>
+    {
+    "call": "API function name",
+    "timestamp": 1321267155000, // in milliseconds
+    "status": "OK"
+    // and other values depending on call
+    }
+    </pre>
+
+.{% endblock doc %}
+{% block testapi %}{% endblock testapi %}

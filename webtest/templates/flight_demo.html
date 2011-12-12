@@ -24,7 +24,8 @@ function login(){
     /* uses login to authenticate the user */
     var data = {
         "call": "LOGIN",
-        "username": "test",
+        
+        "username": "{% if user.is_authenticated %}{{user.username}}{% else %}test{% endif %}",
         "password": "silicon"
     }
     send_call(data, function(response){

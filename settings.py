@@ -179,9 +179,14 @@ CACHES = {
     }
 }
 
+#django_selenium tests
+TEST_RUNNER = 'django_selenium.selenium_runner.SeleniumTestRunner'
+SELENIUM_DRIVER = 'Firefox'
+TEST_PRODUCTION = True
 
 try:
     from settings_local import *
     print "local settings imported successfully"
 except ImportError:
     print "no local settings"
+

@@ -86,6 +86,7 @@ class BaseTest(TestCase):
         # client 2 has two users
         self.u3= User.objects.create_user('uclient2a','ucient2a@trialflight.com','pass')
         profile = self.u3.get_profile()
+
         profile.client = self.client2
         profile.save()
         
