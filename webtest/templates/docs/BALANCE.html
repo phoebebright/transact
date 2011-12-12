@@ -1,0 +1,20 @@
+{% extends "test.html" %}
+{% load webtags %}
+
+{% block heading %}BALANCE{% endblock heading %}</h1>
+
+{% block flow %}<li class="required"><a href="/docs/LOGIN.html">LOGIN</a></li><li>BALANCE</li>{% endblock %}
+
+{% block doc %}<p>Get the balance of the currently logged in Client</p>
+
+<p><b>Check Balance</b></p>
+<pre>
+{"call":"BALANCE",
+"token": "{% token %}"}
+</pre>
+
+
+
+{% endblock doc %}
+{% block examplejson %}{"call":"BALANCE","token": "{% token %}"}{% endblock examplejson %}
+

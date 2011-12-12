@@ -1,0 +1,27 @@
+{% extends "test.html" %}
+{% load webtags %}
+
+{% block heading %}BALANCE{% endblock heading %}</h1>
+
+{% block flow %}<li class="required"><a href="/docs/LOGIN.html">LOGIN</a></li><li>RECHARGE</li>{% endblock %}
+
+{% block doc %}<p>Get the recharge the currently logged in clients account.</p>
+
+<p><b>Recharge by default amount set in Client Profile</b></p>
+<pre>
+{"call":"RECHARGE",
+"token": "{% token %}"}
+</pre>
+
+<p><b>Specify amount to Recharge by</b></p>
+<pre>
+{"call":"RECHARGE",
+"token": "{% token %}",
+ "amount": 100}
+</pre>
+
+
+
+{% endblock doc %}
+{% block examplejson %}{"call":"RECHARGE","token": "{% token %}"}{% endblock examplejson %}
+
