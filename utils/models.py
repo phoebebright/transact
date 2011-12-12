@@ -69,8 +69,6 @@ class MailLog(models.Model):
 
     def save(self, *args, **kwargs): 
         self.subject = self.subject[:119]
-        if not self.created_by:
-            self.created_by=system_user()
         super(MailLog, self).save(*args, **kwargs)
 
         

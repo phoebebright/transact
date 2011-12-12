@@ -148,20 +148,23 @@ class Client(models.Model):
         
     def recharge(self, amount=0):
         """ Topup the client's account when it runs low
+        return amount topped up by
         """
         
-        #TODO: check needs topping up then get payment and update Payment entity
-        
         if amount == 0:
-            # calculate dfault amount
-            pass
-        else:
+            amount = self.topup_by
+  
+        if amount > 0:
+
             Payment.objects.create(
                 payment_type = 'R',
                 amount = amount)
             self.balance = self.balance + amount
             self.save()
 
+            #TODO: Send notification
+        return amount
+        
     def can_pay(self, amount):
         """Check there are enough funds to pay this amount
         """
