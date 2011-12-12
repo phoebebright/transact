@@ -2,7 +2,7 @@
 
 from api.calls.fields import DecimalField
 from api.exceptions import TransactionClosedException, TransactionNotExistException, TransactionNeedsQtyorValException, \
-        TransactionUserNotAuthorized
+        TransactionUserNotAuthorized, TransactionStatusNotPending
 from decorators import authenticated
 from api.calls.base import *
 import api.config
@@ -247,19 +247,14 @@ class TransactInfoRequest(TransactionRequest):
 class TransactCancelResponse(Response):
     pass
 
-class TransactCancelRequest(Request):
+class TransactCancelRequest(TransactionRequest):
     response = TransactCancelResponse
 
-    def validate(self):
-        from web.models import Transaction
-        try:
-            self.trans = Transaction.objects.get(uuid=self.require('transID'))
-        except:
-            raise TransactionNotExistException()
+    def _validate_transaction_status(self):
+        if not self.trans.is_open:
+            raise TransactionStatusNotPending()
 
-
-    @authenticated
-    def run(self):
+    def _run(self):
         self.trans.cancel()
         response = self.response()
         return response

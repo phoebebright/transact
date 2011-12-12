@@ -897,9 +897,12 @@ class TradeTest(ApiWithDataTestCase):
         data = self._api_call(call_data)
         self.assertTrue(data.get('transID'), data)
         transact_id = data.get('transID')
+
+
+
         call_data ={
             "call": "TRANSACTINFO",
-            "token": self.token,
+            "token": self._auth("uclient1a"),
             "transID": transact_id,
         }
         data = self._api_call(call_data)
@@ -915,9 +918,22 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data.get('name'), 'Carbon Credit 1')
         self.assertTrue(data.get('productID'))
 
+        ## try to cancel with other user
         call_data ={
             "call": "TRANSACTCANCEL",
-            "token": self.token,
+            "token": self._auth("uclient2a"),
+            "transID": transact_id,
+        }
+        data = self._api_call(call_data)
+
+        self.assertEqual(data.get('status'), "FAILED VALIDATION", data)
+        self.assertEqual(data.get('call'), 'TRANSACTCANCEL')
+        self.assertEqual(data.get('code'), 306, data)
+        self.assertEqual(data.get('description'), 'Transaction Belongs to different User')
+
+        call_data ={
+            "call": "TRANSACTCANCEL",
+            "token": self._auth("uclient1a"),
             "transID": transact_id,
         }
         data = self._api_call(call_data)
@@ -941,6 +957,17 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data.get('state'), 'CANCELLED')
         self.assertEqual(data.get('name'), 'Carbon Credit 1')
         self.assertTrue(data.get('productID'))
+
+        call_data ={
+            "call": "TRANSACTCANCEL",
+            "token": self.token,
+            "transID": transact_id,
+        }
+        data = self._api_call(call_data)
+        self.assertEqual(data.get('status'), "FAILED VALIDATION", data)
+        self.assertEqual(data.get('call'), 'TRANSACTCANCEL')
+        self.assertEqual(data.get('code'), 307, data)
+        self.assertEqual(data.get('description'), 'Transaction status not pending')
 
 class UnitTests(TestCase):
 

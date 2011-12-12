@@ -60,3 +60,7 @@ class TransactionNeedsQtyorValException(ValidationException):
 class TransactionUserNotAuthorized(ValidationException):
     txtMessage = "Transaction Belongs to different User"
     errorCode = 306
+
+class TransactionStatusNotPending(ValidationException):
+    txtMessage = "Transaction status not pending"
+    errorCode = 307
