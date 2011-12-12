@@ -54,3 +54,19 @@ class Examples(BaseSeleniumTextCase):
         driver.find_element_by_xpath("//span[@id='approvePay']").click()
         driver.is_text_present("Successfully paid")
         driver.find_element_by_xpath("//button[@type='button']").click()
+
+    def test_goldz(self):
+        driver = self.driver
+        self.get_relative('/')
+        driver.find_element_by_link_text("Examples").click()
+        driver.find_element_by_link_text("Purchase in Game Voucher (buy by value)").click()
+        goldz = driver.driver.find_element_by_id("goldzAmount")
+        self.assertEquals(goldz.text, "0")
+        driver.find_element_by_id("buyButton").click()
+        driver.is_text_present("How much do you want to spend")
+        driver.find_element_by_id("transAmount").clear()
+        driver.find_element_by_id("transAmount").send_keys("200")
+        driver.find_element_by_xpath("//button[2]").click()
+        driver.is_text_present("Transaction successful")
+        driver.find_element_by_id("TA_close").click()
+        self.assertTrue(int(goldz.text) > 0)
