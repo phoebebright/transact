@@ -810,7 +810,7 @@ class TradeTest(ApiWithDataTestCase):
         data = self._api_call(call_data)
 
         self.assertEqual(data.get('status'), "FAILED VALIDATION", data)
-        self.assertEqual(data.get('call'), 'PAY')
+        self.assertEqual(data.get('call'), 'TRANSACTINFO')
         self.assertEqual(data.get('code'), 306, data)
         self.assertEqual(data.get('description'), 'Transaction Belongs to different User')
 
@@ -835,14 +835,14 @@ class TradeTest(ApiWithDataTestCase):
         call_data ={
             "call": "PAY",
             "token": self._auth("uclient1a"),
-            "transID": data.get('transID'),
+            "transID": transId,
         }
         data = self._api_call(call_data)
 
         call_data ={
             "call": "TRANSACTINFO",
             "token": self.token,
-            "transID": data.get('transID'),
+            "transID": transId,
         }
         data = self._api_call(call_data)
 

@@ -177,7 +177,9 @@ class TransactionRequest(Request):
             self.trans = Transaction.objects.get(uuid=self.require('transID'))
         except:
             raise TransactionNotExistException()
+        self._validate_transaction_status()
 
+    def _validate_transaction_status(self):
         if self.trans.is_closed:
             raise TransactionClosedException()
 
@@ -219,18 +221,14 @@ class PayRequest(TransactionRequest):
 class TransactInfoResponse(Response):
     pass
 
-class TransactInfoRequest(Request):
+class TransactInfoRequest(TransactionRequest):
     response = TransactInfoResponse
 
-    def validate(self):
-        from web.models import Transaction
-        try:
-            self.trans = Transaction.objects.get(uuid=self.require('transID'))
-        except:
-            raise TransactionNotExistException()
-
-    @authenticated
-    def run(self):
+    def _validate_transaction_status(self):
+        """do not validate status for info"""
+        pass
+    
+    def _run(self):
         product = self.trans.product
         data = {
             "quantity": self.trans.quantity,
