@@ -130,6 +130,7 @@ INSTALLED_APPS = (
     'web',
     'webtest',
     'utils',
+    'django_coverage',
 
 )
 
