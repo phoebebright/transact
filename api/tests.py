@@ -18,12 +18,21 @@ def list_pool():
         print "POOL"
         for p in Pool.objects.all():
             print "%30s | %s | %s | %.2f | %s | %.2f | %s" % (p.product, p.quality, p.type, p.quantity, p.currency, p.price, p.added)
-            
-def list_transactions():
-        print "TRANSACTIONS"
-        for p in Transaction.objects.all():
-            print "%s |%30s | %s | %.3f | %s | %.2f | %.2f | %.2f | %s" % (p.status, p.product, p.pool, p.quantity, p.currency, p.price, p.fee, p.total, p.expire_at)
 
+
+def list_transactions():
+        print "TRANSACTIONS ",Transaction.objects.count()
+        for p in Transaction.objects.all():
+            print "%s | %s |%30s | %s | %s | %s | %s | %.2f | %.2f | %s" % (p.id, p.status, p.product, p.client, p.pool, p.quantity, p.currency, p.fee, p.total, p.expire_at)
+
+def list_payments():
+        print "PAYMENTS",Payment.objects.count()
+        for p in Payment.objects.all():
+            if p.trans:
+                tid = p.trans.id
+            else:
+                tid =0
+            print "%s |%s | %s | %.2f |" % (tid, p.client, p.ref, p.amount)
 
 class ApiTestCase(TestCase):
 
@@ -229,6 +238,7 @@ class AuthTest(ApiTestCase):
         value = cache.get(jsoncontent['token'])
         self.assertEquals(value,'tester')
 
+        
 class TradeTest(ApiWithDataTestCase):
 
 
@@ -339,11 +349,13 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data['currencies']['EUR']['unit'], 4.4)
 
     def test_simple_qtycheck(self):
+    
+        # fails if token does not match currently logged in user
         token = "1db6b44cafa0494a950d9ef531c02e69"
         call = {
             "call": "QTYCHECK",
             "token": token,
-            "price": 4.4
+            "price": 4.4,
         }
         data = self._api_call(call)
         self.assertEqual(data.get('status'), "FAILED")
@@ -351,7 +363,9 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data.get('code'), 401, data)
 
         call['token'] = self._auth()
+
         data = self._api_call(call)
+
         self.assertEqual(data.get('status'), "OK", data)
         self.assertEqual(data.get('call'), 'QTYCHECK')
         self.assertEqual(data.get('quantity'), 2500.0)
@@ -359,6 +373,8 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data.get('quality'), 'G')
         self.assertEqual(data['currencies']['EUR']['total'], 11000.25)
         self.assertEqual(data['currencies']['EUR']['unit'], 4.4)
+        
+        
 
     def test_price_check_errors(self):
         auth_call = {
@@ -1037,17 +1053,23 @@ class TradeTest(ApiWithDataTestCase):
 
         data = self._api_call(call_data_balance)
         self.assertEqual(data.get('balance'), 950)
-        print data
+        self.assertEqual(self.client1.balance, 950)
+
         # Check decimals working
         
-        trans = Transaction.new(self.client1, value=0.21)
-        trans.pay('REF')
-        list_transactions()
-        data = self._api_call(call_data_balance)
-        print data
-        self.assertEqual(data.get('balance'), 949.79)
+        trans2 = Transaction.new(self.client1, value=0.31)
+        self.assertEqual(self.client1.balance, 950)
         
+        trans2.pay('REF')
+        self.assertEqual(self.client1.balance,949.69)
+        data1 = self._api_call(call_data_balance)
 
+        print 'calculated=',self.client1.calculated_balance()
+        print 'record=',self.client1.balance
+  
+        self.assertEqual(data1.get('balance'), 949.69)
+        
+        
 class UnitTests(TestCase):
 
     def setUp(self):

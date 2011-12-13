@@ -129,8 +129,8 @@ class Client(models.Model):
     currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default='EUR')
     quality = models.CharField(_('Default Quality'),  max_length=1, choices=QUALITIES, blank=True, null=True)
     type =  models.ForeignKey(ProductType, verbose_name = _('Default Product Type'), blank=True, null=True)
-    topup_at_level =  models.DecimalField(_('Topup at this level'), max_digits=9, decimal_places=2, default =10)
-    topup_by =  models.DecimalField(_('Topup by this amount'), max_digits=9, decimal_places=2, default=10)
+    recharge_level =  models.DecimalField(_('Topup at this level'), max_digits=9, decimal_places=2, default =10)
+    recharge_by =  models.DecimalField(_('Topup by this amount'), max_digits=9, decimal_places=2, default=10)
     active = models.BooleanField(_('Active'), default=True)
     joined = models.DateTimeField(_('Created Date/Time'), auto_now_add=True)
     customers = models.ManyToManyField(Customer, through='Relationship')
@@ -158,8 +158,28 @@ class Client(models.Model):
             Relationship.objects.create(
                 client = self,
                 customer = cust)
-                
-     
+        print 'saved',self.balance
+    
+    def needs_recharge(self, amount = 0):
+        """ Return True if the balance is below the recharge level
+            Allow an option paramter to check if by including an amount that will take
+            it below the recharge level.
+        """
+        
+        return (self.balance + Decimal(str(amount)) <= self.recharge_level)
+    
+    def update_balance(self, amount):
+        """ update the balanace only from this method.
+            amounts may be positive or negative
+            
+            do recharge if drops below recharge level
+        """
+        self.balance = self.balance + amount
+        self.save(force_update=True)
+        
+        if self.needs_recharge():
+            self.recharge(self.recharge_by)
+        
     def transaction_fee(self):
         """in future fee can be varied by Client.
         for the moment return the default
@@ -182,11 +202,13 @@ class Client(models.Model):
         if amount > 0:
 
             Payment.objects.create(
+                client = self,
                 payment_type = 'R',
                 amount = amount)
-            self.balance = self.balance + amount
-            self.save()
-
+                
+            
+            self.update_balance(amount)
+                        
             #TODO: Send notification
         return amount
 
@@ -210,6 +232,20 @@ class Client(models.Model):
         """
 
         return (Decimal(str(amount)) <= self.balance)
+        
+    def calculated_balance(self):
+        """ Calculate client balance as sum of all payments
+        This should always be the same as the client.balance amount
+        Note that it assumes that all transactions for a client
+        are off the same currency
+        """
+       
+        try:
+            p = Payment.objects.filter(client = self).aggregate(balance=Sum('amount'))
+
+            return p['balance']
+        except self.DoesNotExist:
+            return 0
         
             
 class Relationship(models.Model):
@@ -441,7 +477,7 @@ class Pool(models.Model):
         """
         returns the product id of the first product added to the pool that matches the requirements
         """
-        
+  
         # valid quantity
         
         if isinstance(quantity,Decimal):
@@ -517,7 +553,11 @@ class Pool(models.Model):
 
         # remove fee from value before further calculation
 
-        v = v - client.transaction_fee()
+        if client:
+            v = v - client.transaction_fee()
+        else:
+            v = v - config_value('web','DEFAULT_FEE')
+        
       
         # convert type to ProductType if required
         if type and type>' ' and not isinstance(type, ProductType):
@@ -750,6 +790,7 @@ class Transaction(models.Model):
         if self.client.can_pay(self.total):
             p = Payment.objects.create(
                 trans=self, 
+                client=self.client,
                 ref=ref,
                 status='S', 
                 amount=self.total, 
@@ -758,10 +799,6 @@ class Transaction(models.Model):
             self.status = 'P'
             self.pool = None
             self.save()
-            
-            # update clients balance
-            self.client.balance = self.client.balance - self.total
-            self.client.save()
             
             return p
             
@@ -820,7 +857,7 @@ class Transaction(models.Model):
             raise Unable2RefundTransaction()
         else:
             self.cancel()
-            #NOW UNDO PAYMENT
+            #TODO: NOW UNDO PAYMENT
 
             
         
@@ -856,6 +893,7 @@ class Payment(models.Model):
     """
     
     trans = models.ForeignKey(Transaction, blank=True, null=True)
+    client = models.ForeignKey(Client)
     status = models.CharField(_('Status'),  max_length=1, choices=PAYMENT_STATUS, default='F')
     payment_type = models.CharField(_('Type'),  max_length=1, default='A')
     ref = models.CharField(_('Payment Ref'), max_length=20, blank=True, null=True)
@@ -872,7 +910,7 @@ class Payment(models.Model):
 
     def save(self, *args, **kwargs):
         
-        #  All payment types except 'R'echarge are negative (ie. reduce balance)
+        #  All payment types except 'R'echarge are negative (ie. they reduce balance)
         # so make them negative
        
         if self.payment_type != 'R':
@@ -881,6 +919,8 @@ class Payment(models.Model):
                     
         super(Payment, self).save(*args, **kwargs)
 
+        # clients balance is updated in Payment.save()
+        self.client.update_balance(self.amount)
         
     @property
     def is_paid(self):
@@ -888,12 +928,6 @@ class Payment(models.Model):
         return (self.status=='S')
         
         
-    @classmethod
-    def client_balance(self, client):
-    
-        #TODO return sum of all payments
-        
-        return 1
 
 class UserProfile(models.Model):
 

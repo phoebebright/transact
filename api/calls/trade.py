@@ -38,11 +38,12 @@ class PriceCheckRequest(Request):
         # have to put this here (and have api above web settings.INSTALLED_APPS
         # or you get error
         from web.models import Pool
-        
-        item = Pool.PRICECHECK(self.qty, type=self.get("type"), quality=self.get("quality"))
+
+        item = Pool.PRICECHECK(self.qty, type=self.get("type"), quality=self.get("quality"),
+            client=self.client)
 
         # get total price including fee for this amount and this client
-        total_price = item.total_price(self.qty, self.user.profile.client)
+        total_price = item.total_price(self.qty, self.client)
         
         response_data = {}
 
@@ -79,9 +80,10 @@ class QtyCheckRequest(Request):
     @authenticated
     def run(self):
         from web.models import Pool
+
         item = Pool.QTYCHECK(self.price, type=self.get("type"),
-            quality=self.get("quality"), client=self.user.client)
-        print item.__dict__, '-------'
+            quality=self.get("quality"), client=self.client)
+
         
         response_data = {}
 
