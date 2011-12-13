@@ -64,3 +64,5 @@ class TransactionUserNotAuthorized(ValidationException):
 class TransactionStatusNotPending(ValidationException):
     txtMessage = "Transaction status not pending"
     errorCode = 307
+    
+    

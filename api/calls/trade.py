@@ -38,18 +38,18 @@ class PriceCheckRequest(Request):
         # have to put this here (and have api above web settings.INSTALLED_APPS
         # or you get error
         from web.models import Pool
-
+        
         item = Pool.PRICECHECK(self.qty, type=self.get("type"), quality=self.get("quality"))
 
+        # get total price including fee for this amount and this client
+        total_price = item.total_price(self.qty, self.user.profile.client)
+        
         response_data = {}
 
-        #TODO: once login is working, get the Client entity from the current Authentic
-        # and get the fee like this Client.transaction_fee()
-        fee = config_value("web", "DEFAULT_FEE")
         # TODO: make it a DictField instance - there is no DictField class yet
         response_data["currencies"] = {
             item.currency: {
-                "total": float((item.price * self.qty) + fee),
+                "total": float(total_price),
                 "unit": float(item.price)
             }
         }
@@ -79,8 +79,10 @@ class QtyCheckRequest(Request):
     @authenticated
     def run(self):
         from web.models import Pool
-        item = Pool.QTYCHECK(self.price, type=self.get("type"), quality=self.get("quality"))
-
+        item = Pool.QTYCHECK(self.price, type=self.get("type"),
+            quality=self.get("quality"), client=self.user.client)
+        print item.__dict__, '-------'
+        
         response_data = {}
 
         fee = config_value("web", "DEFAULT_FEE")
@@ -259,16 +261,16 @@ class TransactCancelRequest(TransactionRequest):
         response = self.response()
         return response
 
-class ClientBalanceResponse(Response):
+class BalanceResponse(Response):
     pass
 
-class ClientBalanceRequest(Request):
+class BalanceRequest(Request):
     """ Get the current balance for the client from the client entity
     """
     
     # TODO:  Add pending transactions as well
     
-    response = ClientBalanceResponse
+    response = BalanceResponse
 
     @authenticated
     def run(self):
@@ -277,19 +279,19 @@ class ClientBalanceRequest(Request):
 
         client = Client.objects.get(id = profile.client.id)
         data = {
-            "balance": client.balance
+            "balance": client.balance.quantize(Decimal('.01'))
                 }
         response = self.response(**data)
         return response
 
-class ClientRechargeResponse(Response):
+class RechargeResponse(Response):
     pass
 
-class ClientRechargeRequest(Request):
+class RechargeRequest(Request):
     """ recharge the clients account
     """
     
-    response = ClientRechargeResponse
+    response = RechargeResponse
 
     @authenticated
     def run(self):

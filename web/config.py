@@ -61,6 +61,15 @@ config_register(DecimalValue(
 
 config_register(DecimalValue(
     TRANSACT_GROUP,
+        'MIN_VALUE',
+        description = _('Minimum Value that can be purchased.  Must be more the Fee.'),
+        help_text = _("Set min value"),
+        default = '0.30',
+))
+
+
+config_register(DecimalValue(
+    TRANSACT_GROUP,
         'DEFAULT_MIN_POOL_LEVEL',
         description = _('Default recommended level of Quality/Type products in the Pool.'),
         help_text = _("Set default level based on activity"),

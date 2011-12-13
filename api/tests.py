@@ -19,6 +19,11 @@ def list_pool():
         for p in Pool.objects.all():
             print "%30s | %s | %s | %.2f | %s | %.2f | %s" % (p.product, p.quality, p.type, p.quantity, p.currency, p.price, p.added)
             
+def list_transactions():
+        print "TRANSACTIONS"
+        for p in Transaction.objects.all():
+            print "%s |%30s | %s | %.3f | %s | %.2f | %.2f | %.2f | %s" % (p.status, p.product, p.pool, p.quantity, p.currency, p.price, p.fee, p.total, p.expire_at)
+
 
 class ApiTestCase(TestCase):
 
@@ -55,8 +60,10 @@ class ApiWithDataTestCase(ApiTestCase):
 
     def setUp(self):
         super(ApiWithDataTestCase, self).setUp()
+        
         cleanup_objects = self.cleanup_objects
         self.client1 = Client.objects.create(name='Client 1')
+        self.client1.recharge(1000)
         self.client2 = Client.objects.create(name='Client 2')
         cleanup_objects.append(self.client1)
         cleanup_objects.append(self.client2)
@@ -733,6 +740,8 @@ class TradeTest(ApiWithDataTestCase):
             "token": self._auth("uclient1a"),
             "transID": transId,
         }
+        
+
         data = self._api_call(call_data)
 
         self.assertEqual(data.get('status'), "OK", data)
@@ -969,6 +978,76 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data.get('code'), 307, data)
         self.assertEqual(data.get('description'), 'Transaction status not pending')
 
+    def test_client_balance_and_recharge(self):
+        """api.TradeTest.test_transact_cancel
+            /////////////////////////////////////////////////////////////////////
+            // BALANCE REQUEST
+            {
+            "call": "BALANCE",
+            "token": "1db6b44cafa0494a950d9ef531c02e69", // required
+            }
+            // BALANCE RESPONSE
+            {
+            "call": "BALANCE",
+            "status": "OK",
+            "timestamp": 1321267155000,
+            "balance": 102.90
+            }
+
+        """
+        list_transactions()
+        self._add_users_clients()
+        self._auth("uclient1a")
+        call_data_balance ={
+            "call": "BALANCE",
+            "token": self.token,
+        }
+
+        data = self._api_call(call_data_balance)
+
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'BALANCE')
+        self.assertEqual(data.get('balance'), 1000)
+
+        # remove 100 from balance
+        trans = Transaction.new(self.client1, value=100)
+
+        # balance hasn't changed yet
+        data = self._api_call(call_data_balance)
+        self.assertEqual(data.get('balance'), 1000)
+
+        # once paid, balance changes
+        trans.pay('REF')
+
+        data = self._api_call(call_data_balance)
+        self.assertEqual(data.get('balance'), 900)
+
+        # recharge account by 50
+  
+        call_data ={
+            "call": "RECHARGE",
+            "token": self.token,
+            "amount": 50,
+        }
+
+        data = self._api_call(call_data)
+        self.assertEqual(data.get('status'), "OK", data)
+        self.assertEqual(data.get('call'), 'RECHARGE')
+        self.assertEqual(data.get('amount'), 50)
+
+        data = self._api_call(call_data_balance)
+        self.assertEqual(data.get('balance'), 950)
+        print data
+        # Check decimals working
+        
+        trans = Transaction.new(self.client1, value=0.21)
+        trans.pay('REF')
+        list_transactions()
+        data = self._api_call(call_data_balance)
+        print data
+        self.assertEqual(data.get('balance'), 949.79)
+        
+
 class UnitTests(TestCase):
 
     def setUp(self):
@@ -1102,4 +1181,16 @@ class UnitTests(TestCase):
         self.assertEquals(content['call'],'LISTPRODUCTS')
         self.assertEquals(content['status'],'OK')
         self.assertTrue(int(content['timestamp']) > 0)       
+        
+        
+                # fails with not enough funds
+        
+        data = self._api_call(call_data)
+        self.assertEqual(data.get('status'), "FAILED", data)
+        self.assertEqual(data.get('call'), 'PAY')
+        self.assertEqual(data.get('code'), 112, data)
+        self.assertEqual(data.get('description'), 'Not enough Funds')
+        
+        # 
+
     """        
