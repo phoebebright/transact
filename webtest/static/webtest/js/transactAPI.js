@@ -55,9 +55,13 @@ TODO: initialization of TransactAPI with token, connection string?
 
         jQuery.ajax({
         url:TransactAPI.gate,
+    //    xhrFields: {
+    //        withCredentials: true
+    //    },
         type: "POST",
         data: JSON.stringify(post_data),
         contentType: "application/json; charset=UTF-8",
+        crossDomain: true,
         success: function(data){
             var status = data['status'];
             delete data['status'];
