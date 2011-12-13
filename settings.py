@@ -185,8 +185,9 @@ CACHES = {
 #django_selenium tests
 TEST_RUNNER = 'django_selenium.selenium_runner.SeleniumTestRunner'
 SELENIUM_DRIVER = 'Firefox'
-TEST_PRODUCTION = True
-
+#SELENIUM_TEST_PRODUCTION = True
+SELENIUM_BASE_URL = "http://transactcarbon.com"
+SELENIUM_HTTP_AUTH_URL = "http://testuser:silicon@transactcarbon.com/"
 try:
     from settings_local import *
     print "local settings imported successfully"

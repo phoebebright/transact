@@ -9,12 +9,10 @@ class BaseSeleniumTextCase(SeleniumTestCase):
 
     def setUp(self):
         super(BaseSeleniumTextCase, self).setUp()
-        if settings.TEST_PRODUCTION:
-            self.base_url = "http://transactcarbon.com"
-            self.auth_url = "http://testuser:silicon@transactcarbon.com/"
+        self.base_url = settings.SELENIUM_BASE_URL
+        if settings.SELENIUM_HTTP_AUTH_URL:
+            self.auth_url = settings.SELENIUM_HTTP_AUTH_URL
             self.driver.get(self.auth_url)
-        else:
-            self.base_url = "http://localhost:8000"
         self.get_relative('/')
             
     def is_element_present(self, how, what):
