@@ -22,6 +22,7 @@ from django.db.models.signals import post_save
 import config
 from livesettings import config_value
 from web.exceptions import *
+from utils.models import Notification, MailLog
 
 CURRENCIES = (('EUR','EUR'), ('GBP','GBP'), ('USD','USD'))
 QUALITIES = (
@@ -102,6 +103,8 @@ class Client(models.Model):
     top_amount - amount to topup by  - default is maximum quantity again.
     balance is recalculated each time a payment occurs.  This avoids hitting the payment
        table each time the balance is checked.
+       
+    Note that notification_user field is optional. If not specified, no notifications are sent.
     """
     
     uuid = UUIDField(auto=True)
@@ -115,6 +118,8 @@ class Client(models.Model):
     active = models.BooleanField(_('Active'), default=True)
     joined = models.DateTimeField(_('Created Date/Time'), auto_now_add=True)
     customers = models.ManyToManyField(Customer, through='Relationship')
+    notification_user = models.ForeignKey(User, blank=True, null=True)
+    
     
     def __unicode__(self):
         return self.name 
@@ -164,6 +169,21 @@ class Client(models.Model):
 
             #TODO: Send notification
         return amount
+
+    def recharge_notification(amount, balance):
+        """ Send notificaiton of recharge if an email field is specified
+        """
+        
+        if self.notification_user:
+            try:
+                notify = Notification.objects.get(name='RechargeSuccessful')
+            except Notification.DoesNotExist:
+                raise ValidationError('Cannot find entry in  Notification table for "RechargeSuccessful"')
+       
+            notify.notify(send_to=self.notification_user.email, 
+                send_from = settings.DEFAULT_FROM_EMAIL,
+                context = {'balance': balance, 'amount': amount, 'NOW': datetime.now()},
+            )            
         
     def can_pay(self, amount):
         """Check there are enough funds to pay this amount
@@ -743,7 +763,9 @@ class Transaction(models.Model):
         else:
             self.cancel()
             #NOW UNDO PAYMENT
+
             
+        
     @property
     def status_name(self):
         """return status name from status field"""
@@ -751,6 +773,23 @@ class Transaction(models.Model):
             if code == self.status:
                 return name
 
+
+class TransactionMailLog(MailLog):
+    """
+    Record emails sent 
+    """
+
+    trans = models.ForeignKey(Transaction, null=True)
+
+    class Meta:
+        verbose_name = 'Transaction Mail Log'
+
+    def delete(self, user=None):
+        """
+        don't delete
+        """
+        
+        pass
             
 class Payment(models.Model):
     """

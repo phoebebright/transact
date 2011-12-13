@@ -37,6 +37,8 @@ class ClientAdmin(admin.ModelAdmin):
     search_fields =	 ('name','uuid')
     ordering = ('-name',)
 
+'''
+Not Implemented
 class AuthAdmin(admin.ModelAdmin):
 
     class Meta:
@@ -46,7 +48,7 @@ class AuthAdmin(admin.ModelAdmin):
     list_display = ('alias','uuid','user','expire_at')
    
     search_fields =	 ('alias','uuid','user.username')
-
+'''
 
 class ProductTypeAdmin(admin.ModelAdmin):
 
@@ -104,6 +106,6 @@ admin.site.register(Product, ProductAdmin)
 admin.site.register(ProductType, ProductTypeAdmin)
 admin.site.register(Pool, PoolAdmin)
 admin.site.register(Transaction, TransactionAdmin)
-admin.site.register(Auth, AuthAdmin)
+#admin.site.register(Auth, AuthAdmin)
 admin.site.register(PoolLevel)
 admin.site.register(UserProfile)
