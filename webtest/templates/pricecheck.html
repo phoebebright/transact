@@ -14,18 +14,28 @@
         jQuery.fn.serializeForm = function(){a={};b=this.serializeArray();jQuery.each(b,function(d,c){a[c['name']]=c['value']});return a;}
 
         function sendFormCall(form){
+            // Serialize a form to array with {"field_name": "field_value"}
             var data = form.serializeForm();
+            // our form has 'call' field so we need extract it
             var callname = data['call'];
             delete data['call'];
-            TransactAPI.call(callname, data, alertBox);
+            //make api call and call function on callback
+            TransactAPI.call(callname, data, function(status, data){
+                var box_content = "";
+                if (status == "OK") {
+                    for (var key in data["currencies"]) {
+                        var val = data["currencies"][key]["total"];
+                        box_content += "total in "+key+": "+val+"<br/>";
+                    }
+                } else {
+                    box_content = "Failed to make check";
+                }
+                alertBox(box_content);
+
+            });
         }
 
-        function alertBox(status, data){
-            var box_content = "";
-            for (var key in data["currencies"]) {
-                var val = data["currencies"][key]["total"];
-                box_content += "total in "+key+": "+val+"<br/>";
-            }
+        function alertBox(box_content){
             var info_box = jQuery('<div/>', {'class': "dialog", 'html': box_content});
             jQuery(info_box).dialog({modal:true,
                                      resizable: false,
@@ -35,14 +45,16 @@
 				                                }
                                      }
                                   });
-        };
+        }
 
         jQuery(document).ready(function() {
             // only needed for development - ignore this for production
             if ( ! window.location.origin) window.location.origin = window.location.protocol+"//"+window.location.host;
             TransactAPI.gate = window.location.origin + "/api/"
             // only needed for development - ignore this for production
+            // we need login to get valid token
             TransactAPI.login('test','silicon');
+            // stick click event
             jQuery('#call_api').click(function(){
                 sendFormCall(jQuery("#call_form"));
                 return false;
