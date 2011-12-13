@@ -88,6 +88,10 @@ class ProductAdmin(admin.ModelAdmin):
 
     actions = [move2pool,]
 
+    def has_add_permission(self, request):
+        return False
+
+
 
 class PoolAdmin(admin.ModelAdmin):
 
