@@ -9,7 +9,13 @@ from django.core.exceptions import PermissionDenied
 from django.db import router
 from django.http import HttpResponse,HttpResponseRedirect
 
+class UserProfileInline(admin.StackedInline):
+ model = UserProfile
+ max_num = 1
+ can_delete = False
+
 UserAdmin.list_display = ('email', 'username', 'first_name', 'last_name', 'is_active', 'date_joined', 'last_login', 'is_staff')
+UserAdmin.inlines = [UserProfileInline]
 
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
@@ -28,7 +34,8 @@ class TradeAdmin(admin.ModelAdmin):
 
 
 class ClientAdmin(admin.ModelAdmin):
-
+    inlines = [UserProfileInline]
+    
     class Meta:
         model = Client 
         
@@ -108,4 +115,4 @@ admin.site.register(Pool, PoolAdmin)
 admin.site.register(Transaction, TransactionAdmin)
 #admin.site.register(Auth, AuthAdmin)
 admin.site.register(PoolLevel)
-admin.site.register(UserProfile)
+#admin.site.register(UserProfile)
