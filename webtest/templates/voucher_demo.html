@@ -39,6 +39,7 @@ function pay(transID, obj){
     TransactAPI.call("PAY",data, function (status, response){
         if(status=="OK"){
             jQuery("#box_content").empty().append("<p>Transaction successful</p>");
+            // add to total Goldz displayed quantity bought
             var total = parseFloat(jQuery("#goldzAmount").text()) + response['quantity'];
             jQuery("#goldzAmount").empty().append(total);
         }else{
@@ -57,6 +58,7 @@ function transact_n_pay(obj){
     };
     TransactAPI.call("TRANSACT",data, function(status, response){
         if(status=="OK"){
+            //transaction successful make payment
             pay(response["transID"], obj);
         }else{
             jQuery("#box_content").empty().prepend("Sorry your transaction couldn't be initiated.");
@@ -75,6 +77,7 @@ function showModal(){
         buttons: {
             "Cancel": function() {jQuery(this).dialog( "close" );jQuery(this).remove()},
             "Ok": function() {
+                    //make transaction and payment pass reference to this modal window to pass along
                     transact_n_pay(this);
                 }
             }
@@ -88,6 +91,8 @@ jQuery(document).ready(function(){
     TransactAPI.gate = window.location.origin + "/api/"
     // only needed for development - ignore this for production
     login();
+    // our modalDialogBox will contain button to start transaction
+    // after successful transaction it will automatically make pay call and display bought value
     jQuery("#buyButton").click(showModal);
 
 });
