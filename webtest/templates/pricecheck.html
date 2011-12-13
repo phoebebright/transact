@@ -8,26 +8,19 @@
     <script type="text/javascript" src="/static/js/crsf.js"></script>
     <script type="text/javascript" src="/static/js/JSON.js"></script>
     <script type="text/javascript" src="/static/webtest/js/jquery.cookie.min.js"></script>    
-    <script type="text/javascript" src="/static/webtest/js/main.js"></script>
+    <script type="text/javascript" src="/static/webtest/js/transactAPI.js"></script>
     <script type="text/javascript">
+        /* Serializes a form to array with {"field_name": "field_value"} */
+        jQuery.fn.serializeForm = function(){a={};b=this.serializeArray();jQuery.each(b,function(d,c){a[c['name']]=c['value']});return a;}
 
-        function login(){
-            /* uses login to authenticate the user */
-            var data = {
-                "call": "LOGIN",
-                "username": "test",
-                "password": "silicon"
-            }
-            send_call(JSON.stringify(data), function(response){
-                if(response["status"]=="OK"){
-                    jQuery("#id_token").val(response['token']);
-                }else{
-                    var box_content = "<p>Sorry, authentication was not possible at this moment. Try refreshing the page.</p>";
-                    showModal(box_content);
-                }
-            });
+        function sendFormCall(form){
+            var data = form.serializeForm();
+            var callname = data['call'];
+            delete data['call'];
+            TransactAPI.call(callname, data, alertBox);
         }
-        function alertBox(data){
+
+        function alertBox(status, data){
             var box_content = "";
             for (var key in data["currencies"]) {
                 var val = data["currencies"][key]["total"];
@@ -42,11 +35,14 @@
 				                                }
                                      }
                                   });
-            display_call(data);
         };
 
         jQuery(document).ready(function() {
-            login();
+            // only needed for development - ignore this for production
+            if ( ! window.location.origin) window.location.origin = window.location.protocol+"//"+window.location.host;
+            TransactAPI.gate = window.location.origin + "/api/"
+            // only needed for development - ignore this for production
+            TransactAPI.login('test','silicon');
             jQuery('#call_api').click(function(){
                 sendFormCall(jQuery("#call_form"));
                 return false;
@@ -63,7 +59,5 @@
     {{ form.as_p }}
     <p class="align-right"><input id="call_api" type="button" class="button" value="Send">
 </form>
-<h4>Call response below:</h4>
-<div id="call_response"></div>
 
 {% endblock main %}

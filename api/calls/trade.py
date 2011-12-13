@@ -1,7 +1,8 @@
 #from decimal import Decimal
 
 from api.calls.fields import DecimalField
-from api.exceptions import TransactionClosedException, TransactionNotExistException, TransactionNeedsQtyorValException
+from api.exceptions import TransactionClosedException, TransactionNotExistException, TransactionNeedsQtyorValException, \
+        TransactionUserNotAuthorized, TransactionStatusNotPending
 from decorators import authenticated
 from api.calls.base import *
 import api.config
@@ -164,11 +165,11 @@ class TransactRequest(Request):
         response = self.response(**data)
         return response
 
-class PayResponse(Response):
-    pass
 
-class PayRequest(Request):
-    response = PayResponse
+class TransactionRequest(Request):
+    """Request that validates That user has ownership over transaction he wants to access
+       also validates that transID is valid
+    """
 
     def validate(self):
         from web.models import Transaction
@@ -176,12 +177,34 @@ class PayRequest(Request):
             self.trans = Transaction.objects.get(uuid=self.require('transID'))
         except:
             raise TransactionNotExistException()
+        self._validate_transaction_status()
 
+    def _validate_transaction_status(self):
         if self.trans.is_closed:
             raise TransactionClosedException()
 
+    def _validate_user_ownership(self):
+        client = self.user.profile.client
+        if not client:
+            raise ValidationException("user profile has no client attached")
+        if self.trans.client != client:
+            raise TransactionUserNotAuthorized("Transaction Belongs to different User")
+        
     @authenticated
     def run(self):
+        self._validate_user_ownership()
+        return self._run()
+
+    def _run(self):
+        pass
+
+class PayResponse(Response):
+    pass
+
+class PayRequest(TransactionRequest):
+    response = PayResponse
+
+    def _run(self):
         self.trans.pay()
         product = self.trans.product
         data = {
@@ -198,18 +221,14 @@ class PayRequest(Request):
 class TransactInfoResponse(Response):
     pass
 
-class TransactInfoRequest(Request):
+class TransactInfoRequest(TransactionRequest):
     response = TransactInfoResponse
 
-    def validate(self):
-        from web.models import Transaction
-        try:
-            self.trans = Transaction.objects.get(uuid=self.require('transID'))
-        except:
-            raise TransactionNotExistException()
-
-    @authenticated
-    def run(self):
+    def _validate_transaction_status(self):
+        """do not validate status for info"""
+        pass
+    
+    def _run(self):
         product = self.trans.product
         data = {
             "quantity": self.trans.quantity,
@@ -228,19 +247,14 @@ class TransactInfoRequest(Request):
 class TransactCancelResponse(Response):
     pass
 
-class TransactCancelRequest(Request):
+class TransactCancelRequest(TransactionRequest):
     response = TransactCancelResponse
 
-    def validate(self):
-        from web.models import Transaction
-        try:
-            self.trans = Transaction.objects.get(uuid=self.require('transID'))
-        except:
-            raise TransactionNotExistException()
+    def _validate_transaction_status(self):
+        if not self.trans.is_open:
+            raise TransactionStatusNotPending()
 
-
-    @authenticated
-    def run(self):
+    def _run(self):
         self.trans.cancel()
         response = self.response()
         return response

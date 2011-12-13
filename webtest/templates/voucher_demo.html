@@ -3,34 +3,16 @@
 {% block extra_head %}
 <script type="text/javascript" src="/static/js/JSON.js"></script>
 <script type="text/javascript" src="/static/webtest/js/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="/static/webtest/js/transactAPI.js"></script>
     <link href="/static/webtest/css/fun.css" rel="stylesheet" type="text/css" media="screen" />
 <script type="text/javascript">
-function send_call(post_data, callback) {
-    /* general method handling call */
-    jQuery.ajax({
-        url:"/api/",
-        type: "POST",
-        data: JSON.stringify(post_data),
-        contentType: "application/json; charset=UTF-8",
-        success: function(data){
-            callback(data);
-        },
-        accept: 'json'
-    });
-
-}
-
 
 function login(){
     /* uses login to authenticate the user */
-    var data = {
-        "call": "LOGIN",
-        "username": "test",
-        "password": "silicon"
-    }
-    send_call(data, function(response){
-        if(response["status"]=="OK"){
-            jQuery.cookie("TA_TOKEN", response["token"], {"expires": response['expires']}); //modified version of jQuery.cookie to accept seconds
+    TransactAPI.login("test","silicon", function(status, response){
+        if(status=="OK"){
+
+            TransactAPI.add_token( response["token"], response['expires']); //modified version of jQuery.cookie to accept seconds
         }else{
             var box_content = "Sorry, authentication was not possible at this moment. Try refreshing the page.";
             alert(box_content);
@@ -49,14 +31,13 @@ function validate(obj){
     return true;
 }
 
+
 function pay(transID, obj){
     var data = {
-        "call": "PAY",
-        "token": jQuery.cookie("TA_TOKEN"),
         "transID": transID
-    }
-    send_call(data, function(response){
-        if(response["status"]=="OK"){
+    };
+    TransactAPI.call("PAY",data, function (status, response){
+        if(status=="OK"){
             jQuery("#box_content").empty().append("<p>Transaction successful</p>");
             var total = parseFloat(jQuery("#goldzAmount").text()) + response['quantity'];
             jQuery("#goldzAmount").empty().append(total);
@@ -65,20 +46,17 @@ function pay(transID, obj){
         }
         jQuery(".ui-dialog-buttonset").append("<button id='TA_close' class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only'>Close</button>");
         jQuery("#TA_close").click(function(){jQuery(obj).dialog("close");jQuery(obj).remove()});
-    })
+    });
 }
-
 
 function transact_n_pay(obj){
     if(!validate(obj)){return false};
     jQuery(".ui-dialog-buttonset").empty();
     var data = {
-        "call": "TRANSACT",
-        "token": jQuery.cookie("TA_TOKEN"),
         "value": jQuery("#transAmount", obj).val()
-    }
-    send_call(data, function(response){
-        if(response["status"]=="OK"){
+    };
+    TransactAPI.call("TRANSACT",data, function(status, response){
+        if(status=="OK"){
             pay(response["transID"], obj);
         }else{
             jQuery("#box_content").empty().prepend("Sorry your transaction couldn't be initiated.");
@@ -86,7 +64,7 @@ function transact_n_pay(obj){
             jQuery("#TA_close").click(function(){jQuery(obj).dialog("close");jQuery(obj).remove()});
 
         }
-    })
+    });
 }
 
 function showModal(){
@@ -105,6 +83,10 @@ function showModal(){
 
 jQuery(document).ready(function(){
     var total_carbon;
+     // only needed for development - ignore this for production
+    if ( ! window.location.origin) window.location.origin = window.location.protocol+"//"+window.location.host;
+    TransactAPI.gate = window.location.origin + "/api/"
+    // only needed for development - ignore this for production
     login();
     jQuery("#buyButton").click(showModal);
 

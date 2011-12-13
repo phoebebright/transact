@@ -69,14 +69,14 @@ class Examples(BaseSeleniumTextCase):
         driver.find_element_by_id("TA_close").click()
         self.assertTrue(int(goldz.text) > 0)
 
-    def test_transact(self):
-        driver = self.driver
-        driver.find_element_by_link_text("Examples").click()
-        driver.find_element_by_link_text("Basic Transaction demo - TEST ONLY").click()
-        driver.is_text_present("Recent Transactions")
-        driver.is_text_present("Pool")
-        driver.find_element_by_id("id_qty").clear()
-        driver.find_element_by_id("id_qty").send_keys("6")
-        driver.find_element_by_id("save").click()
-        firstqtycell=driver.find_element_by_xpath("//div[@id='content']/div/table/tbody/tr[2]/td[5]")
-        self.assertEqual("6.00", firstqtycell.text)
+#    def test_transact(self):
+#        driver = self.driver
+#        driver.find_element_by_link_text("Examples").click()
+#        driver.find_element_by_link_text("Basic Transaction demo - TEST ONLY").click()
+#        driver.is_text_present("Recent Transactions")
+#        driver.is_text_present("Pool")
+#        driver.find_element_by_id("id_qty").clear()
+#        driver.find_element_by_id("id_qty").send_keys("6")
+#        driver.find_element_by_id("save").click()
+#        firstqtycell=driver.find_element_by_xpath("//div[@id='content']/div/table/tbody/tr[2]/td[5]")
+#        self.assertEqual("6.00", firstqtycell.text)

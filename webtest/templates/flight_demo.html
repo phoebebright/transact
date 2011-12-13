@@ -3,53 +3,33 @@
 {% block extra_head %}
 <script type="text/javascript" src="/static/js/JSON.js"></script>
 <script type="text/javascript" src="/static/webtest/js/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="/static/webtest/js/transactAPI.js"></script>
 <script type="text/javascript">
-function send_call(post_data, callback) {
-    /* general method handling call */
-    jQuery.ajax({
-        url:"/api/",
-        type: "POST",
-        data: JSON.stringify(post_data),
-        contentType: "application/json; charset=UTF-8",
-        success: function(data){
-            callback(data);
-        },
-        accept: 'json'
-    });
-    
-}
 
-
-function login(){
-    /* uses login to authenticate the user */
-    var data = {
-        "call": "LOGIN",
-        
-        "username": "{% if user.is_authenticated %}{{user.username}}{% else %}test{% endif %}",
-        "password": "silicon"
-    }
-    send_call(data, function(response){
-        if(response["status"]=="OK"){
-            jQuery.cookie("TA_TOKEN", response["token"], {"expires": response['expires']}); //modified version of jQuery.cookie to accept seconds
+function login_callback(status, response){
+        if(status=="OK"){
+            TransactAPI.add_token(response['token'], response['expires']); // adds token to every future request stores token in cookie
             transact();
         }else{
             var box_content = "<p>Sorry, authentication was not possible at this moment. Try refreshing the page.";
             showModal(box_content);
         }
-    });
+    }
 
+function login(){
+    /* uses login to authenticate the user */
+    TransactAPI.login("test", "silicon", login_callback);
 }
+
 function transact(){
     var data = {
-        "call": "TRANSACT",
-        "token": jQuery.cookie("TA_TOKEN"),
         "quantity": 0.2
-    }
-    send_call(data, fillCarbon);
+    };
+    TransactAPI.call("TRANSACT",data, fillCarbon);
 }
 
-function fillCarbon(response){
-    if(response["status"]=="OK"){
+function fillCarbon(status, response){
+    if(status=="OK"){
         total_carbon = response["total"];
         jQuery.cookie("TA_TRANS_ID", response["transID"]);
         jQuery("#carbon").append(total_carbon.toFixed(2));
@@ -59,15 +39,8 @@ function fillCarbon(response){
     }
 }
 
-
-function pay(){
-    var data = {
-        "call": "PAY",
-        "token": jQuery.cookie("TA_TOKEN"),
-        "transID": jQuery.cookie("TA_TRANS_ID")
-    }
-    send_call(data, function(response){
-        if(response["status"]=="OK"){
+function pay_response(status, response){
+        if(status=="OK"){
             var box_content = "<p>Successfully paid</p>";
             showModal(box_content);
 
@@ -75,24 +48,30 @@ function pay(){
             var box_content = "<p>Sorry Your payment can't be processed at the moment</p>";
             showModal(box_content);
         }
-    })
+    }
+
+function pay(){
+    var data = {
+        "transID": jQuery.cookie("TA_TRANS_ID")
+    };
+    TransactAPI.call("PAY", data, pay_response);
 }
 
-function cancel(){
-    var data = {
-        "call": "TRANSACTCANCEL",
-        "token": jQuery.cookie("TA_TOKEN"),
-        "transID": jQuery.cookie("TA_TRANS_ID")
-    }
-    send_call(data, function(response){
-        if(response["status"]=="OK"){
+function cancel_response(status, response){
+        if(status=="OK"){
             var box_content = "<p>Your transaction was cancelled</p>";
             showModal(box_content);
         }else{
             var box_content = "<p>Your transaction could not be cancelled, it will expire automatically.</p>";
             showModal(box_content);
         }
-    })
+    }
+
+function cancel(){
+    var data = {
+        "transID": jQuery.cookie("TA_TRANS_ID")
+    };
+    TransactAPI.call("TRANSACTCANCEL", data, cancel_response);
 }
 
 function showModal(content){
@@ -107,6 +86,11 @@ function showModal(content){
 
 jQuery(document).ready(function(){
     var total_carbon;
+    // only needed for development - ignore this for production
+    if ( ! window.location.origin) window.location.origin = window.location.protocol+"//"+window.location.host;
+    TransactAPI.gate = window.location.origin + "/api/"
+    // only needed for development - ignore this for production
+
     login();
     jQuery("#approvePay").click(pay);
     jQuery("#cancelPay").click(cancel);
