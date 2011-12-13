@@ -140,3 +140,62 @@ class MailLog(models.Model):
         self.save()
         
         return True               
+
+
+class Notification(models.Model):
+    """
+    holds formats for email notifications
+    """
+    name = models.CharField(max_length=30, unique=True)
+    app = models.CharField(max_length=20)
+    subject = models.CharField(max_length=120)
+    body = models.TextField(null=True)
+    from_email = models.EmailField(null=True, blank=True)
+    priority = models.BooleanField(_('Send as Priority Email'), default=False)
+
+    def __unicode__(self):
+        return  self.name
+        
+    class Meta:
+        ordering = ['name',]
+
+    def notify(self, send_to, context=None, attach=None, priority=None):
+        """
+        send this notification to list of people supplied
+        attach is a list of attachments in the form of mime content
+        send_to can be a comma separated string or a list of emails
+        """
+        
+        if context:
+            t1 = Template(self.body)
+            c = Context(context)
+            body = t1.render(c)
+
+            t2 = Template(self.subject)
+            subject = t2.render(c)
+            
+            
+        else:
+            body = self.body
+            subject = self.subject
+        
+        if type(send_to) == type(list()):
+            # dedupelicate list and join with commas
+            send_to = ', '.join(list(set(send_to)))
+            
+        # default to priority in notification object but override by setting parameter to this function
+        if priority == None:
+            priority = self.priority
+
+        mlog = MailLog.objects.create(subject = subject,
+            body = body,
+            from_email = self.from_email,
+            notification = self,
+            to_email = send_to,
+            priority = priority,
+            )
+                    
+        mlog.save()     
+
+        return mlog.send(attach=attach)
+        

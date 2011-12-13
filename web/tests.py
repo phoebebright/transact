@@ -41,6 +41,12 @@ def list_transactions():
         for p in Transaction.objects.all():
             print "%s |%30s | %s | %s | %.2f | %s | %.2f | %s" % (p.status, p.product, p.pool, p.fee, p.quantity, p.currency, p.price, p.expire_at)
 
+def list_notifications():
+        print "MAILLOG"
+        for p in MailLog.objects.all():
+            print "%s |%s" % (p.to_email, p.subject)
+
+
 def list_products():
 
         for t in Product.objects.all():
@@ -81,6 +87,10 @@ class BaseTest(TestCase):
         profile = self.u2.get_profile()
         profile.client = self.client1
         profile.save()
+        
+        # set u2 to receive notifications
+        self.client1.notification_user=self.u2
+        self.client1.save()
         
         
         # client 2 has two users
@@ -453,6 +463,8 @@ class DownstreamTests(BaseTestMoreData):
         self.client2.recharge(450)
         transb.pay('REF')
         
+    def test_client_recharge(self):
+        # TODO: Test recharge
         
     def test_pool(self):
         """
