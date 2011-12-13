@@ -1,0 +1,52 @@
+{% extends "test.html" %}
+
+{% block heading %}API{% endblock heading %}
+
+{% block flowchart %}{% endblock %}
+
+{% block doc %}
+    <h4>Structure</h4>
+    <h5>Error message schema</h5>
+    <pre>
+    {
+    "call": "API function name",
+    "status": "FAILED", // FAILED (ERROR?) if it's not OK it's an error
+    "code": 12345, // unique error code
+    "description": "Human readable description of the problem"
+    }
+    </pre>
+    <p>if request json cannot be read "call" value will be null</p>
+    <p>error status can be "FAILED" if operation was unsucessfull or "VALIDATION FAILED" when imput parameters were not valid</p>
+
+    <h4>Listing</h4>
+    <ul>
+        <li>100 - transaction error look at description</li>
+        <li>101 - No match found in Pool</li>
+        <li>102 - Below minimum quantity allowed</li>
+        <li>103 - Above maximum quantity allowed</li>
+        <li>104 - Closed Transaction cannot be cancelled</li>
+        <li>105 - Open Transaction cannot be Refunded</li>
+        <li>106 - Closed Transaction cannot be Expired</li>
+        <li>107 - Trying to remove more units than are available</li>
+        <li>108 - Product must have a Quality before being put in the Pool</li>
+        <li>109 - Product must have a Product Type before being put in the Pool</li>
+        <li>110 - Invalid Product Type</li>
+        <li>111 - New Transaction needs a quantity or value</li>
+        <li>112 - Not enough Funds</li>
+
+        <li>300 - validation error look at description</li>
+        <li>301 - not valid decimal format</li>
+        <li>302 - API Call not supported</li>
+        <li>303 - Transaction Closed</li>
+        <li>304 - Transaction does not exist</li>
+        <li>305 - Transaction needs a quantity or value</li>
+        <li>306 - Transaction Belongs to different User</li>
+        <li>307 - Transaction status not pending</li>
+
+        <li>400 - authentication error look at description</li>
+        <li>401 - Not authenticated</li>
+        <li>402 - username/password not valid</li>
+
+    </ul>
+.{% endblock doc %}
+{% block testapi %}{% endblock testapi %}
