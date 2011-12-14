@@ -22,7 +22,9 @@ class AuthRequest(Request):
     def run(self):
         if self.authID == "secret" and self.secret == "sauce":
             return self.response(token=uuid.uuid4().hex,
-                            expires=int((time.time() + 300) * 1000)
+                            expires=int((time.time() + 300) * 1000),
+                            client = user.get_profile().client,
+                            
                             )
         raise NotAuthenticatedException()
 
@@ -43,10 +45,10 @@ class LoginRequest(Request):
         user = authenticate(username=self.require("username"), password=self.require("password"))
         if user and user.is_active:
             token = uuid.uuid4().hex
-
+            
             expires = int(config_value('api','TOKEN_EXPIRY'))
             cache.set(token, user.username, expires)
             return self.response(token=token,
-                            expires=expires
+                            expires=expires,
                             )
         raise LoginFailedException()

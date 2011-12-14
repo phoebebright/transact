@@ -11,6 +11,7 @@ def authenticated(run_func):
         try:
             user = User.objects.get(username=value)
             self.user = user
+            self.client = user.get_profile().client
         except User.DoesNotExist:
             raise NotAuthenticatedException()
 

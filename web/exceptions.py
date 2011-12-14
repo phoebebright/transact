@@ -101,3 +101,9 @@ class NotEnoughFunds(ModelException):
     txtMessage = 'Not enough Funds'
     errorCode = 112
     
+class BelowMinValue(ModelException):
+    '''
+    raised if request to buy item that has a total price below the minimum
+    '''
+    txtMessage = 'Below minimum value allowed'
+    errorCode = 113

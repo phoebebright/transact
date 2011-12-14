@@ -24,6 +24,22 @@ from livesettings import config_value
 from web.exceptions import *
 from utils.models import Notification, MailLog
 
+"""
+Decimals are used for both money values and for quantities.
+Money values are held to 2 decimal places and the model should round as required before 
+  returning a value.  It is for the API to ensure that the format of the number is correct.
+Quantities are held to 3 decimal places to ensure that when a transaction for a specific value
+  is requested, it can be filled exactly.  If only 2dp used, then you might not get a 
+  transaction for EUR100.00, it might be EUR99.95
+"""
+
+# Used to quantize decimals for monetary values
+TWODP = Decimal('0.01')
+QTYDP = Decimal('0.001')
+
+# number of decimal places used for quantities
+QTY_NUM_DP = 3   
+
 CURRENCIES = (('EUR','EUR'), ('GBP','GBP'), ('USD','USD'))
 QUALITIES = (
     ('B','Bronze'),
@@ -113,8 +129,8 @@ class Client(models.Model):
     currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default='EUR')
     quality = models.CharField(_('Default Quality'),  max_length=1, choices=QUALITIES, blank=True, null=True)
     type =  models.ForeignKey(ProductType, verbose_name = _('Default Product Type'), blank=True, null=True)
-    topup_at_level =  models.DecimalField(_('Topup at this level'), max_digits=9, decimal_places=2, default =config_value('web','MAX_QUANTITY'))
-    topup_by =  models.DecimalField(_('Topup by this amount'), max_digits=9, decimal_places=2, default =config_value('web','MAX_QUANTITY'))
+    recharge_level =  models.DecimalField(_('Topup at this level'), max_digits=9, decimal_places=2, default =10)
+    recharge_by =  models.DecimalField(_('Topup by this amount'), max_digits=9, decimal_places=2, default=10)
     active = models.BooleanField(_('Active'), default=True)
     joined = models.DateTimeField(_('Created Date/Time'), auto_now_add=True)
     customers = models.ManyToManyField(Customer, through='Relationship')
@@ -142,8 +158,28 @@ class Client(models.Model):
             Relationship.objects.create(
                 client = self,
                 customer = cust)
-                
-     
+        print 'saved',self.balance
+    
+    def needs_recharge(self, amount = 0):
+        """ Return True if the balance is below the recharge level
+            Allow an option paramter to check if by including an amount that will take
+            it below the recharge level.
+        """
+        
+        return (self.balance + Decimal(str(amount)) <= self.recharge_level)
+    
+    def update_balance(self, amount):
+        """ update the balanace only from this method.
+            amounts may be positive or negative
+            
+            do recharge if drops below recharge level
+        """
+        self.balance = self.balance + amount
+        self.save(force_update=True)
+        
+        if self.needs_recharge():
+            self.recharge(self.recharge_by)
+        
     def transaction_fee(self):
         """in future fee can be varied by Client.
         for the moment return the default
@@ -159,14 +195,20 @@ class Client(models.Model):
         if amount == 0:
             amount = self.topup_by
   
+        else:
+            amount = Decimal(str(amount))
+            
+            
         if amount > 0:
 
             Payment.objects.create(
+                client = self,
                 payment_type = 'R',
                 amount = amount)
-            self.balance = self.balance + amount
-            self.save()
-
+                
+            
+            self.update_balance(amount)
+                        
             #TODO: Send notification
         return amount
 
@@ -190,6 +232,20 @@ class Client(models.Model):
         """
 
         return (Decimal(str(amount)) <= self.balance)
+        
+    def calculated_balance(self):
+        """ Calculate client balance as sum of all payments
+        This should always be the same as the client.balance amount
+        Note that it assumes that all transactions for a client
+        are off the same currency
+        """
+       
+        try:
+            p = Payment.objects.filter(client = self).aggregate(balance=Sum('amount'))
+
+            return p['balance']
+        except self.DoesNotExist:
+            return 0
         
             
 class Relationship(models.Model):
@@ -240,7 +296,7 @@ class Trade(models.Model):
     purchwhen = models.DateTimeField(_('Purchase Date/Time'), auto_now_add=True, editable=True)
     total = models.DecimalField(_('Total Paid'), max_digits=9, decimal_places=2,default =0)
     currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default='EUR')
-    tonnes =  models.DecimalField(_('Tonnes'), max_digits=9, decimal_places=3)
+    tonnes =  models.DecimalField(_('Tonnes'), max_digits=9, decimal_places=QTY_NUM_DP)
     ref =  models.CharField(_('Purchase Ref'), max_length=50, blank=True, null=True)
     
     def __unicode__(self):
@@ -269,13 +325,12 @@ class Product(models.Model):
     uuid = UUIDField(auto=True)
     name = models.CharField(_('Product Name'), max_length=50)
     trade = models.ForeignKey(Trade)
-    currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
     quality = models.CharField(_('Default Quality'),  max_length=1, choices=QUALITIES, blank=True, null=True)
     type =  models.ForeignKey(ProductType, verbose_name = _('Default Product Type'), blank=True, null=True)
     price = models.DecimalField(_('Price'), max_digits=9, decimal_places=2,default =0)
-    currency = models.CharField(_('Currency'),  max_length=3, choices=CURRENCIES, default='EUR')
-    quantity_purchased =  models.DecimalField(_('Quantity Purchased'), max_digits=9, decimal_places=3)
-    quantity2pool =  models.DecimalField(_('Quantity Moved to Pool'), max_digits=9, decimal_places=3, default=0)
+    currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
+    quantity_purchased =  models.DecimalField(_('Quantity Purchased'), max_digits=9, decimal_places=QTY_NUM_DP)
+    quantity2pool =  models.DecimalField(_('Quantity Moved to Pool'), max_digits=9, decimal_places=QTY_NUM_DP, default=0)
     
     def __unicode__(self):
         return self.name 
@@ -336,7 +391,7 @@ class Pool(models.Model):
     
     uuid = UUIDField(auto=True)
     product = models.ForeignKey(Product)
-    quantity =  models.DecimalField(_('Quantity Available'), max_digits=9, decimal_places=3)
+    quantity =  models.DecimalField(_('Quantity Available'), max_digits=9, decimal_places=QTY_NUM_DP)
     quality = models.CharField(_('Default Quality'),  max_length=1, choices=QUALITIES, blank=True, null=True)
     type =  models.ForeignKey(ProductType, verbose_name = _('Default Product Type'), blank=True, null=True)
     price = models.DecimalField(_('Price'), max_digits=9, decimal_places=2,default =0)
@@ -352,6 +407,30 @@ class Pool(models.Model):
         verbose_name = "Pool"
         verbose_name_plural = "Pool"
 
+    def total_price(self, qty, client=None):
+        """
+        Return total price including fees for specified quantity
+        """
+
+        if client:
+            fee = client.transaction_fee()
+        else:
+            fee = config_value('web','DEFAULT_FEE')
+            
+        return ((self.price * qty) + fee).quantize(TWODP)
+
+    def qty_for_price(self, price, client=None):
+        """
+        Return quantity that can be bought for a specified price
+        """
+
+        if client:
+            price -= client.transaction_fee()
+        else:
+            price -= config_value('web','DEFAULT_FEE')
+            
+        return (price / self.price).quantize(QTYDP)
+    
     @classmethod
     def LISTPRODUCTS(self):
         """
@@ -398,7 +477,7 @@ class Pool(models.Model):
         """
         returns the product id of the first product added to the pool that matches the requirements
         """
-        
+  
         # valid quantity
         
         if isinstance(quantity,Decimal):
@@ -442,7 +521,13 @@ class Pool(models.Model):
 
         if queryset.count()>0:
             # first in first out - return earliest entry 
-            return queryset.order_by('added')[0]
+            item = queryset.order_by('added')[0]
+            
+            if item.total_price(qty, client) < config_value('web','MIN_VALUE'):
+                raise BelowMinValue
+            else:
+                return item
+            
         else:
             if client:
                 raise NoMatchInPoolClientException()
@@ -450,7 +535,7 @@ class Pool(models.Model):
                 raise NoMatchInPoolException()
 
     @classmethod
-    def QTYCHECK(cls, value, quality=None, type=None, client=None):
+    def QTYCHECK(cls, value, client, quality=None, type=None, ):
         """
         returns the product id of the first product added to the pool that matches the requirements
         """
@@ -458,11 +543,22 @@ class Pool(models.Model):
         # valid quantity
         
         if isinstance(value,Decimal):
-            v=value
+            v = value
         else:
             v = Decimal(str(value))
-
             
+        if v <  config_value('web','MIN_VALUE'):
+            raise BelowMinValue
+
+
+        # remove fee from value before further calculation
+
+        if client:
+            v = v - client.transaction_fee()
+        else:
+            v = v - config_value('web','DEFAULT_FEE')
+        
+      
         # convert type to ProductType if required
         if type and type>' ' and not isinstance(type, ProductType):
             try:
@@ -492,9 +588,9 @@ class Pool(models.Model):
 
         # take first item where there are enough units
         for item in queryset.order_by('added'):
-            if item.price * item.quantity > v:
+            if (v /item.price) <= item.quantity:
                 return item
-        
+
         if client:
             raise NoMatchInPoolClientException()
         else:
@@ -593,7 +689,7 @@ class Transaction(models.Model):
     price =  models.DecimalField(_('Price'), max_digits=9, decimal_places=2, default=0)
     fee =  models.DecimalField(_('Fee'), max_digits=9, decimal_places=2, default=0)
     currency = models.CharField(_('Default Currency'),  max_length=3, choices=CURRENCIES, default=config_value('web','DEFAULT_CURRENCY'))
-    quantity =  models.DecimalField(_('Quantity'), max_digits=9, decimal_places=3)
+    quantity =  models.DecimalField(_('Quantity'), max_digits=9, decimal_places=QTY_NUM_DP)
     created = models.DateTimeField(_('Created Date/Time'), auto_now_add=True, editable=False)
     closed = models.DateTimeField(_('Closed Date/Time'), null=True, blank=True)
     expire_at = models.DateTimeField(_('Expire ated Date/Time'), null=True)
@@ -648,15 +744,17 @@ class Transaction(models.Model):
         if not quantity and not value:
             raise TransactionNeedsQtyorVal
         
+        # check quantity is within allowed range
+        
         if quantity:
             qty = Decimal(str(quantity))
-            item = Pool.PRICECHECK(qty, quality=quality, type=type)
+            item = Pool.PRICECHECK(qty, quality=quality, type=type, client=client)
             v = item.price*qty
         if value:
             v = Decimal(str(value))
-            item = Pool.QTYCHECK(v, quality=quality, type=type)
+            item = Pool.QTYCHECK(v, quality=quality, type=type, client=client)
             
-            qty = Decimal(str(round((v - client.transaction_fee() ) / item.price,3)))
+            qty = Decimal(str(round((v - client.transaction_fee() ) / item.price,QTY_NUM_DP)))
             
         # TODO in future need to do a lock between doing a price check and
         # creating a transaction
@@ -692,6 +790,7 @@ class Transaction(models.Model):
         if self.client.can_pay(self.total):
             p = Payment.objects.create(
                 trans=self, 
+                client=self.client,
                 ref=ref,
                 status='S', 
                 amount=self.total, 
@@ -700,10 +799,6 @@ class Transaction(models.Model):
             self.status = 'P'
             self.pool = None
             self.save()
-            
-            # update clients balance
-            self.client.balance = self.client.balance - self.total
-            self.client.save()
             
             return p
             
@@ -762,7 +857,7 @@ class Transaction(models.Model):
             raise Unable2RefundTransaction()
         else:
             self.cancel()
-            #NOW UNDO PAYMENT
+            #TODO: NOW UNDO PAYMENT
 
             
         
@@ -798,6 +893,7 @@ class Payment(models.Model):
     """
     
     trans = models.ForeignKey(Transaction, blank=True, null=True)
+    client = models.ForeignKey(Client)
     status = models.CharField(_('Status'),  max_length=1, choices=PAYMENT_STATUS, default='F')
     payment_type = models.CharField(_('Type'),  max_length=1, default='A')
     ref = models.CharField(_('Payment Ref'), max_length=20, blank=True, null=True)
@@ -814,7 +910,7 @@ class Payment(models.Model):
 
     def save(self, *args, **kwargs):
         
-        #  All payment types except 'R'echarge are negative (ie. reduce balance)
+        #  All payment types except 'R'echarge are negative (ie. they reduce balance)
         # so make them negative
        
         if self.payment_type != 'R':
@@ -823,6 +919,8 @@ class Payment(models.Model):
                     
         super(Payment, self).save(*args, **kwargs)
 
+        # clients balance is updated in Payment.save()
+        self.client.update_balance(self.amount)
         
     @property
     def is_paid(self):
@@ -830,12 +928,6 @@ class Payment(models.Model):
         return (self.status=='S')
         
         
-    @classmethod
-    def client_balance(self, client):
-    
-        #TODO return sum of all payments
-        
-        return 1
 
 class UserProfile(models.Model):
 
@@ -862,7 +954,7 @@ class PoolLevel(models.Model):
     
     quality = models.CharField(_('Default Quality'),  max_length=1, choices=QUALITIES, blank=True, null=True)
     type =  models.ForeignKey(ProductType, verbose_name = _('Default Product Type'), blank=True, null=True)
-    minlevel =  models.DecimalField(_('Minimum Units'), max_digits=9, decimal_places=3)
+    minlevel =  models.DecimalField(_('Minimum Units'), max_digits=9, decimal_places=QTY_NUM_DP)
     
     
     def __unicode__(self):
