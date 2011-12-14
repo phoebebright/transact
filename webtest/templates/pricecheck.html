@@ -34,7 +34,45 @@
 
             });
         }
+        function fill_quality(){
+            TransactAPI.call("LISTQUALITIES",{'blank':'any'},function(status,data){
+                if (status=="OK"){
+                    for (var key in data['types']) {
+                        var quality = data['types'][key];
+                        var option = '<option value="' + quality['code'] +'"';
+                        if (quality['code'] == "") option += ' selected = true';
+                        option += '>' +quality['name'] +'</option>';
+                        jQuery('#id_quality').append(option);
+                    }
+                } else {
+                    //failure show any option
+                        var option = '<option value="" selected = true>any</option>';
+                        jQuery('#id_quality').append(option);
+                }
 
+
+            });
+        }
+        function fill_type(){
+            TransactAPI.call("LISTTYPES",{'blank':'any'},function(status,data){
+                if (status=="OK"){
+                    for (var key in data['types']) {
+                        var type = data['types'][key];
+                        var option = '<option value="' + type['code'] +'"';
+                        if (type['code'] == "") option += ' selected = true';
+                        option += '>' +type['name'] +'</option>';
+                        jQuery('#id_type').append(option);
+                    }
+                } else {
+                    //failure show any option
+                        var option = '<option value="" selected = true>any</option>';
+                        jQuery('#id_type').append(option);
+                }
+
+
+            });
+
+        }
         function alertBox(box_content){
             var info_box = jQuery('<div/>', {'class': "dialog", 'html': box_content});
             jQuery(info_box).dialog({modal:true,
@@ -53,7 +91,11 @@
             TransactAPI.gate = window.location.origin + "/api/"
             // only needed for development - ignore this for production
             // we need login to get valid token
+            // this next call will attach token to every next call and also store token in cookie
             TransactAPI.login('test','silicon');
+            // fill quality and type selections
+            fill_quality();
+            fill_type();
             // stick click event
             jQuery('#call_api').click(function(){
                 sendFormCall(jQuery("#call_form"));
