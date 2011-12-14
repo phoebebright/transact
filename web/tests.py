@@ -50,9 +50,9 @@ def list_payments():
                 tid =0
             print "%s |%s | %s | %.2f |" % (tid, p.client, p.ref, p.amount)
 
-def list_notifications():
+def list_maillog():
         print "MAILLOG"
-        for p in MailLog.objects.all():
+        for p in ClientMailLog.objects.all():
             print "%s |%s" % (p.to_email, p.subject)
 
 
@@ -70,7 +70,7 @@ class BaseTest(TestCase):
 
     def setUp(self):
         """ running setup """
-      
+         
         self.client1=Client.objects.create(name='Client 1')
         self.client2=Client.objects.create(name='Client 2')
         self.client3=Client.objects.create(name='Client 3')
@@ -98,8 +98,8 @@ class BaseTest(TestCase):
         profile.save()
         
         # set u2 to receive notifications
-        self.client1.notification_user=self.u2
-        self.client1.save()
+        self.client2.notification_user=self.u2
+        self.client2.save()
         
         
         # client 2 has two users
@@ -109,11 +109,13 @@ class BaseTest(TestCase):
         profile.client = self.client2
         profile.save()
         
+        # current version of django won't insert sql files for intial data - aghhh
         #  add product types
-        p=ProductType.objects.create(code='WIND', name='Wind')
+        ProductType.objects.create(code='WIND', name='Wind')
         ProductType.objects.create(code='HYDR', name='Hydro')
         ProductType.objects.create(code='BIOM', name='Biomass')
-        
+        ClientNotification.objects.create(name="TransactionPaid", subject="test transaction paid", body="test", from_email='test@trialflight.com')
+        ClientNotification.objects.create(name="AccountRecharge", subject="test account recharge", body="test", from_email='test@trialflight.com')
         
 
 class BaseTestMoreData(BaseTest):
@@ -548,25 +550,31 @@ class DownstreamTests(BaseTestMoreData):
         self.assertEqual(Transaction.objects.open().count(),3)
         
     def test_client_balance_and_recharge(self):
+        # client1 balance is 100
+        self.client1.recharge_level = 50
+        self.client1.recharge_by = 100
+        self.client1.save()
 
+
+        self.assertEqual(self.client1.balance, 100)
         # client1 has balance of 11, client3 has 0
         self.assertTrue(self.client1.can_pay(1.0))
-        self.assertFalse(self.client3.can_pay(101.0))
+        self.assertFalse(self.client1.can_pay(101.0))
 
         # nothing in account so can't pay
         self.assertFalse(self.client3.can_pay(1.0))
         
         # Client can pay
-        trans = Transaction.new(self.client1, value=90)
+        trans = Transaction.new(self.client1, value=33.49)
         self.assertTrue(trans.can_pay())
         trans.pay('REF')
-        self.assertEqual(self.client1.balance,10)
+        self.assertEqual(self.client1.balance, Decimal(str('66.51')))
         
         # now check long method of calculating balance also works
         self.assertEqual(self.client1.balance, self.client1.calculated_balance())
 
         # now can't pay
-        self.assertFalse(self.client1.can_pay(10.02))
+        self.assertFalse(self.client1.can_pay(76.52))
         
         
         # client3 can't pay
@@ -596,6 +604,9 @@ class DownstreamTests(BaseTestMoreData):
         self.assertEqual(self.client2.balance, self.client2.calculated_balance())
  
     def client_recharge_tests(self):
+        """
+        test automatic recharge of account
+        """
     
         self.client1.recharge_level = 50
         self.client1.balance = 100.50
@@ -624,6 +635,36 @@ class DownstreamTests(BaseTestMoreData):
         self.assertEqual(self.client1.balance,Decimal('105'))     
                 
                 
+    def test_notifications(self):
+        """
+        test notifications being sent
+        client1 no setup with a user
+        client2 has a notification user
+        """
+
+        self.client2.recharge_level = 50
+        self.client2.balance = 100
+        self.client2.recharge_by = 100
+        self.client2.save()
+
+     
+        transa = Transaction.new(self.client2, value=45)
+        transa.pay('ref')
+
+        self.assertEqual(ClientMailLog.objects.count(), 1)
+        mail = ClientMailLog.objects.get(id=1)
+        self.assertEqual(mail.to_email, self.client2.notification_user.email)
+     
+        # this will cause a recharge
+        transa = Transaction.new(self.client2, value=10)
+        transa.pay('ref')
+        self.assertEqual(self.client2.balance,Decimal('145'))     
+                
+        list_maillog()
+        self.assertEqual(ClientMailLog.objects.count(), 3)
+        mail = ClientMailLog.objects.get(id=3)
+        self.assertEqual(mail.to_email, self.client2.notification_user.email)
+        self.assertEqual(mail.notification.name, "AccountRecharge")
         
     def test_pool(self):
         """

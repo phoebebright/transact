@@ -5,18 +5,19 @@ from uuidfield import UUIDField
 from collections import defaultdict
 
 #django
-from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.core.exceptions import ValidationError, PermissionDenied
+from django.core.mail import send_mail, EmailMessage
+from django.core.mail import send_mail, EmailMessage
 from django.db import models
 from django.db.models import Max, Q, Sum
 from django.db.models.query import QuerySet
-from django.http import Http404
-from django.utils.translation import ugettext_lazy as _
-from django.core.mail import send_mail, EmailMessage
-from django.utils.html import strip_tags
 from django.db.models.signals import post_save
+from django.http import Http404
+from django.template import Context, Template
+from django.utils.html import strip_tags
+from django.utils.translation import ugettext_lazy as _
 
 #app
 import config
@@ -158,7 +159,6 @@ class Client(models.Model):
             Relationship.objects.create(
                 client = self,
                 customer = cust)
-        print 'saved',self.balance
     
     def needs_recharge(self, amount = 0):
         """ Return True if the balance is below the recharge level
@@ -173,8 +173,19 @@ class Client(models.Model):
             amounts may be positive or negative
             
             do recharge if drops below recharge level
+            
+            NOTE: for some reason, self.balance can hold
+            an old value for balance, so have to get it
+            again here to ensure it works.  Try removing
+            the update and running tests to see if it
+            still causes a problem.  Currently failing at
+            the end of test_client_balance_and_recharge (PHB)
         """
-        self.balance = self.balance + amount
+        
+        # get again to ensure have most up to date balance
+        c=Client.objects.get(id=self.id)
+ 
+        self.balance = c.balance + amount
         self.save(force_update=True)
         
         if self.needs_recharge():
@@ -206,26 +217,24 @@ class Client(models.Model):
                 payment_type = 'R',
                 amount = amount)
                 
-            
-            self.update_balance(amount)
-                        
-            #TODO: Send notification
+            self.recharge_notification()                                    
+
         return amount
 
-    def recharge_notification(amount, balance):
+    def recharge_notification(self):
         """ Send notificaiton of recharge if an email field is specified
         """
-        
+
         if self.notification_user:
             try:
-                notify = Notification.objects.get(name='RechargeSuccessful')
-            except Notification.DoesNotExist:
-                raise ValidationError('Cannot find entry in  Notification table for "RechargeSuccessful"')
+                notify = ClientNotification.objects.get(name='AccountRecharge')
+            except ClientNotification.DoesNotExist:
+                raise MissingRechargeNotification
        
-            notify.notify(send_to=self.notification_user.email, 
-                send_from = settings.DEFAULT_FROM_EMAIL,
-                context = {'balance': balance, 'amount': amount, 'NOW': datetime.now()},
-            )            
+            return notify.notify(self.notification_user.email, client=self, context = {'NOW': datetime.now()},)
+         
+               
+     
         
     def can_pay(self, amount):
         """Check there are enough funds to pay this amount
@@ -799,13 +808,27 @@ class Transaction(models.Model):
             self.status = 'P'
             self.pool = None
             self.save()
+                        
+            self.payment_notification()
             
             return p
             
         else:
             raise NotEnoughFunds
             
-            
+    def payment_notification(self):
+        """ Send email notification to client
+            Don't send notifications if no user specified
+        """
+         
+        if self.client.notification_user:
+            try:
+                notify = ClientNotification.objects.get(name='TransactionPaid')
+            except ClientNotification.DoesNotExist:
+                raise MissingPaymentNotification
+                
+            return notify.notify(self.client.notification_user.email, trans=self, client=self.client)
+
         
     @classmethod
     def expire_all(self):
@@ -869,15 +892,63 @@ class Transaction(models.Model):
                 return name
 
 
-class TransactionMailLog(MailLog):
+
+class ClientNotification(Notification):
+    
+    class Meta:
+        verbose_name = 'Client Notification'
+         
+    def notify(self, send_to, send_from=None, context=None, attach=None,  client=None, trans=None,):
+        """
+        send this notification to list of people supplied
+        attach is a list of attachments in the form of mime content
+        send_to can be a comma separated string or a list of emails
+        """
+        
+        
+        if not context:
+            context = {}
+            
+        context.update({ 'trans' : trans,
+            'client' : client,
+            })
+
+        t1 = Template(self.body)
+        c = Context(context)
+        body = t1.render(c)
+
+        t2 = Template(self.subject)
+        subject = t2.render(c)
+        
+        if type(send_to) == type(list()):
+            send_to = ', '.join(send_to)
+        
+        if not send_from:
+            send_from = self.from_email
+            
+        mlog = ClientMailLog.objects.create(subject = subject,
+            body = body,
+            from_email = send_from,
+            notification = self,
+            to_email = send_to,
+            client = client,
+            trans=trans)
+                    
+        mlog.save()     
+
+        return mlog.send(attach=attach)
+        
+class ClientMailLog(MailLog):
     """
     Record emails sent 
     """
 
     trans = models.ForeignKey(Transaction, null=True)
+    client = models.ForeignKey(Client)
+    notification = models.ForeignKey(ClientNotification)
 
     class Meta:
-        verbose_name = 'Transaction Mail Log'
+        verbose_name = 'Client Mail Log'
 
     def delete(self, user=None):
         """
@@ -885,7 +956,7 @@ class TransactionMailLog(MailLog):
         """
         
         pass
-            
+        
 class Payment(models.Model):
     """
     Attempted and successful payments of a transaction.

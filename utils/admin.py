@@ -22,6 +22,13 @@ class MailLogAdmin(admin.ModelAdmin):
     list_filter =	('sent_date', )
     ordering = ('-sent_date',)
 
+class NotifyAdmin(admin.ModelAdmin):
+
+    class Meta:
+        model = Notification
+
+    list_display = ('name','subject')
+    exclude = ('app',)
+
+
 admin.site.register(Say, SayAdmin) 
-admin.site.register(Notification)
-admin.site.register(MailLog, MailLogAdmin)

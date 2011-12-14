@@ -107,3 +107,17 @@ class BelowMinValue(ModelException):
     '''
     txtMessage = 'Below minimum value allowed'
     errorCode = 113
+    
+class MissingPaymentNotification(ModelException):
+    '''
+    raised if record in Notification table missing
+    '''
+    txtMessage = 'Missing item TransactionPaid in web_clientnotification table'
+    errorCode = 114
+     
+class MissingRechargeNotification(ModelException):
+    '''
+    raised if record in Notification table missing
+    '''
+    txtMessage = 'Missing item AccountRecharge in web_clientnotification table'
+    errorCode = 114    
