@@ -12,6 +12,15 @@ import json
 
 @csrf_exempt
 def call(request):
+    if request.method == "OPTIONS":
+        response = HttpResponse()
+        response['Access-Control-Allow-Origin'] = '*'
+        response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        response['Access-Control-Max-Age'] = 1000
+        response['Access-Control-Allow-Headers'] = 'Origin, Content-Type, Accept'
+        return response
+    if request.method != "POST":
+       return HttpResponse("only post allowed")
     jsondata = request.raw_post_data
     apirequest=None
 #    data = base.unwrap(jsondata)
@@ -70,5 +79,7 @@ def call(request):
                    "now": datetime.datetime.now()
                 }
         )
-    return HttpResponse(result.get_json(),
+    response = HttpResponse(result.get_json(),
         content_type='application/json')
+    response['Access-Control-Allow-Origin'] = '*'
+    return response
