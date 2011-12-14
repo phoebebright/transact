@@ -53,12 +53,16 @@ class Command(NoArgsCommand):
         profile = user1.get_profile()
         profile.client = clienta
         profile.save()
+        
 
         clientb =Client.objects.create(name='Client B')        
         userb= User.objects.create_user('testb','testb@transactcarbon.com','silicon')
         profile = userb.get_profile()
         profile.client = clientb
         profile.save()
+
+        clientb.notification_user = userb
+        clientb.save()
 
         clientb.recharge(100)
                 
@@ -131,3 +135,7 @@ class Command(NoArgsCommand):
         
         trans = Transaction.new(clientb, 1)
         trans.pay('PAYREF 2')                
+        
+        
+        # Notifications]
+        

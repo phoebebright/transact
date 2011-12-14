@@ -1011,7 +1011,8 @@ class TradeTest(ApiWithDataTestCase):
             }
 
         """
-        list_transactions()
+        
+
         self._add_users_clients()
         self._auth("uclient1a")
         call_data_balance ={
@@ -1038,6 +1039,9 @@ class TradeTest(ApiWithDataTestCase):
         data = self._api_call(call_data_balance)
         self.assertEqual(data.get('balance'), 900)
 
+        client = Client.objects.get(id=self.client1.id)
+        self.assertEqual(client.balance, Decimal(str('900')))
+        
         # recharge account by 50
   
         call_data ={
@@ -1051,22 +1055,19 @@ class TradeTest(ApiWithDataTestCase):
         self.assertEqual(data.get('call'), 'RECHARGE')
         self.assertEqual(data.get('amount'), 50)
 
+
+        client1again = Client.objects.get(id=self.client1.id)
         data = self._api_call(call_data_balance)
         self.assertEqual(data.get('balance'), 950)
-        self.assertEqual(self.client1.balance, 950)
+        self.assertEqual(client1again.balance, 950)
 
+        
         # Check decimals working
         
-        trans2 = Transaction.new(self.client1, value=0.31)
-        self.assertEqual(self.client1.balance, 950)
-        
+        trans2 = Transaction.new(self.client1, value=0.31)        
         trans2.pay('REF')
-        self.assertEqual(self.client1.balance,949.69)
+        
         data1 = self._api_call(call_data_balance)
-
-        print 'calculated=',self.client1.calculated_balance()
-        print 'record=',self.client1.balance
-  
         self.assertEqual(data1.get('balance'), 949.69)
         
         

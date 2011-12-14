@@ -12,8 +12,9 @@ function login(){
     /* uses login to authenticate the user */
     TransactAPI.login("test", "silicon", function (status, response){
         if(status=="OK"){
-            TransactAPI.add_token(response['token'], response['expires']); // adds token to every future request stores token in cookie
-            //start transaction
+            TransactAPI.add_token(response['token'], response['expires']); // adds token to every future request. stores token in cookie
+            
+            // logged in ok, so now create a transaction for the offset
             transact();
         }else{
             var box_content = "<p>Sorry, authentication was not possible at this moment. Try refreshing the page.";
@@ -24,7 +25,7 @@ function login(){
 
 function transact(){
     var data = {
-        "quantity": 0.2
+        "quantity": 0.2    // carry out required calculation here to get actual tonnes of carbon to offset
     };
     TransactAPI.call("TRANSACT",data, function (status, response){
         if(status=="OK"){
@@ -84,8 +85,10 @@ jQuery(document).ready(function(){
     if ( ! window.location.origin) window.location.origin = window.location.protocol+"//"+window.location.host;
     TransactAPI.gate = window.location.origin + "/api/"
     // only needed for development - ignore this for production
+    
     //do login and on success start transaction
     login();
+    
     //assign events to pay and to cancel
     jQuery("#approvePay").click(pay);
     jQuery("#cancelPay").click(cancel);
@@ -108,103 +111,61 @@ jQuery(document).ready(function(){
 <span id="PriceItinerary_ArrivalStationName__1">London-Stansted -</span> <span id="PriceItinerary_ArrivalTime__1">08:20</span></p>
 
 <div id="PriceItinerary_BreakdownContainer__1">
-<table cellpadding="0" cellspacing="0">
+<table cellpadding="0" cellspacing="0" width="300px">
 <tbody>
 <tr>
-<td>1</td>
-
-<td>x</td>
-
-<td>Adult</td>
-
-<td class="rght nowrap">64.99</td>
-
+<td>1x Adult</td>
+<td style="text-align:right;">64.99</td>
 <td>EUR</td>
 </tr>
 
 <tr>
-<td colspan="5"><br></td>
+<td colspan="4"><br></td>
 </tr>
 
-<tr class="bld">
-<td colspan="3">Fare</td>
 
-<td class="rght nowrap">64.99</td>
-
+<td>Fare</td>
+<td style="text-align:right;">64.99</td>
 <td>EUR</td>
 </tr>
 
-<tr class="bld">
-<td colspan="3"><a href="#">Taxes and Fees</a></td>
 
-<td id="TaxesAndFeesSubTotalCell" class="rght nowrap">30.73</td>
-
-<td>EUR</td>
-</tr>
-
-<tr style="display: none;">
-<td colspan="5">
-<table cellpadding="0" cellspacing="0">
-<tbody>
 <tr>
-<td>»&nbsp;Taxes and Fees</td>
-
-<td class="rght nowrap" style="text-align:right;">24.24</td>
-
+<td>Taxes and Fees</td>
+<td  style="text-align:right;">30.73</td>
 <td>EUR</td>
 </tr>
 
 <tr>
-<td>»&nbsp;Aviation Insurance/PRM Levy</td>
-
-<td class="rght nowrap" style="text-align:right;">6.49</td>
-
-<td>EUR</td>
-</tr>
-</tbody>
-</table>
-</td>
-</tr>
-
-<tr class="bld">
-<td colspan="3">Online Check-In</td>
-
-<td class="rght nowrap">6.00</td>
-
+<td>Aviation Insurance/PRM Levy</td>
+<td  style="text-align:right;">6.49</td>
 <td>EUR</td>
 </tr>
 
-<tr class="bld">
-<td colspan="3">EU 261 Levy</td>
-
-<td class="rght nowrap">2.00</td>
-
+<tr>
+<td>Online Check-In</td>
+<td style="text-align:right;">6.00</td>
 <td>EUR</td>
 </tr>
 
-<tr class="bld">
-<td colspan="3">Carbon</td>
-
-<td id="carbon" class="rght nowrap"></td>
-
+<tr>
+<td>EU 261 Levy</td>
+<td style="text-align:right;">2.00</td>
 <td>EUR</td>
 </tr>
 
-<tr class="bld">
-<td colspan="3">Sub Total</td>
-
-<td class="rght nowrap">103.72</td>
-
+<tr bgcolor="#FF9900">
+<td>Carbon</td>
+<td id="carbon" style="text-align:right;"></td>
 <td>EUR</td>
 </tr>
 
-<tr class="bld">
-<td colspan="3">Total Price</td>
 
-<td class="rght nowrap">103.72</td>
-
+<td>Total Price</td>
+<td style="text-align:right;">105.72</td>
 <td>EUR</td>
 </tr>
+
 </tbody>
 </table>
 
@@ -214,4 +175,22 @@ jQuery(document).ready(function(){
 <p style="margin-top:10px;">
 <span id="cancelPay" class="button">Cancel</span><span id="approvePay" class="button">Pay</span>
 </p>
+{% endblock %}
+
+{% block sidebar %}
+<ol>
+<li>Load required javascript</li>
+    <ul>
+        <li>    JSON.js</li>
+        <li>    jquery.cookie.min.js</li>
+        <li>    transactAPI.js</li>
+    </ul>
+<li>Javascript functions to login, create a transaction, pay and cancel</li>
+
+    
+<li>Call login and create a transaction to offset this flight.  Also set buttons to trigger payment or cancellation.  In this example a fixed amount of 0.2 is used, but in a real example a calucation to get the real carbon offset required for this flight would be done.  </li>
+    
+</ol>
+
+
 {% endblock %}
