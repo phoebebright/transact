@@ -138,5 +138,31 @@
     }
     </pre> 
     
+    <h5>How to Recharge your Account</h5>
+    <p>In order to ensure fast payment that will not disrupt your payment process with your customer, an account is setup when you joined TransAct Carbon.  This account will be automatically topped up when it falls below a pre-agreed level and it can also be topped up manually using the <a href="/docs/RECHARGE.html">RECHARGE</a> api call.  Calls to <a href="/docs/TRANSACT.html">TRANSACT</a> and <a href="/docs/PAY.html">PAY</a> will fail if there are not enough funds so it is advisable to check the <a href="/docs/BALANCE.html">BALANCE</a> before starting a purchase </p>
+    
 .{% endblock doc %}
+
+{% block sidebar %}
+
+<div id="sidebar">
+    <h5>API Calls</h5>
+    <ul class="options">
+        <li><a href="/docs/PING.html">PING</a></li>
+        <li><a href="/docs/LOGIN.html">LOGIN</a></li>
+        <li><a href="/docs/LISTPRODUCTS.html">LISTTYPES</a></li>
+        <li><a href="/docs/LISTQUALITIES.html">LISTQUALITIES</a></li>
+        <li><a href="/docs/BALANCE.html">BALANCE</a></li>
+        <li><a href="/docs/RECHARGE.html">RECHARGE</a></li>
+        <li><a href="/docs/PRICECHECK.html">PRICECHECK</a></li>
+        <li><a href="/docs/QTYCHECK.html">QTYCHECK</a></li>
+        <li><a href="/docs/TRANSACT.html">TRANSACT</a></li>
+        <li><a href="/docs/PAY.html">PAY</a></li>
+        <li><a href="/docs/TRANSACTCANCEL.html">TRANSACTCANCEL</a></li>
+        <li><a href="/docs/TRANSACTINFO.html">TRANSACTINFO</a></li>
+
+    </ul>
+</div>
+{% endblock %}
+
 {% block testapi %}{% endblock testapi %}
