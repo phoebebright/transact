@@ -101,3 +101,23 @@ class NotEnoughFunds(ModelException):
     txtMessage = 'Not enough Funds'
     errorCode = 112
     
+class BelowMinValue(ModelException):
+    '''
+    raised if request to buy item that has a total price below the minimum
+    '''
+    txtMessage = 'Below minimum value allowed'
+    errorCode = 113
+    
+class MissingPaymentNotification(ModelException):
+    '''
+    raised if record in Notification table missing
+    '''
+    txtMessage = 'Missing item TransactionPaid in web_clientnotification table'
+    errorCode = 114
+     
+class MissingRechargeNotification(ModelException):
+    '''
+    raised if record in Notification table missing
+    '''
+    txtMessage = 'Missing item AccountRecharge in web_clientnotification table'
+    errorCode = 114    

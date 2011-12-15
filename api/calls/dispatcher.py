@@ -10,6 +10,6 @@ calls = {
     "TRANSACTINFO": ('trade', 'TransactInfoRequest'),
     "TRANSACTCANCEL": ('trade', 'TransactCancelRequest'),
     "PAY": ('trade', 'PayRequest'),
-    "BALANCE": ('trade', 'ClientBalanceRequest'),
-    "RECHARGE": ('trade', 'ClientRechargeRequest'),
+    "BALANCE": ('trade', 'BalanceRequest'),
+    "RECHARGE": ('trade', 'RechargeRequest'),
 }

@@ -1,5 +1,6 @@
 
 from web.models import *
+from utils.admin import NotifyAdmin, MailLogAdmin
 
 from django.contrib import admin
 from django.contrib.admin import helpers
@@ -110,6 +111,17 @@ class TransactionAdmin(admin.ModelAdmin):
         
     list_display = ('uuid','client','status', 'pool', 'product','price','currency','fee', 'quantity')
 
+class ClientNotifyAdmin(NotifyAdmin):
+
+   class Meta:
+        model = ClientNotification
+
+class ClientMailLogAdmin(MailLogAdmin):
+
+   class Meta:
+        model = ClientMailLog
+
+ 
 
 admin.site.register(Trade, TradeAdmin)    
 admin.site.register(Client, ClientAdmin)
@@ -117,6 +129,8 @@ admin.site.register(Product, ProductAdmin)
 admin.site.register(ProductType, ProductTypeAdmin)
 admin.site.register(Pool, PoolAdmin)
 admin.site.register(Transaction, TransactionAdmin)
+admin.site.register(ClientNotification, ClientNotifyAdmin)
+admin.site.register(ClientMailLog, ClientMailLogAdmin)
 #admin.site.register(Auth, AuthAdmin)
 admin.site.register(PoolLevel)
 #admin.site.register(UserProfile)

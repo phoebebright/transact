@@ -1,4 +1,5 @@
 #python
+from datetime import date, datetime, timedelta
 
 #django
 from django.core.mail import send_mail, EmailMessage
@@ -77,6 +78,7 @@ class MailLog(models.Model):
 
     class Meta:
         ordering = ['-id',]
+        abstract = True
 
     def send(self, priority=False, individual=True, attach=None):
         """
@@ -158,6 +160,7 @@ class Notification(models.Model):
         
     class Meta:
         ordering = ['name',]
+        abstract = True
 
     def notify(self, send_to, context=None, attach=None, priority=None):
         """

@@ -16,8 +16,10 @@ class BasicRequestForm(forms.Form):
 
 class PriceCheck(BasicRequestForm):
     quantity = forms.DecimalField(max_value=1000, min_value=0.2)
-    quality = forms.ChoiceField(choices = Pool.LISTQUALITIES('Any'), initial='', required=False)
-    type = forms.ChoiceField(choices=Pool.LISTTYPES('Any'), initial='', required=False)
+    #quality = forms.ChoiceField(choices = Pool.LISTQUALITIES('Any'), initial='', required=False)
+    #type = forms.ChoiceField(choices=Pool.LISTTYPES('Any'), initial='', required=False)
+    quality = forms.ChoiceField(initial='', required=False)
+    type = forms.ChoiceField(initial='', required=False)
 
 class TransAct(PriceCheck):
     currency = forms.ChoiceField(choices=CURRENCIES)
