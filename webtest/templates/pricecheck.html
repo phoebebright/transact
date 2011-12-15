@@ -86,10 +86,12 @@
         }
 
         jQuery(document).ready(function() {
+            {% if debug_setting %}
             // only needed for development - ignore this for production
             if ( ! window.location.origin) window.location.origin = window.location.protocol+"//"+window.location.host;
             TransactAPI.gate = window.location.origin + "/api/"
             // only needed for development - ignore this for production
+            {% endif %}
             // we need login to get valid token
             // this next call will attach token to every next call and also store token in cookie
             TransactAPI.login('test','silicon', function(status, data){
