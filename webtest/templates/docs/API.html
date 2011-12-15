@@ -6,28 +6,15 @@
 
 {% block doc %}
     <h4>Introduction</h4>
-    <p>Transact API features:</p>
+    <p>TransAct API features:</p>
     <ul>
         <li>RESTful</li>
         <li>uses json to carry data</li>
         <li>uses Http as transport protocol only (some devices ie. blackberry )</li>
-        <li>all calls except PING and LOGIN require valid token</li>
+        <li>all calls except PING and LOGIN require valid tokens</li>
         <li>unauthorised requests (not valid token) will not hit database</li>
-        <li>More to come...</li>
     </ul>
 
-    <h4>ASSUMPTIONS</h4>
-    <ol>
-        <li>Units are held to three decimal places.
-        if 1 unit = 1 tonne and units are priced at €5 per unit, 0.01 of a unit will cost 5c and
-        0.001 until will cost .5c.</li>
-        <li> Prices calculations are rounded to the nearest whole cent</li>
-        <li> The minimum purchase is 1 EUR or 0.1000 units whichever is smaller</li>
-        <li> The maximum purchase is 1000 EUR or 100 units whichever is larger</li>
-        <li> If the Client does not specify a Type or Quality they will be allocated the oldest
-        product with sufficient quantity regardless of price.</li>
-        <li>wherever there's pagination limit can only be set up to 1000</li>
-    </ol>
 
     <h4>Json Structure</h4>
     <h5>Generic elements of a call</h5>
@@ -60,5 +47,96 @@
     }
     </pre>
 
+    <h4>Example Call</h4>
+    
+    <h2>Load required javascript files</h2>
+    <p>The following javascript is required to use the TransAct API</p>
+    <code>
+    &lt;script type="text/javascript" src="/js/JSON.js">&lt;/script>
+    <a href="/static/js/JSON.js">Download...</a><br />
+    &lt;script type="text/javascript" src="/js/jquery.cookie.min.js">&lt;/script>
+    <a href="/static/webtest/js/jquery.cookie.min.js">Download...</a><br />
+    &lt;script type="text/javascript" src="/js/transactAPI.js">&lt;/script>
+    <a href="/static/webtest/js/transactAPI.js">Download...</a><br />  
+    </pre>
+    <p>jQuery has been used in the examples below, so to run them, also load:</p>
+    <pre>
+    &lt;script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js" type="text/javascript">&lt;/script><br />
+    &lt;script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript">&lt;/script><br />
+    &lt;link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/smoothness/jquery-ui.css" type="text/css" media="all" /><br />
+    </pre>
+
+    
+    <h5>Login and put a token in a cookie</h5>
+    
+    <pre>
+    function login(){
+    /* uses login to authenticate the user */
+    TransactAPI.login("YOUR_USERNAME", "YOUR_PASSWORD", function (status, response){
+        if(status=="OK"){
+            TransactAPI.add_token(response['token'], response['expires']); // adds token to every future request. stores token in cookie
+            
+            ADDITIONAL CALLS HERE IF REQUIRED ON LOADING A PAGE
+        }else{
+            var box_content = "<p>Sorry, authentication was not possible at this moment. Try refreshing the page.";
+            showModal(box_content);
+        }
+    });
+}
+    </pre>
+  
+    <h5>How to Purchase</h5>
+    
+    <p>Buying occurs in two steps.  Call TRANSACT to get a price and reserve a quantity of units.  This is called a Transaction and you will be passed back a Transaction ID.  This transaction will automatically expire in 5 minutes if not paid for within that time.  To pay for the transaction, simply call PAY with the transaction ID and payment will be deducted from your account.</p>
+    
+    <h5>Creating a Transaction</h5>
+    
+    <pre>
+    function transact(){
+    var data = {
+        "quantity": 0.2    // number of units required
+    };
+    TransactAPI.call("TRANSACT",data, function (status, response){
+        if(status=="OK"){
+        
+            # this is the total cost
+            var total_carbon = response["total"];
+            
+            # save the transaction id in a cookie
+            jQuery.cookie("TA_TRANS_ID", response["transID"]); 
+            
+            # display the price in an element with id carbon
+            jQuery("#carbon").append(total_carbon.toFixed(2));
+            
+        }else{
+            # display error message
+            var box_content = "<p>Your transaction could not be initiated</p>";
+            showModal(box_content);
+        }
+      });
+    }
+    </pre>
+    
+    <h5>How to Pay</h5>
+    <pre>
+    function pay(){
+        var data = {
+            "transID": jQuery.cookie("TA_TRANS_ID")   // get the transaction id from the cookie
+        };
+        TransactAPI.call("PAY", data, function (status, response){
+            if(status=="OK"){
+                # do whatever is required once payment is made
+                var box_content = "<p>Successfully paid</p>";
+                showModal(box_content);
+    
+            }else{
+                # display error message
+                var box_content = "<p>Sorry Your payment can't be processed at the moment</p>";
+                showModal(box_content);
+            }
+        });
+    }
+    </pre> 
+    
 .{% endblock doc %}
 {% block testapi %}{% endblock testapi %}
