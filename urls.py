@@ -22,6 +22,7 @@ urlpatterns += patterns('',
     url(r'^webtest/', include('webtest.urls')),
     url(r'^api/', include('api.urls')),
     url(r'^settings/', include('livesettings.urls')),
+    url(r'^contact/', include('contact_form.urls')),
 )
 
 urlpatterns += patterns('web.views',

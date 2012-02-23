@@ -109,7 +109,7 @@ class TransactionAdmin(admin.ModelAdmin):
         model = Transaction 
         
         
-    list_display = ('uuid','client','status', 'pool', 'product','price','currency','fee', 'quantity')
+    list_display = ('uuid','created','client','status', 'pool', 'product','price','currency','fee', 'quantity')
 
 class ClientNotifyAdmin(NotifyAdmin):
 
