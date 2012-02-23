@@ -1,0 +1,8 @@
+A message was sent from Transact Carbon website
+Name: {{ name}}
+Company: {{ company }}
+Email: {{ email }}
+Telephone: {{ contact_no }}
+Message:
+{{ body }}
+
