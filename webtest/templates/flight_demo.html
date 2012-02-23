@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
+
+
 <script type="text/javascript" src="/static/js/JSON.js"></script>
 <script type="text/javascript" src="/static/webtest/js/jquery.cookie.min.js"></script>
 <script type="text/javascript" src="/static/webtest/js/transactAPI.js"></script>
@@ -81,10 +83,12 @@ function showModal(content){
 }
 
 jQuery(document).ready(function(){
-    // only needed for development - ignore this for production
-    if ( ! window.location.origin) window.location.origin = window.location.protocol+"//"+window.location.host;
-    TransactAPI.gate = window.location.origin + "/api/"
-    // only needed for development - ignore this for production
+     {% if debug_setting %}
+            // only needed for development - ignore this for production
+            if ( ! window.location.origin) window.location.origin = window.location.protocol+"//"+window.location.host;
+            TransactAPI.gate = window.location.origin + "/api/"
+            // only needed for development - ignore this for production
+     {% endif %}
     
     //do login and on success start transaction
     login();

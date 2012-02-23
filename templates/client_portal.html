@@ -117,8 +117,9 @@
     {% if user.is_authenticated %}
             
         <p><b>Current Balance:</b> <span id="balance">0</span></p>  
+        <p><b>Recharge By Default:</b>{{client.recharge_by}}</p>  
+        <p><b>Auto Recharge at Level:</b>{{client.recharge_level}}</p>  
         
-        <p><button type="button" id="topup">Topup Account</button></p>
         
         <h2>Recent Transactions</h2>
 
@@ -142,6 +143,23 @@
         {% endfor %}
         </table>
     
+       <h2>Recent Account Recharge</h2>
+
+       <table width="100%">
+        <tr>
+            <td>Created</td><td>Amount</td>
+        </tr>
+        {% for item in recharge %}
+            <tr>
+                <td>{{item.payment_date}}</td>
+                <td>{{item.amount}}</td>
+    
+                </tr>
+        {% endfor %}
+        </table>
+    
+      
+
     {% endif %}
 
 {% endblock main %}

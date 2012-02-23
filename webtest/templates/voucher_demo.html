@@ -86,10 +86,13 @@ function showModal(){
 
 jQuery(document).ready(function(){
     var total_carbon;
-     // only needed for development - ignore this for production
-    if ( ! window.location.origin) window.location.origin = window.location.protocol+"//"+window.location.host;
-    TransactAPI.gate = window.location.origin + "/api/"
-    // only needed for development - ignore this for production
+    {% if debug_setting %}
+           // only needed for development - ignore this for production
+           if ( ! window.location.origin) window.location.origin = window.location.protocol+"//"+window.location.host;
+           TransactAPI.gate = window.location.origin + "/api/"
+           // only needed for development - ignore this for production
+    {% endif %}
+
     login();
     // our modalDialogBox will contain button to start transaction
     // after successful transaction it will automatically make pay call and display bought value

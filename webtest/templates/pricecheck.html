@@ -86,16 +86,25 @@
         }
 
         jQuery(document).ready(function() {
+            {% if debug_setting %}
             // only needed for development - ignore this for production
             if ( ! window.location.origin) window.location.origin = window.location.protocol+"//"+window.location.host;
             TransactAPI.gate = window.location.origin + "/api/"
             // only needed for development - ignore this for production
+            {% endif %}
             // we need login to get valid token
             // this next call will attach token to every next call and also store token in cookie
-            TransactAPI.login('test','silicon');
-            // fill quality and type selections
-            fill_quality();
-            fill_type();
+            TransactAPI.login('test','silicon', function(status, data){
+                if (status =="OK") {
+                    TransactAPI.add_token(data['token'],data['expiry']);
+                    // fill quality and type selections
+                    fill_quality();
+                    fill_type();
+                } else {
+                    alertBox("Could not login");
+                }
+
+            });
             // stick click event
             jQuery('#call_api').click(function(){
                 sendFormCall(jQuery("#call_form"));
