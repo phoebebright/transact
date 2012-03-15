@@ -202,7 +202,6 @@ class Client(models.Model):
         """ Topup the client's account when it runs low
         return amount topped up by
         """
-        
         if amount == 0:
             amount = self.topup_by
   
@@ -249,16 +248,13 @@ class Client(models.Model):
         are off the same currency
         """
        
-        try:
-            p = Payment.objects.filter(client = self).aggregate(balance=Sum('amount'))
-            
-            if p['balance'] == None:
-                return 0
-            else:
-                return p['balance']
-        except self.DoesNotExist:
-            # should not happen as aggregate with no records returns None
+        p = Payment.objects.filter(client = self).aggregate(balance=Sum('amount'))
+        
+        if p['balance'] == None:
             return 0
+        else:
+            return p['balance']
+
         
             
 class Relationship(models.Model):
@@ -432,6 +428,8 @@ class Pool(models.Model):
             
         return ((self.price * qty) + fee).quantize(TWODP)
 
+    '''
+    NOT USED
     def qty_for_price(self, price, client=None):
         """
         Return quantity that can be bought for a specified price
@@ -443,13 +441,14 @@ class Pool(models.Model):
             price -= config_value('web','DEFAULT_FEE')
             
         return (price / self.price).quantize(QTYDP)
+    '''
     
     @classmethod
     def LISTPRODUCTS(self):
         """
         List of currently available products
         """
-        
+        print '-->',config_value('web','MIN_QUANTITY')
         return self.objects.filter(quantity__gte = config_value('web','MIN_QUANTITY'))
     
     def remove_quantity(self, units):
@@ -874,7 +873,9 @@ class Transaction(models.Model):
             self.status = 'C'
             self.pool = None
             self.save()
-            
+      
+    '''
+    NOT YET DEPLOYED - DO MANUALLY IN ADMIN
     def refund(self):
         """
         put this quanity of items back in the pool and refund
@@ -885,17 +886,16 @@ class Transaction(models.Model):
         else:
             self.cancel()
             #TODO: NOW UNDO PAYMENT
-
-            
     '''
-    UNUSED
+            
+
     @property
     def status_name(self):
         """return status name from status field"""
         for (code,name) in STATUS:
             if code == self.status:
                 return name
-    '''
+    
 
 
 class ClientNotification(Notification):

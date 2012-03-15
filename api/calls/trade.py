@@ -61,7 +61,7 @@ class PriceCheckRequest(Request):
 
 class QtyCheckResponse(Response):
     pass
-#    quantity = micromodels.FloatField()
+#    value = micromodels.FloatField()
 #    type = micromodels.CharField()
 #    quality = micromodels.CharField()
 #    currencies = micromodels.BaseField()  # dictionary of currencies

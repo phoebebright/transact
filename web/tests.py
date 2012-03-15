@@ -503,6 +503,7 @@ class DownstreamTests(BaseTestMoreData):
         self.assertTrue(trans.is_open)
         self.assertFalse(trans.is_closed)
         self.assertEqual(trans.quantity, Decimal('10.55'))
+        self.assertEqual(trans.payment, None)
         
         # check this amount now removed from pool
         item = Pool.objects.get(id=item.id)
@@ -517,6 +518,7 @@ class DownstreamTests(BaseTestMoreData):
         self.assertEqual(trans.status, 'P')
         self.assertFalse(trans.is_open)
         self.assertTrue(trans.is_closed)
+        self.assertEqual(trans.payment, p)
 
         # create a transaction by quantity
         trans = Transaction.new(self.client1, quantity=10.55)
@@ -524,10 +526,29 @@ class DownstreamTests(BaseTestMoreData):
         # create a transaction by value
         trans = Transaction.new(self.client1, value=10.55)
         
-        #DO NEXT
-        #cancel, expire, refund, pay
-        
 
+        
+    def test_cancel_transactions(self):
+
+        # create a transaction 
+        trans = Transaction.new(self.client1, 10.55)
+        id = trans.id
+        
+        # and cancel
+        trans.cancel()
+        
+        t = Transaction.objects.get(id=id)
+        
+        # transaction marked as cancelled
+        self.assertEqual(t.status, 'C')
+        self.assertEqual(t.pool, None)
+
+        # create a transaction and pay so transaction is now closed 
+        trans = Transaction.new(self.client1, 10.55)
+        trans.pay('cantcancel')
+        
+        self.assertRaises(Unable2CancelTransaction, trans.cancel)
+        
     def test_expire_transactions(self):
     
         # create some open transactions
@@ -549,6 +570,13 @@ class DownstreamTests(BaseTestMoreData):
         
         # one item expired
         self.assertEqual(Transaction.objects.open().count(),3)
+        
+        # create a transaction and pay so transaction is now closed 
+        trans = Transaction.new(self.client1, 10.55)
+        trans.pay('cantexpire')
+
+        self.assertRaises(Unable2CancelTransaction, trans.cancel)
+        
         
     def test_client_balance_and_recharge(self):
         # client1 balance is 100
@@ -609,7 +637,7 @@ class DownstreamTests(BaseTestMoreData):
         # now check long method of calculating balance also works
         self.assertEqual(self.client2.balance, self.client2.calculated_balance())
  
-    def client_recharge_tests(self):
+    def test_client_recharge(self):
         """
         test automatic recharge of account
         """
@@ -648,6 +676,7 @@ class DownstreamTests(BaseTestMoreData):
         
         # recharge by default amount
         self.client1.recharge()
+        
         self.assertEqual(self.client1.balance,Decimal('100'))     
         
         # recharge by specified amount
@@ -700,6 +729,13 @@ class DownstreamTests(BaseTestMoreData):
         # manual send of notification
         note = ClientNotification.objects.get(name='TransactionPaid')
         note.notify([self.u1.email,],  client=self.client1, trans=transa)
+        
+        # get invalid notification
+        notify = ClientNotification.objects.get(name='TransactionPaid')
+        notify.delete()
+
+        trans = Transaction.new(self.client2, value=45)
+        self.assertRaises(MissingPaymentNotification, trans.pay, 'payref')
         
     def test_pool(self):
         """
@@ -825,7 +861,7 @@ class ListTests(BaseTestMoreData):
         self.assertEqual(qualities[0][0],'')
         self.assertEqual(qualities[0][1],'Any')
 
-    """  
+
     def test_listproducts(self):
     
         products = Pool.LISTPRODUCTS()
@@ -835,10 +871,10 @@ class ListTests(BaseTestMoreData):
         p = Pool.objects.get(id=1)
         self.assertEqual(p.quantity, 2500)
         p.remove_quantity(2499.9)
-
+        list_products()
         products = Pool.LISTPRODUCTS()
         self.assertEqual(products.count(),2)
-    """
+
 class MiscTests(BaseTestMoreData):
     """
     other tests
@@ -849,5 +885,10 @@ class MiscTests(BaseTestMoreData):
         usr = User.objects.get(username='uclient1a')
         self.assertEqual(str(usr.get_profile()), "uclient1a's profile")
         
-    
-    
+    def test_product(self):
+        "check product properties"
+        
+        p = Product.objects.get(name = 'Carbon Credit 2')
+        self.assertEqual(p.quality_name, "Platinum")
+        
+        

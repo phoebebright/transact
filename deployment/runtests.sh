@@ -1,6 +1,6 @@
 #!/bin/bash
 SUBJECT="Test results `date`"
-TO="engrost@gmail.com,phoebebright@vividlogic.ie"
+TO="engrost@gmail.com,phoebebright310@gmail.com"
 MESSAGE="report.txt"
 
 #run tests
