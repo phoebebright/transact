@@ -165,7 +165,6 @@ class Client(models.Model):
             Allow an option paramter to check if by including an amount that will take
             it below the recharge level.
         """
-        
         return (self.balance + Decimal(str(amount)) <= self.recharge_level)
     
     def update_balance(self, amount):
@@ -448,7 +447,6 @@ class Pool(models.Model):
         """
         List of currently available products
         """
-        print '-->',config_value('web','MIN_QUANTITY')
         return self.objects.filter(quantity__gte = config_value('web','MIN_QUANTITY'))
     
     def remove_quantity(self, units):

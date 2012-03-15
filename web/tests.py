@@ -516,6 +516,8 @@ class DownstreamTests(BaseTestMoreData):
         self.assertEqual(p.ref, 'PAYREF')
         self.assertTrue(p.is_paid)
         self.assertEqual(trans.status, 'P')
+        self.assertEqual(trans.status_name, 'Paid')
+        
         self.assertFalse(trans.is_open)
         self.assertTrue(trans.is_closed)
         self.assertEqual(trans.payment, p)
@@ -541,6 +543,7 @@ class DownstreamTests(BaseTestMoreData):
         
         # transaction marked as cancelled
         self.assertEqual(t.status, 'C')
+        self.assertEqual(t.status_name, 'Cancelled')
         self.assertEqual(t.pool, None)
 
         # create a transaction and pay so transaction is now closed 
@@ -642,14 +645,16 @@ class DownstreamTests(BaseTestMoreData):
         test automatic recharge of account
         """
     
-        self.client1.recharge_level = 50
-        self.client1.balance = 100.50
-        self.client1.recharge_by = 100
+        self.client1.recharge_level = Decimal('50')
+        self.client1.balance = Decimal('100.50')
+        self.client1.recharge_by = Decimal('100')
         self.client1.save()
         
         # check needs_recharge
         self.assertFalse(self.client1.needs_recharge())
         self.assertFalse(self.client1.needs_recharge(50))
+        print self.client1.balance, self.client1.recharge_level
+        
         self.assertTrue(self.client1.needs_recharge(50.51))
         
         # this transaction will not trigger a recharge
@@ -749,6 +754,9 @@ class DownstreamTests(BaseTestMoreData):
         p.remove_quantity(100)
         p = Pool.objects.get(id=1)
         self.assertEqual(p.quantity, 2400)
+        
+        # try removing more units than there are available
+        self.assertRaises(Unable2RemoveUnits, p.remove_quantity, 2500  )
         
         # remove decimal amount
         p.remove_quantity(0.3)
@@ -870,8 +878,8 @@ class ListTests(BaseTestMoreData):
         # if quantity is below minimum then won't be counted
         p = Pool.objects.get(id=1)
         self.assertEqual(p.quantity, 2500)
-        p.remove_quantity(2499.9)
-        list_products()
+        p.remove_quantity(2499.99)
+
         products = Pool.LISTPRODUCTS()
         self.assertEqual(products.count(),2)
 
