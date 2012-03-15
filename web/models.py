@@ -164,6 +164,8 @@ class Client(models.Model):
         """ Return True if the balance is below the recharge level
             Allow an option paramter to check if by including an amount that will take
             it below the recharge level.
+            Amounts should be negative so they can be added to the balance to get the
+            new balance
         """
         return (self.balance + Decimal(str(amount)) <= self.recharge_level)
     
@@ -202,7 +204,8 @@ class Client(models.Model):
         return amount topped up by
         """
         if amount == 0:
-            amount = self.topup_by
+            amount = self.recharge_by
+            
   
         else:
             amount = Decimal(str(amount))

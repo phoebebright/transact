@@ -323,6 +323,7 @@ class DownstreamTests(BaseTestMoreData):
         #no quality G, type 'XXX'
         self.assertRaises(NoMatchInPoolException,  Pool.QTYCHECK, 10, quality='G', type='BIOM', client=self.client1)
         """
+        self.assertRaises(InvalidProductType,  Pool.QTYCHECK, 10, type='XXX', client=self.client1)
         
         #test for matches
         #quantity = available
@@ -652,10 +653,9 @@ class DownstreamTests(BaseTestMoreData):
         
         # check needs_recharge
         self.assertFalse(self.client1.needs_recharge())
-        self.assertFalse(self.client1.needs_recharge(50))
-        print self.client1.balance, self.client1.recharge_level
+        self.assertFalse(self.client1.needs_recharge('-50'))
         
-        self.assertTrue(self.client1.needs_recharge(50.51))
+        self.assertTrue(self.client1.needs_recharge('-50.51'))
         
         # this transaction will not trigger a recharge
         transa = Transaction.new(self.client1, value=45.50)
