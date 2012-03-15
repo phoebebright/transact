@@ -53,7 +53,7 @@ def list_payments():
 def list_maillog():
         print "MAILLOG"
         for p in ClientMailLog.objects.all():
-            print "%s |%s" % (p.to_email, p.subject)
+            print "%s |%s | %s" % (p.to_email, p.subject, p.body)
 
 
 def list_products():
@@ -175,6 +175,7 @@ class BasicTests(TestCase):
     simple tests 
     """
 
+        
     def test_create_client(self):
         "create client test"
         
@@ -511,8 +512,8 @@ class DownstreamTests(BaseTestMoreData):
         # now pay this Transaction
         p = trans.pay('PAYREF')
         
-        self.assertTrue(p.ref, 'PAYREF')
-        
+        self.assertEqual(p.ref, 'PAYREF')
+        self.assertTrue(p.is_paid)
         self.assertEqual(trans.status, 'P')
         self.assertFalse(trans.is_open)
         self.assertTrue(trans.is_closed)
@@ -576,6 +577,11 @@ class DownstreamTests(BaseTestMoreData):
         # now can't pay
         self.assertFalse(self.client1.can_pay(76.52))
         
+        # client3 has zero balance with no transactions
+        self.assertEqual(self.client3.balance, 0)
+        self.assertEqual(self.client3.calculated_balance(), 0)
+        
+        
         
         # client3 can't pay
         trans = Transaction.new(self.client3, 10)
@@ -627,14 +633,30 @@ class DownstreamTests(BaseTestMoreData):
         self.assertEqual(self.client1.balance,Decimal('55'))     
 
 
-        # but another amount like that will- should recharge account with 100       
+        # but another amount like that will-  recharge account with 100       
         transa = Transaction.new(self.client1, value=50)
         self.assertFalse(self.client1.needs_recharge())
         transa.pay('ref')
         self.assertFalse(self.client1.needs_recharge())
         self.assertEqual(self.client1.balance,Decimal('105'))     
-                
-                
+        
+        # manual recharge
+        self.client1.recharge_level = 50
+        self.client1.balance = 0
+        self.client1.recharge_by = 100
+        self.client1.save()
+        
+        # recharge by default amount
+        self.client1.recharge()
+        self.assertEqual(self.client1.balance,Decimal('100'))     
+        
+        # recharge by specified amount
+        self.client1.recharge(50)
+        self.assertEqual(self.client1.balance,Decimal('150'))     
+        
+        self.client1.recharge_notification()
+        print 'done'
+        
     def test_notifications(self):
         """
         test notifications being sent
@@ -653,18 +675,31 @@ class DownstreamTests(BaseTestMoreData):
 
         self.assertEqual(ClientMailLog.objects.count(), 1)
         mail = ClientMailLog.objects.get(id=1)
+        
+        # calling delete should not delete
+        mail.delete()
+        self.assertEqual(ClientMailLog.objects.count(), 1)
+        
         self.assertEqual(mail.to_email, self.client2.notification_user.email)
      
-        # this will cause a recharge
+        # this will cause a recharge before doing a transaction
         transa = Transaction.new(self.client2, value=10)
         transa.pay('ref')
         self.assertEqual(self.client2.balance,Decimal('145'))     
                 
-        list_maillog()
+
         self.assertEqual(ClientMailLog.objects.count(), 3)
-        mail = ClientMailLog.objects.get(id=3)
+        mail = ClientMailLog.objects.get(id=2)
         self.assertEqual(mail.to_email, self.client2.notification_user.email)
         self.assertEqual(mail.notification.name, "AccountRecharge")
+
+        mail = ClientMailLog.objects.get(id=3)
+        self.assertEqual(mail.to_email, self.client2.notification_user.email)
+        self.assertEqual(mail.notification.name, 'TransactionPaid')
+
+        # manual send of notification
+        note = ClientNotification.objects.get(name='TransactionPaid')
+        note.notify([self.u1.email,],  client=self.client1, trans=transa)
         
     def test_pool(self):
         """
@@ -727,7 +762,11 @@ class DownstreamTests(BaseTestMoreData):
         self.assertEqual(config_value('web','DEFAULT_MIN_POOL_LEVEL'),Decimal('100'))
 
         self.assertTrue(PoolLevel.check_level_ok(quality=p.quality, type=p.type))
-
+        
+        # check using text of product type
+        self.assertTrue(PoolLevel.check_level_ok(quality=p.quality, type='HYDR'))
+        # and where product type is invalid
+        self.assertRaises(InvalidProductType,  PoolLevel.check_level_ok, 'G', 'XXX') 
         
         # remove a big amount so level below minlevel of 100
         p.remove_quantity(2400)    
@@ -744,6 +783,7 @@ class ListTests(BaseTestMoreData):
     check some basic API calls to the model
     """
                 
+    
         
     def test_listtype(self):
         """
@@ -799,3 +839,15 @@ class ListTests(BaseTestMoreData):
         products = Pool.LISTPRODUCTS()
         self.assertEqual(products.count(),2)
     """
+class MiscTests(BaseTestMoreData):
+    """
+    other tests
+    """
+                
+    def test_user(self):
+        "check user profile "
+        usr = User.objects.get(username='uclient1a')
+        self.assertEqual(str(usr.get_profile()), "uclient1a's profile")
+        
+    
+    
