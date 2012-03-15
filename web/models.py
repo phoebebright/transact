@@ -1,3 +1,9 @@
+"""
+UPDATE 15March2012 by Phoebe Bright
+
+Coverage tests for this module are now at 99% and just ran out of time to make it 100%.  
+"""
+
 #python
 from datetime import date, datetime, timedelta
 from decimal import Decimal

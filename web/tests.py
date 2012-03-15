@@ -1,3 +1,10 @@
+"""
+UPDATE 15March2012 by Phoebe Bright
+
+These tests are primarily for models.py
+Coverage tests for this module are now at 99% and just ran out of time to make it 100%.  
+"""
+
 #python
 from datetime import date, datetime, timedelta
 import config
@@ -689,7 +696,6 @@ class DownstreamTests(BaseTestMoreData):
         self.assertEqual(self.client1.balance,Decimal('150'))     
         
         self.client1.recharge_notification()
-        print 'done'
         
     def test_notifications(self):
         """
@@ -741,6 +747,12 @@ class DownstreamTests(BaseTestMoreData):
 
         trans = Transaction.new(self.client2, value=45)
         self.assertRaises(MissingPaymentNotification, trans.pay, 'payref')
+
+        # get invalid notification
+        notify = ClientNotification.objects.get(name='AccountRecharge')
+        notify.delete()
+
+        self.assertRaises(MissingRechargeNotification, self.client2.recharge, 100)
         
     def test_pool(self):
         """
