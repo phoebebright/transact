@@ -8,12 +8,13 @@ sys.path.insert(0, '/home/django/')
 
 gettext = lambda s: s
 
-SITE_URL = "http://dev.trialflight.com"
+SITE_URL = "http://transact.trialflight.com"
+
 
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = True
 
 # if email in debug mode - don't sent externally
@@ -134,6 +135,8 @@ INSTALLED_APPS = (
 
 )
 
+LOGIN_REDIRECT_URL = "/"
+
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
 # the site admins on every HTTP 500 error.
@@ -194,4 +197,6 @@ try:
     print "local settings imported successfully"
 except ImportError:
     print "no local settings"
+
+TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
 
