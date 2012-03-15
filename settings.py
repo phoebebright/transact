@@ -194,9 +194,8 @@ SELENIUM_BASE_URL = "http://transactcarbon.com"
 SELENIUM_HTTP_AUTH_URL = "http://testuser:silicon@transactcarbon.com/"
 try:
     from settings_local import *
-    print "local settings imported successfully"
 except ImportError:
-    print "no local settings"
+    pass
 
 TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
 
