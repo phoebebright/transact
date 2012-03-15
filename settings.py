@@ -13,7 +13,7 @@ SITE_URL = "http://dev.trialflight.com"
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = True
 
 # if email in debug mode - don't sent externally
@@ -22,14 +22,10 @@ EMAIL_DEBUG = False
 TEST_EMAIL = 'phoebebright310+dev@gmail.com'
 
 ADMINS = (
-     ('Phoebe Bright', 'phoebebright310+transactadmin@gmail.com'),
+     ('Phoebe Bright', 'phoebebright310@gmail.com'),
 )
 
-MANAGERS = (
-    ("Michael O'Leary", "mikeoleary4+transact@gmail.com"),
-    ('Phoebe Bright', 'phoebebright310+transactman@gmail.com'),
-    
-)
+MANAGERS = ADMINS
 
 DEFAULT_FROM_EMAIL = "info@transactcarbon.com"
 
@@ -130,7 +126,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
     'django.contrib.admindocs',
-    'contact_form',    
     'api',
     'web',
     'webtest',
