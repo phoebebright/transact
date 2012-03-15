@@ -30,9 +30,9 @@ def transact(request):
 
 def flight_demo(request):
 
-    return render_to_response("flight_demo.html", {"form": form, "debug_setting": settings.DEBUG})
+    return render_to_response("flight_demo.html", { "debug_setting": settings.DEBUG})
 
 
 def voucher_demo(request):
 
-    return render_to_response("voucher_demo.html", {"form": form, "debug_setting": settings.DEBUG})
+    return render_to_response("voucher_demo.html", {"debug_setting": settings.DEBUG})
