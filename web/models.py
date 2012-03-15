@@ -251,9 +251,13 @@ class Client(models.Model):
        
         try:
             p = Payment.objects.filter(client = self).aggregate(balance=Sum('amount'))
-
-            return p['balance']
+            
+            if p['balance'] == None:
+                return 0
+            else:
+                return p['balance']
         except self.DoesNotExist:
+            # should not happen as aggregate with no records returns None
             return 0
         
             
@@ -883,14 +887,15 @@ class Transaction(models.Model):
             #TODO: NOW UNDO PAYMENT
 
             
-        
+    '''
+    UNUSED
     @property
     def status_name(self):
         """return status name from status field"""
         for (code,name) in STATUS:
             if code == self.status:
                 return name
-
+    '''
 
 
 class ClientNotification(Notification):
@@ -995,7 +1000,7 @@ class Payment(models.Model):
         
     @property
     def is_paid(self):
-    
+        
         return (self.status=='S')
         
         
@@ -1044,8 +1049,6 @@ class PoolLevel(models.Model):
         quality/type are below minimum levels
         """
 
-        
-            
         # allow passing the product type code 
         if not isinstance(type, ProductType):
             try:
