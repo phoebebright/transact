@@ -63,8 +63,6 @@ TODO: initialization of TransactAPI with token, connection string?
         contentType: "application/json; charset=UTF-8",
         crossDomain: true,
         success: function(data){
-            // some browsers do not parse data as json.. do it now
-            if (typeof(data)=="string") data = JSON.parse(data);
             var status = data['status'];
             delete data['status'];
             callback(status,data);
@@ -120,8 +118,8 @@ TODO: initialization of TransactAPI with token, connection string?
             send_call(data, callback);
         },
         "default_callback": log_callback,
-        "version": "0.6",
-        "gate": "http://api.transactcarbon.com/api/",
+        "version": "0.5",
+        "gate": "http://transactcarbon.com/api/",
         "add_token": set_token
     }
 })();
