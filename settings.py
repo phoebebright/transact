@@ -8,7 +8,7 @@ sys.path.insert(0, '/home/django/')
 
 gettext = lambda s: s
 
-SITE_URL = "http://transact.trialflight.com"
+SITE_URL = "http://api.transactcarbon.com"
 
 
 
@@ -18,9 +18,9 @@ DEBUG = True
 TEMPLATE_DEBUG = True
 
 # if email in debug mode - don't sent externally
-EMAIL_DEBUG = False
+EMAIL_DEBUG = True
 # where emails are sent in debug mode
-TEST_EMAIL = 'phoebebright310+dev@gmail.com'
+TEST_EMAIL = 'phoebebright310+trans@gmail.com'
 
 ADMINS = (
      ('Phoebe Bright', 'phoebebright310@gmail.com'),
@@ -34,8 +34,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'transact',   
-        'USER': 'root',               
-        'PASSWORD': '578632',           
+        'USER': 'transact',               
+        'PASSWORD': 'h8d6e555',           
         'HOST': '',                  
         'PORT': '',                 
     }
@@ -53,7 +53,7 @@ SITE_ID = 1
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
 MEDIA_URL = '/media/'
 
-STATIC_ROOT = os.path.join(PROJECT_ROOT, 'site_media')
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 STATIC_URL = '/static/'
 
 # URL prefix for admin static files -- CSS, JavaScript and images.

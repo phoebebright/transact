@@ -807,6 +807,7 @@ class Transaction(models.Model):
         # check client has enough in account
         
         if self.client.can_pay(self.total):
+            
             p = Payment.objects.create(
                 trans=self, 
                 client=self.client,
@@ -834,12 +835,16 @@ class Transaction(models.Model):
         if self.client.notification_user:
             try:
                 notify = ClientNotification.objects.get(name='TransactionPaid')
+                print 'found notify'
             except ClientNotification.DoesNotExist:
+                print 'raising notification'
                 raise MissingPaymentNotification
                 
             return notify.notify(self.client.notification_user.email, trans=self, client=self.client)
 
-        
+        else:
+            print 'no notification user'
+            
     @classmethod
     def expire_all(self):
         """

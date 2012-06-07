@@ -5,12 +5,12 @@
 
 {% block flow %}<li class="required"><a href="/docs/LOGIN.html">LOGIN</a></li><li>QTYCHECK</li>{% endblock %}
 
-{% block doc %}<p>Get the quantity that can be purchased for a given value, optionally specify the Quality and Product Type.</p>  
+{% block doc %}<p>Get the quantity that can be purchased for a given price, optionally specify the Quality and Product Type.</p>  
 <p>If no parameters are passed, return first available product</p>
 
 <pre>
 {"call":"QTYCHECK",
-   "value": 10}
+   "price": 10}
 </pre>
 
 <p>Can optionally specify what Quality and/or Product Type, for example</p>
@@ -18,21 +18,21 @@
 <pre>
 {"call":"QTYCHECK",
 "token": "{% token %}",
-"value": 10,
+"price": 10,
 "quality": "P"}
 </pre>
 <p> OR </p>
 <pre>
 {"call":"QTYCHECK",
 "token": "{% token %}",
-"value": 2.15,
+"price": 2.15,
 "type": "WIND"}
 </pre>
 <p> OR </p>
 <pre>
 {"call":"QTYCHECK",
 "token": "{% token %}",
-"value": 10,
+"price": 10,
 "quality": "P",
 "type": "WIND"}
 </pre>
@@ -43,6 +43,6 @@
 {% endblock doc %}
 {% block examplejson %}
 {% autoescape off %}
-{"call":"QTYCHECK","token": "{% token %}", "value": 100}{% endautoescape %}
+{"call":"QTYCHECK","token": "{% token %}", "price": 100}{% endautoescape %}
 {% endblock examplejson %}
 
