@@ -1,89 +1,127 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<!--
-Design by Free CSS Templates
-http://www.freecsstemplates.org
-Released for free under a Creative Commons Attribution 2.5 License
-
-Name       : Plain & Clean
-   
-Description: A two-column, fixed-width design with dark color scheme.
-Version    : 1.0
-Released   : 20111024
-
--->
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta name="keywords" content="" />
 <meta name="description" content="" />
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-<title>{% block title %}TransAct Carbon{% endblock %}</title>
+<title>{% block title %}TransAct Carbon Developers Resource Centre{% endblock %}</title>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js" type="text/javascript"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
 
 
+<link rel="stylesheet" type="text/css" media="all" href="http://transactcarbon.com/wp-content/themes/versatile/style.css" />
+<!--[if IE]>
+<link rel="stylesheet" type="text/css" media="all" href="http://transactcarbon.com/wp-content/themes/versatile/css/ie.css" />
+<![endif]-->
+<link rel="stylesheet" type="text/css" href="http://transactcarbon.com/wp-content/themes/versatile/css/colorscheme.css" media="screen" />
+<link rel="stylesheet" type="text/css" href="http://transactcarbon.com/wp-content/themes/versatile/css/skin.php" media="screen" />
 
-
-<link href="/static/css/style.css" rel="stylesheet" type="text/css" media="screen" />
+<!--<link href="/static/css/style.css" rel="stylesheet" type="text/css" media="screen" />-->
 <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/smoothness/jquery-ui.css" type="text/css" media="all" />
+
+<style>
+code, pre    { background: white; border: 1px solid #dddddd; color: #444; display:block; overflow:auto;   }
+code, pre    { font: normal 12px/20px Consolas, "Courier New", Courier, monospace; padding: 0 10px; margin:15px 0;  }
+
+
+</style>
 
 {% block extra_head %}
 {% endblock extra_head %}
 
 </head>
-<body>
-<div id="wrapper">
-	<div id="header" class="container">
-			<div id="logo">
-			<h1><a href="#">TransAct API</a></h1>
-			<p>Buy Carbon how you want, when you want</p>
-		</div>
-			<div id="menu">
-			<ul>
-				<li><a href="/">Home</a></li>
-				<li><a href="/about.html">About Us</a></li>
+
+<body id="stretched" class="page page-id-23 page-parent page-template page-template-template-fullwidth-php">
+<!-- #wrap-all -->
+<div id="wrap-all">
+	<header id="header">
+
+		<div id="topbar">
+
+			<div class="inner">
+	
+				<div class="logo">
+											<h1 id="site-title"><span><a href="http://transactcarbon.com/" title="Transact Carbon" rel="home">Transact Carbon - Developers Resource Centre</a></span></h1><h2 id="site-description">A PayPal for voluntary carbon credits</h2>
+									</div>
+				<!-- /logo -->
 				
-				{% if user.is_authenticated %}
-                <li><a href="/examples.html">Examples</a></li>
-				<li><a href="/docs.html">Developers</a></li>
-				<li><a href="/client_portal">Account</a></li>
-                {% else %}
-				<li><a href="/login/">Sign In</a></li>
-                
-				{% endif %}
-             </ul>
-		</div>
+				
+	            <div class="topmenu">
+		        	<ul id="menu-header-menu" class="nav"><li id="menu-item-5" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-home"><a href="http://transactcarbon.com/">Home</a></li>
+        <li id="menu-item-588" class="menu-item menu-item-type-post_type menu-item-object-page"><a href="http://api.transactcarbon.com/">Developers Home</a></li>
+		<li id="menu-item-11" class="menu-item menu-item-type-custom menu-item-object-custom"><a href="/examples.html">Examples</a></li>
 
-	</div>
-	<!-- end #header -->
-	<div class="clear"></div>
-	<div id="page" class="container">
-		<div id="content">
-		    <div class="post">
-
-		    {% block main %}
 		
-            {% endblock main %}
-            
-            </div>
+		<li id="menu-item-11" class="menu-item menu-item-type-custom menu-item-object-custom"><a href="/docs.html">Documentation</a></li>
+		
+		{% if user.is_authenticated %}
+		    <li id="menu-item-11" class="menu-item menu-item-type-custom menu-item-object-custom"><a href="/login/">Login</a></li>		
+		    <li id="menu-item-11" class="menu-item menu-item-type-custom menu-item-object-custom"><a href="/client_portal/">Account</a></li>
 
-			<div style="clear: both;">&nbsp;</div>
+        {% else %}
+		    <li id="menu-item-11" class="menu-item menu-item-type-custom menu-item-object-custom"><a href="/logout/">Logout</a></li>		
+
+		{% endif %}
+
+        </ul>
+        </div>
+	            <!-- /topmenu -->
+
+			</div>
+			<!-- /inner -->
+
 		</div>
-		<!-- end #content -->
-        {% block sidebar %}{% endblock %}
+		<!-- /topbar -->
+		<div class="clear"></div>		<div id="subheader" class="rightsidebar" >
+			</div>
+	<!-- /subheader -->
+</header>
+<!-- /header -->
 
-		<div style="clear: both;">&nbsp;</div>
+<div class="pagemid rightsidebar">
+
+	<div class="topshadow"></div>
+
+	<div class="inner">
+
+		<div id="main">	
+
+			<div id="breadcrumbs"><div class="breadcrumbs"><a href="http://transactcarbon.com/" rel="home" class="breadcrumbs-begin">Home</a> <span class="breadcrumbs-separator">&nbsp;&#47;&nbsp;</span> Developers Resource Centre</div></div>			<!-- /breadcrumb -->
+
+			<div class="content">
+        		<div class=" page type-page status-publish hentry">
+				{% block main %}
+				
+				
+				{% endblock main %}
+				
+		        </div>
+
+			</div>
+			<!-- /content -->
+		
+		</div>
+		<!-- /main -->
+
+		<aside id="sidebar">
+			<div class="content">
+
+
+			    {% block sidebar %}
+			    {% endblock sidebar %}
+	
+			</div>
+		</aside>
+		<!-- /sidebar -->
+	
 	</div>
-	<!-- end #page -->
+    <!-- /inner -->
+
 </div>
-<div class="clear"></div>
+	
 
-
-<div id="footer">
-	<p>Copyright (c) 2012 transactcarbon.com. All rights reserved. Design by <a href="http://www.freecsstemplates.org/">Free CSS Templates</a>.</p>
-</div>
-
-<script type="text/javascript">
+<!-- /wrap-all --><script type="text/javascript">
   var uvOptions = {};
   (function() {
     var uv = document.createElement('script'); uv.type = 'text/javascript'; uv.async = true;

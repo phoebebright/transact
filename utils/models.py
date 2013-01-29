@@ -135,8 +135,9 @@ class MailLog(models.Model):
 
         if attach:
             msg.attach(attach)
-            
-        msg.send()
+        
+        #TODO: Commented out until email service error fixed
+        #msg.send()
                             
         self.sent_date = datetime.now()
         self.save()
