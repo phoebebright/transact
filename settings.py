@@ -22,6 +22,13 @@ EMAIL_DEBUG = True
 # where emails are sent in debug mode
 TEST_EMAIL = 'phoebebright310+trans@gmail.com'
 
+'''
+EMAIL_HOST = "mail.tinywho.com"
+EMAIL_PORT = "25"
+EMAIL_HOST_USER = "info@djbono.com"
+EMAIL_HOST_PASSWORD = "highyellow"
+'''
+
 ADMINS = (
      ('Phoebe Bright', 'phoebebright310@gmail.com'),
 )
@@ -93,6 +100,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'middleware.cors.XsSharing',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (

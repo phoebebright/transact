@@ -42,7 +42,7 @@ code, pre    { font: normal 12px/20px Consolas, "Courier New", Courier, monospac
 			<div class="inner">
 	
 				<div class="logo">
-											<h1 id="site-title"><span><a href="http://transactcarbon.com/" title="Transact Carbon" rel="home">Transact Carbon - Developers Resource Centre</a></span></h1><h2 id="site-description">A PayPal for voluntary carbon credits</h2>
+											<h1 id="site-title"><span><a href="http://transactcarbon.com/" title="Transact Carbon" rel="home">Transact Carbon - Developers Resource Centre</a></span></h1><h2 id="site-description">PayPal for Voluntary Carbon Credits</h2>
 									</div>
 				<!-- /logo -->
 				
@@ -56,13 +56,14 @@ code, pre    { font: normal 12px/20px Consolas, "Courier New", Courier, monospac
 		<li id="menu-item-11" class="menu-item menu-item-type-custom menu-item-object-custom"><a href="/docs.html">Documentation</a></li>
 		
 		{% if user.is_authenticated %}
-		    <li id="menu-item-11" class="menu-item menu-item-type-custom menu-item-object-custom"><a href="/login/">Login</a></li>		
-		    <li id="menu-item-11" class="menu-item menu-item-type-custom menu-item-object-custom"><a href="/client_portal/">Account</a></li>
+		    <li id="menu-item-11" class="menu-item menu-item-type-custom menu-item-object-custom"><a href="/client_portal/">Account</a></li>		    <li id="menu-item-11" class="menu-item menu-item-type-custom menu-item-object-custom"><a href="/logout/">Logout</a></li>		
 
         {% else %}
-		    <li id="menu-item-11" class="menu-item menu-item-type-custom menu-item-object-custom"><a href="/logout/">Logout</a></li>		
+		    <li id="menu-item-11" class="menu-item menu-item-type-custom menu-item-object-custom"><a href="/login/">Login</a></li>		
+
 
 		{% endif %}
+
 
         </ul>
         </div>
@@ -104,16 +105,8 @@ code, pre    { font: normal 12px/20px Consolas, "Courier New", Courier, monospac
 		</div>
 		<!-- /main -->
 
-		<aside id="sidebar">
-			<div class="content">
-
-
-			    {% block sidebar %}
-			    {% endblock sidebar %}
 	
-			</div>
-		</aside>
-		<!-- /sidebar -->
+	
 	
 	</div>
     <!-- /inner -->
